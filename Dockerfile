@@ -20,7 +20,10 @@ WORKDIR /app
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \
     DOTNET_EnableDiagnostics=0 \
-    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
+    HOME=/tmp \
+    PLAYWRIGHT_BROWSERS_PATH=/ms-playwright \
+    XDG_CACHE_HOME=/tmp/.cache \
+    XDG_CONFIG_HOME=/tmp/.config
 
 COPY --from=build --chown=pwuser:pwuser /app/ ./
 COPY docker-entrypoint.sh /usr/local/bin/librago-entrypoint.sh

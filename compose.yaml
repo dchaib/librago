@@ -14,6 +14,8 @@ services:
     shm_size: 1gb
     security_opt:
       - no-new-privileges:true
+      # Official Playwright profile for Chromium sandboxing under pwuser.
+      - seccomp:./seccomp_profile.json
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
       interval: 30s

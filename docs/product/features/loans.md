@@ -94,6 +94,8 @@ Conceptually, Librago should distinguish:
 - last complete successful synchronization;
 - synchronization result/status.
 
+On startup, Librago synchronizes immediately when a configured network has no previous attempt or when its previous attempt is due according to the configured interval. Otherwise, it waits until the next due synchronization. This prevents application restarts from causing unnecessary upstream requests.
+
 ## Stale data
 
 For version 0.1, network data is stale when there has been no complete successful synchronization for more than 24 hours.

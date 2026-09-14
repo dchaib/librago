@@ -15,7 +15,7 @@ The existing connector experiments target .NET 10. Nantes exposes a JSON API tha
 Version 0.1 is a modular monolith built as one ASP.NET Core 10 application.
 
 - Razor Pages renders the French interface on the server.
-- A hosted background service runs synchronization once at startup and then on a configurable interval.
+- A hosted background service synchronizes on first use or when the persisted synchronization interval is due, then continues on that configurable interval.
 - Network-specific connectors implement a common interface and return generic loan snapshots.
 - SQLite stores loans and synchronization state on a persistent volume.
 - Schema changes are applied by small, ordered in-application migrations.
@@ -32,4 +32,3 @@ Source code is kept in one application project and organized by responsibility. 
 - the Nozay connector makes the runtime image larger because Chromium is required;
 - a failing connector cannot erase previously stored loans;
 - moving synchronization to a separate worker remains possible later through the connector and repository boundaries.
-

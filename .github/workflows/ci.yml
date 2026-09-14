@@ -1,0 +1,40 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.4xx
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore dependencies
+        run: dotnet restore Librago.slnx --locked-mode
+
+      - name: Verify formatting
+        run: dotnet format Librago.slnx --verify-no-changes --no-restore
+
+      - name: Build
+        run: dotnet build Librago.slnx --configuration Release --no-restore
+
+      - name: Test
+        run: dotnet test Librago.slnx --configuration Release --no-build --no-restore --collect:"XPlat Code Coverage"
+
+      - name: Publish application
+        run: dotnet publish src/Librago/Librago.csproj --configuration Release --no-build --no-restore --output artifacts/publish

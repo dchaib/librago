@@ -34,6 +34,16 @@ Secondary:
 
 Additional metadata such as author, volume number, cover image, or material type should be evaluated once source data is known.
 
+## Observed source data
+
+The initial connector exploration established the following source capabilities:
+
+- Nantes exposes title, author, borrowing date, due date, document number, ISBN, material category, series information, and branch data through a JSON API;
+- Nozay exposes borrower, material type, thumbnail, title, author, library, due date, and renewal information in an HTML table;
+- Nozay does not expose the borrowing date in the observed loans page.
+
+Version 0.1 therefore treats author, material type, branch, and borrowing date as optional. A missing optional value must not prevent an otherwise valid loan from being synchronized.
+
 ## Default sort
 
 Loans are sorted by due date ascending.

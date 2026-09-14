@@ -6,20 +6,6 @@ Questions should be removed once answered and, when relevant, the resulting deci
 
 ## Technical spike
 
-### What loan metadata is actually available?
-
-Determine whether each network reliably exposes:
-- title;
-- author;
-- series;
-- volume number;
-- material/document type;
-- cover image;
-- borrowing date;
-- due date;
-- stable external identifiers;
-- lending branch.
-
 ### How does account synchronization fail?
 
 Determine whether failures can occur independently per account and what can be reliably detected.

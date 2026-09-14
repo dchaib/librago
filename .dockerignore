@@ -1,0 +1,15 @@
+.git
+.github
+.vs
+.idea
+.vscode
+**/bin
+**/obj
+TestResults
+artifacts
+/data
+src/Librago/storage
+appsettings.Local.json
+*.db
+*.db-shm
+*.db-wal

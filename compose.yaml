@@ -1,0 +1,25 @@
+services:
+  librago:
+    build: .
+    init: true
+    restart: unless-stopped
+    ports:
+      - "8080:8080"
+    volumes:
+      - librago-data:/app/storage
+      - ./appsettings.Local.json:/app/appsettings.Local.json:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    shm_size: 1gb
+    security_opt:
+      - no-new-privileges:true
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  librago-data:

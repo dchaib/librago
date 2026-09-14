@@ -22,6 +22,41 @@ The project is designed to support multiple library networks through network-spe
 
 ## Project status
 
-Librago is currently in early product definition and technical exploration.
+Version 0.1 is under active development. Its first slice consolidates current loans from the Nantes and Nozay library networks.
 
 See [`docs/README.md`](docs/README.md) for an overview of the project documentation.
+
+## Development
+
+Librago requires the .NET 10 SDK. The Nozay connector also requires a Playwright Chromium installation.
+
+```powershell
+Copy-Item src/Librago/appsettings.Local.example.json src/Librago/appsettings.Local.json
+dotnet restore Librago.slnx
+dotnet build Librago.slnx
+pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium
+dotnet run --project src/Librago
+```
+
+Edit the ignored `src/Librago/appsettings.Local.json` file with local account configuration before starting the application. Never commit this file or paste its contents into an issue.
+
+Each entry under `Librago:Accounts` has a stable local `AccountId`, a `Network` (`Nantes` or `Nozay`), optional borrower display name, and the library credentials. `AccountId` is not a library-issued identifier; choose an opaque local value such as `nantes-reader-a`.
+
+The application synchronizes at startup and then every six hours by default. The interval can be changed with `Librago:SynchronizationInterval` using standard ASP.NET Core configuration.
+
+Run the automated checks with:
+
+```powershell
+dotnet format Librago.slnx --verify-no-changes
+dotnet test Librago.slnx
+```
+
+## Container
+
+For a local container deployment, copy the example configuration to the repository root as `appsettings.Local.json`, fill it in, then run:
+
+```text
+docker compose up --build -d
+```
+
+The web interface is exposed on port 8080. SQLite data and data-protection keys are stored in the `librago-data` Docker volume.

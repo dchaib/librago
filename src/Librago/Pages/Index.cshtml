@@ -1,0 +1,152 @@
+@page
+@model Librago.Pages.IndexModel
+@using Librago.Loans
+@using Librago.Synchronization
+@{
+    ViewData["Title"] = "Mes prêts";
+}
+
+<header class="hero">
+    <p class="eyebrow">Librago</p>
+    <h1>Mes prêts</h1>
+    <p class="hero__subtitle">Les prochains retours de toute la famille, au même endroit.</p>
+</header>
+
+@if (!Model.HasConfiguredAccounts)
+{
+    <section class="notice notice--info" role="status">
+        <strong>Aucun compte n’est configuré.</strong>
+        <span>Ajoutez vos comptes dans la configuration locale pour lancer la première synchronisation.</span>
+    </section>
+}
+
+@foreach (var status in Model.NetworkStatuses.Where(status => status.NeedsAttention))
+{
+    <section class="notice notice--warning" role="status">
+        <strong>@status.NetworkName</strong>
+        @if (status.LastCompleteSuccessAt is null)
+        {
+            <span>Ce réseau n’a encore jamais été synchronisé avec succès.</span>
+        }
+        else
+        {
+            @if (status.Result is SynchronizationResult.Partial)
+            {
+                <span>La dernière synchronisation est partielle. Les prêts précédents sont conservés.</span>
+            }
+            else if (status.Result is SynchronizationResult.Failed)
+            {
+                <span>La dernière synchronisation a échoué. L’ancien état reste affiché.</span>
+            }
+            @if (status.IsStale)
+            {
+                <span>Ces informations datent de plus de 24 heures.</span>
+            }
+        }
+    </section>
+}
+
+@if (Model.HasConfiguredAccounts)
+{
+    <form method="get" class="filters" aria-label="Filtrer les prêts">
+        <label>
+            <span>Réseau</span>
+            <select asp-for="SelectedNetwork" asp-items="Model.NetworkOptions">
+                <option value="">Tous les réseaux</option>
+            </select>
+        </label>
+        <label>
+            <span>Emprunteur</span>
+            <select asp-for="SelectedBorrower" asp-items="Model.BorrowerOptions">
+                <option value="">Toute la famille</option>
+            </select>
+        </label>
+        <button type="submit">Filtrer</button>
+        @if (Model.HasActiveFilters)
+        {
+            <a asp-page="/Index" class="filters__reset">Effacer</a>
+        }
+    </form>
+}
+
+@if (Model.HasConfiguredAccounts && Model.Loans.Count == 0)
+{
+    <section class="empty-state">
+        @if (Model.HasActiveFilters)
+        {
+            <h2>Aucun prêt ne correspond à ces filtres</h2>
+            <p>Modifiez les filtres ou affichez de nouveau tous les prêts.</p>
+        }
+        else if (Model.NetworkStatuses.Count > 0 && Model.NetworkStatuses.All(status => status.Result is SynchronizationResult.Success))
+        {
+            <h2>Aucun prêt en cours</h2>
+            <p>Tous les documents semblent avoir été rendus.</p>
+        }
+        else
+        {
+            <h2>Les prêts ne sont pas encore disponibles</h2>
+            <p>La première synchronisation est en cours ou a besoin d’attention.</p>
+        }
+    </section>
+}
+
+@if (Model.Loans.Count > 0)
+{
+    <p class="result-count">@Model.Loans.Count @(Model.Loans.Count == 1 ? "prêt" : "prêts")</p>
+    <ol class="loan-list">
+        @foreach (var loan in Model.Loans)
+        {
+            var severity = LoanPresentation.SeverityClass(loan.DueOn, Model.Today);
+            <li class="loan-card">
+                <div class="loan-card__body">
+                    <p class="loan-card__network">@loan.NetworkName</p>
+                    <h2>@loan.Title</h2>
+                    @if (!string.IsNullOrWhiteSpace(loan.Author))
+                    {
+                        <p class="loan-card__author">@loan.Author</p>
+                    }
+                    <dl class="loan-card__details">
+                        <div>
+                            <dt>Emprunté par</dt>
+                            <dd>@loan.Borrower</dd>
+                        </div>
+                        @if (!string.IsNullOrWhiteSpace(loan.Branch))
+                        {
+                            <div>
+                                <dt>Bibliothèque</dt>
+                                <dd>@loan.Branch</dd>
+                            </div>
+                        }
+                    </dl>
+                </div>
+                <div class="deadline @severity">
+                    <strong>@LoanPresentation.FormatDeadline(loan.DueOn, Model.Today)</strong>
+                    <span>Retour le @LoanPresentation.FormatDate(loan.DueOn)</span>
+                </div>
+            </li>
+        }
+    </ol>
+}
+
+@if (Model.NetworkStatuses.Count > 0)
+{
+    <footer class="sync-status">
+        <h2>Actualisation des données</h2>
+        <ul>
+            @foreach (var status in Model.NetworkStatuses)
+            {
+                <li>
+                    <strong>@status.NetworkName</strong>
+                    @if (status.LastCompleteSuccessAt is null)
+                    {
+                        <span>Jamais actualisé complètement</span>
+                    }
+                    else
+                    {
+                        <span>Dernière actualisation complète le @Model.FormatSynchronizationTime(status.LastCompleteSuccessAt.Value)</span>
+                    }
+                </li>
+            }
+        </ul>
+    </footer>
+}

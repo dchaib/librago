@@ -36,5 +36,5 @@ jobs:
       - name: Test
         run: dotnet test Librago.slnx --configuration Release --no-build --no-restore --collect:"XPlat Code Coverage"
 
-      - name: Publish application
-        run: dotnet publish src/Librago/Librago.csproj --configuration Release --no-build --no-restore --output artifacts/publish
+      - name: Build container image
+        run: docker build --tag librago:ci .

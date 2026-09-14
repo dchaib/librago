@@ -58,7 +58,10 @@ public sealed partial class LoanSynchronizationService(
             }
             catch (Exception exception)
             {
-                LogAccountFailure(logger, connector.Network.Key, exception.GetType().Name);
+                var failureReason = exception is LibraryConnectorException
+                    ? exception.Message
+                    : exception.GetType().Name;
+                LogAccountFailure(logger, connector.Network.Key, failureReason);
                 await database.MarkAccountFailedAsync(
                     account,
                     connector.Network,
@@ -94,11 +97,11 @@ public sealed partial class LoanSynchronizationService(
     [LoggerMessage(
         EventId = 1002,
         Level = LogLevel.Warning,
-        Message = "Synchronization failed for a {NetworkKey} account ({FailureType}).")]
+        Message = "Synchronization failed for a {NetworkKey} account ({FailureReason}).")]
     private static partial void LogAccountFailure(
         ILogger logger,
         string networkKey,
-        string failureType);
+        string failureReason);
 
     private sealed record ConfiguredAccount(
         LibraryAccountOptions Account,

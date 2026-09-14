@@ -18,25 +18,33 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         LibraryAccountOptions account,
         CancellationToken cancellationToken)
     {
+        var step = "launching the browser";
         using var playwright = await Playwright.CreateAsync();
-        await using var browser = await playwright.Chromium.LaunchAsync(
-            new BrowserTypeLaunchOptions { Headless = true });
-        await using var context = await browser.NewContextAsync(
-            new BrowserNewContextOptions { Locale = "fr-FR" });
-        var page = await context.NewPageAsync();
 
         try
         {
+            await using var browser = await playwright.Chromium.LaunchAsync(
+                new BrowserTypeLaunchOptions { Headless = false });
+            step = "creating the browser context";
+            await using var context = await browser.NewContextAsync(
+                new BrowserNewContextOptions { Locale = "fr-FR" });
+            var page = await context.NewPageAsync();
+
+            step = "opening the portal";
             await NavigateAsync(page, HomeUrl, cancellationToken);
+            step = "waiting for the portal challenge";
             await PassAnubisChallengeAsync(page, cancellationToken);
+            step = "authenticating";
             await AuthenticateAsync(page, account, cancellationToken);
+            step = "opening the loans page";
             await NavigateAsync(page, LoansUrl, cancellationToken);
+            step = "reading the loans";
             return await ReadLoansAsync(page, account, cancellationToken);
         }
         catch (PlaywrightException exception)
         {
             throw new LibraryConnectorException(
-                "The Nozay portal could not be automated in the expected way.",
+                $"The Nozay portal failed while {step}.",
                 exception);
         }
     }
@@ -67,10 +75,16 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         var username = page.Locator("input[name='username']");
         var password = page.Locator("input[name='password']");
 
-        if (await username.CountAsync() == 0 || await password.CountAsync() == 0)
+        await username.WaitForAsync(new LocatorWaitForOptions
         {
-            throw new LibraryConnectorException("The Nozay authentication form was not found.");
-        }
+            State = WaitForSelectorState.Visible,
+            Timeout = 30_000
+        });
+        await password.WaitForAsync(new LocatorWaitForOptions
+        {
+            State = WaitForSelectorState.Visible,
+            Timeout = 30_000
+        });
 
         await username.FillAsync(account.Username);
         await password.FillAsync(account.Password);

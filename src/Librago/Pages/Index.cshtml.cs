@@ -17,10 +17,10 @@ public sealed class IndexModel(
     LibraryConnectorResolver connectorResolver,
     TimeProvider timeProvider) : PageModel
 {
-    [BindProperty(SupportsGet = true, Name = "reseau")]
+    [BindProperty(SupportsGet = true)]
     public string? SelectedNetwork { get; set; }
 
-    [BindProperty(SupportsGet = true, Name = "emprunteur")]
+    [BindProperty(SupportsGet = true)]
     public string? SelectedBorrower { get; set; }
 
     public IReadOnlyList<Loan> Loans { get; private set; } = [];

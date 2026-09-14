@@ -7,7 +7,7 @@ services:
       - "8080:8080"
     volumes:
       - librago-data:/app/storage
-      - ./appsettings.Local.json:/app/appsettings.Local.json:ro
+      - ./src/Librago/appsettings.Local.json:/app/appsettings.Local.json:ro
     read_only: true
     tmpfs:
       - /tmp

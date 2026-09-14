@@ -53,7 +53,7 @@ dotnet test Librago.slnx
 
 ## Container
 
-For a local container deployment, copy the example configuration to the repository root as `appsettings.Local.json`, fill it in, then run:
+For a local container deployment, fill in `src/Librago/appsettings.Local.json`, then run:
 
 ```text
 docker compose up --build -d

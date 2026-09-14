@@ -60,3 +60,5 @@ docker compose up --build -d
 ```
 
 The web interface is exposed on port 8080. SQLite data and data-protection keys are stored in the `librago-data` Docker volume.
+
+The container starts Xvfb so that connectors requiring a visible Chromium session can run without a desktop environment.

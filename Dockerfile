@@ -23,8 +23,12 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     PLAYWRIGHT_BROWSERS_PATH=/ms-playwright
 
 COPY --from=build --chown=pwuser:pwuser /app/ ./
-RUN mkdir -p /app/storage && chown pwuser:pwuser /app/storage
+COPY docker-entrypoint.sh /usr/local/bin/librago-entrypoint.sh
+RUN chmod +x /usr/local/bin/librago-entrypoint.sh \
+    && mkdir -p /app/storage \
+    && chown pwuser:pwuser /app/storage
 
 USER pwuser
 EXPOSE 8080
-ENTRYPOINT ["./Librago"]
+ENTRYPOINT ["/usr/local/bin/librago-entrypoint.sh"]
+CMD ["./Librago"]

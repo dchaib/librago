@@ -4,9 +4,9 @@ public sealed class LibragoOptions
 {
     public const string SectionName = "Librago";
 
-    public string DatabasePath { get; init; } = "storage/librago.db";
+    public string DatabasePath { get; init; } = "/data/librago.db";
 
-    public string DataProtectionPath { get; init; } = "storage/keys";
+    public string DataProtectionPath { get; init; } = "/data/keys";
 
     public TimeSpan SynchronizationInterval { get; init; } = TimeSpan.FromHours(6);
 

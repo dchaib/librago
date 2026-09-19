@@ -5,6 +5,8 @@ using Librago.Connectors.Nozay;
 using Librago.Persistence;
 using Librago.Synchronization;
 using Microsoft.AspNetCore.DataProtection;
+using Microsoft.AspNetCore.DataProtection.KeyManagement;
+using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -20,24 +22,29 @@ builder.Configuration.AddJsonFile(
     "appsettings.Local.json",
     optional: true,
     reloadOnChange: false);
+
+const string externalConfigurationDirectory = "/config";
+if (Directory.Exists(externalConfigurationDirectory))
+{
+    builder.Configuration.AddJsonFile(
+        new PhysicalFileProvider(externalConfigurationDirectory),
+        "appsettings.Local.json",
+        optional: true,
+        reloadOnChange: false);
+}
+
 builder.Configuration.AddEnvironmentVariables();
 
-var configuredKeyPath = builder.Configuration[$"{LibragoOptions.SectionName}:DataProtectionPath"]
-    ?? "storage/keys";
-var dataProtectionPath = Path.IsPathRooted(configuredKeyPath)
-    ? configuredKeyPath
-    : Path.Combine(builder.Environment.ContentRootPath, configuredKeyPath);
-Directory.CreateDirectory(dataProtectionPath);
 builder.Services
     .AddDataProtection()
-    .SetApplicationName("Librago")
-    .PersistKeysToFileSystem(new DirectoryInfo(dataProtectionPath));
+    .SetApplicationName("Librago");
 
 builder.Services
     .AddOptions<LibragoOptions>()
     .Bind(builder.Configuration.GetSection(LibragoOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<LibragoOptions>, LibragoOptionsValidator>();
+builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>, DataProtectionKeyManagementOptionsSetup>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<LibragoDatabase>();
 builder.Services.AddSingleton<ILibraryConnector, NantesLibraryConnector>();

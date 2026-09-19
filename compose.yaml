@@ -6,15 +6,15 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - librago-data:/app/storage
-      - ./src/Librago/appsettings.Local.json:/app/appsettings.Local.json:ro
+      - librago-data:/data
+      - ./src/Librago/appsettings.Local.json:/config/appsettings.Local.json:ro
     read_only: true
     tmpfs:
       - /tmp
     shm_size: 1gb
     security_opt:
       - no-new-privileges:true
-      # Official Playwright profile for Chromium sandboxing under pwuser.
+      # Official Playwright profile for Chromium sandboxing.
       - seccomp:./seccomp_profile.json
     healthcheck:
       test: ["CMD", "curl", "--fail", "--silent", "http://127.0.0.1:8080/health"]

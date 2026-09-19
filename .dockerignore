@@ -6,9 +6,7 @@
 **/bin
 **/obj
 TestResults
-artifacts
-/data
-src/Librago/storage
+src/Librago/data
 appsettings.Local.json
 *.db
 *.db-shm

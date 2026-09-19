@@ -14,11 +14,6 @@ public sealed class LibragoOptionsValidator : IValidateOptions<LibragoOptions>
             return ValidateOptionsResult.Fail("Librago:DatabasePath is required.");
         }
 
-        if (string.IsNullOrWhiteSpace(options.DataProtectionPath))
-        {
-            return ValidateOptionsResult.Fail("Librago:DataProtectionPath is required.");
-        }
-
         if (options.SynchronizationInterval < TimeSpan.FromMinutes(5))
         {
             return ValidateOptionsResult.Fail(

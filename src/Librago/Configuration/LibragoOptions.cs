@@ -6,8 +6,6 @@ public sealed class LibragoOptions
 
     public string DatabasePath { get; init; } = "/data/librago.db";
 
-    public string DataProtectionPath { get; init; } = "/data/keys";
-
     public TimeSpan SynchronizationInterval { get; init; } = TimeSpan.FromHours(6);
 
     public string TimeZone { get; init; } = "Europe/Paris";

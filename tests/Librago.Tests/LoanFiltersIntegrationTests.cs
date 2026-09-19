@@ -129,7 +129,6 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
     private Dictionary<string, string?> TestConfiguration() => new()
     {
         ["Librago:DatabasePath"] = Path.Combine(_temporaryDirectory, "integration.db"),
-        ["Librago:DataProtectionPath"] = Path.Combine(_temporaryDirectory, "keys"),
         ["Librago:SynchronizationInterval"] = "06:00:00",
         ["Librago:TimeZone"] = "Europe/Paris",
         ["Librago:Accounts:0:AccountId"] = "nantes-account",

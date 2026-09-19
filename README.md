@@ -59,6 +59,6 @@ For a local container deployment, fill in `src/Librago/appsettings.Local.json`, 
 docker compose up --build -d
 ```
 
-The web interface is exposed on port 8080. The container layout separates immutable application files (`/app`), read-only external configuration (`/config`), persistent SQLite data and data-protection keys (`/data/librago` in the mounted volume), and ephemeral state (`/tmp`).
+The web interface is exposed on port 8080. The container layout separates immutable application files (`/app`), read-only external configuration (`/config`), persistent SQLite data (`/data` in the mounted volume), and ephemeral state (`/tmp`).
 
 The container starts Xvfb so that connectors requiring a visible Chromium session can run without a desktop environment.

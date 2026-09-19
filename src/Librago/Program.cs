@@ -4,8 +4,6 @@ using Librago.Connectors.Nantes;
 using Librago.Connectors.Nozay;
 using Librago.Persistence;
 using Librago.Synchronization;
-using Microsoft.AspNetCore.DataProtection;
-using Microsoft.AspNetCore.DataProtection.KeyManagement;
 using Microsoft.Extensions.FileProviders;
 using Microsoft.Extensions.Options;
 
@@ -36,15 +34,10 @@ if (Directory.Exists(externalConfigurationDirectory))
 builder.Configuration.AddEnvironmentVariables();
 
 builder.Services
-    .AddDataProtection()
-    .SetApplicationName("Librago");
-
-builder.Services
     .AddOptions<LibragoOptions>()
     .Bind(builder.Configuration.GetSection(LibragoOptions.SectionName))
     .ValidateOnStart();
 builder.Services.AddSingleton<IValidateOptions<LibragoOptions>, LibragoOptionsValidator>();
-builder.Services.AddSingleton<IConfigureOptions<KeyManagementOptions>, DataProtectionKeyManagementOptionsSetup>();
 builder.Services.AddSingleton(TimeProvider.System);
 builder.Services.AddSingleton<LibragoDatabase>();
 builder.Services.AddSingleton<ILibraryConnector, NantesLibraryConnector>();

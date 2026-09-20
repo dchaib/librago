@@ -21,6 +21,8 @@ public sealed class LibraryAccountOptions
 
     public string Borrower { get; init; } = string.Empty;
 
+    public Dictionary<string, string> BorrowerAliases { get; init; } = [];
+
     public required string Username { get; init; }
 
     public required string Password { get; init; }

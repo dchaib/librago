@@ -42,6 +42,8 @@ Edit the ignored `src/Librago/appsettings.Local.json` file with local account co
 
 Each entry under `Librago:Accounts` has a stable local `AccountId`, a `Network` (`Nantes` or `Nozay`), optional borrower display name, and the library credentials. `AccountId` is not a library-issued identifier; choose an opaque local value such as `nantes-reader-a`.
 
+For a family Nozay account, configure that parent account only. Its optional `BorrowerAliases` object maps the borrower names displayed by Nozay to the display names used by Librago. Matching ignores case and repeated whitespace; an unmatched name stays unchanged. This prevents duplicate borrowers when another network uses a shorter configured display name.
+
 The application synchronizes on first use or when the previous attempt is due, then every six hours by default. The interval can be changed with `Librago:SynchronizationInterval` using standard ASP.NET Core configuration.
 
 Run the automated checks with:

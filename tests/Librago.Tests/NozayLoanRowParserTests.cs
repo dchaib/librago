@@ -44,4 +44,46 @@ public sealed class NozayLoanRowParserTests
         Assert.Throws<LibraryConnectorException>(
             () => NozayLoanRowParser.Parse(cells, null, null, string.Empty));
     }
+
+    [Fact]
+    public void ParseUsesNormalizedCaseInsensitiveBorrowerAlias()
+    {
+        string[] cells = ["  LECTEUR   ENFANT NOM  ", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
+
+        var loan = NozayLoanRowParser.Parse(
+            cells,
+            null,
+            null,
+            string.Empty,
+            new Dictionary<string, string>
+            {
+                ["lecteur enfant nom"] = "Lecteur enfant"
+            });
+
+        Assert.Equal("Lecteur enfant", loan.Borrower);
+    }
+
+    [Fact]
+    public void ParsePreservesUnmappedBorrowerAndFallbackIdWhenAliasChanges()
+    {
+        string[] cells = ["Lecteur Inconnu", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
+
+        var unmapped = NozayLoanRowParser.Parse(cells, null, null, string.Empty);
+        var firstAlias = NozayLoanRowParser.Parse(
+            cells,
+            null,
+            null,
+            string.Empty,
+            new Dictionary<string, string> { ["Lecteur Inconnu"] = "Libellé un" });
+        var secondAlias = NozayLoanRowParser.Parse(
+            cells,
+            null,
+            null,
+            string.Empty,
+            new Dictionary<string, string> { ["Lecteur Inconnu"] = "Libellé deux" });
+
+        Assert.Equal("Lecteur Inconnu", unmapped.Borrower);
+        Assert.Equal(firstAlias.ExternalId, secondAlias.ExternalId);
+        Assert.NotEqual(firstAlias.Borrower, secondAlias.Borrower);
+    }
 }

@@ -110,6 +110,43 @@ public sealed class LibragoDatabase
         await transaction.CommitAsync(cancellationToken);
     }
 
+    public async Task RemoveUnconfiguredAccountsAsync(
+        IEnumerable<string> configuredAccountIds,
+        CancellationToken cancellationToken)
+    {
+        var accountIds = configuredAccountIds.ToArray();
+        await using var connection = await OpenConnectionAsync(cancellationToken);
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+
+        foreach (var table in new[] { "loans", "account_sync" })
+        {
+            await using var command = connection.CreateCommand();
+            command.Transaction = transaction;
+
+            if (accountIds.Length == 0)
+            {
+                command.CommandText = $"DELETE FROM {table};";
+            }
+            else
+            {
+                var parameterNames = accountIds
+                    .Select((_, index) => $"$accountId{index}")
+                    .ToArray();
+                command.CommandText =
+                    $"DELETE FROM {table} WHERE account_id NOT IN ({string.Join(", ", parameterNames)});";
+
+                for (var index = 0; index < accountIds.Length; index++)
+                {
+                    command.Parameters.AddWithValue(parameterNames[index], accountIds[index]);
+                }
+            }
+
+            await command.ExecuteNonQueryAsync(cancellationToken);
+        }
+
+        await transaction.CommitAsync(cancellationToken);
+    }
+
     public async Task MarkAccountFailedAsync(
         LibraryAccountOptions account,
         LibraryNetworkDescriptor network,

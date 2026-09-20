@@ -66,6 +66,54 @@ public sealed class LoanSynchronizationServiceTests
         }
     }
 
+    [Fact]
+    public async Task RemovingAnAccountRemovesItsStoredLoansAndSynchronizationState()
+    {
+        var temporaryDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "librago-tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporaryDirectory);
+
+        try
+        {
+            var currentAccount = Account("current-account");
+            var removedAccount = Account("removed-account");
+            var options = Options.Create(new LibragoOptions
+            {
+                DatabasePath = Path.Combine(temporaryDirectory, "test.db")
+            });
+            var database = new LibragoDatabase(options, new TestWebHostEnvironment(temporaryDirectory));
+            var network = new LibraryNetworkDescriptor("Synthetic", "synthetic-network", "Synthetic network");
+            var refreshedAt = new DateTimeOffset(2026, 9, 13, 8, 0, 0, TimeSpan.Zero);
+            await database.InitializeAsync(CancellationToken.None);
+            await database.ReplaceAccountLoansAsync(
+                currentAccount,
+                network,
+                [Snapshot("current", "Current")],
+                refreshedAt,
+                CancellationToken.None);
+            await database.ReplaceAccountLoansAsync(
+                removedAccount,
+                network,
+                [Snapshot("removed", "Removed")],
+                refreshedAt,
+                CancellationToken.None);
+
+            await database.RemoveUnconfiguredAccountsAsync(
+                [currentAccount.AccountId],
+                CancellationToken.None);
+
+            var loans = await database.GetLoansAsync(CancellationToken.None);
+            Assert.Single(loans);
+            Assert.Equal(currentAccount.AccountId, loans[0].AccountId);
+        }
+        finally
+        {
+            Directory.Delete(temporaryDirectory, recursive: true);
+        }
+    }
+
     private static LoanSynchronizationService CreateService(
         IOptions<LibragoOptions> options,
         ILibraryConnector connector,

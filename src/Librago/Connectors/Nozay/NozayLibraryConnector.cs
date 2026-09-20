@@ -154,7 +154,8 @@ public sealed class NozayLibraryConnector : ILibraryConnector
                 values,
                 renewalHref,
                 titleHref,
-                account.Borrower));
+                account.Borrower,
+                account.BorrowerAliases));
         }
 
         return loans;

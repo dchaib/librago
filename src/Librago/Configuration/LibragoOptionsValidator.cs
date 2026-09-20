@@ -59,6 +59,14 @@ public sealed class LibragoOptionsValidator : IValidateOptions<LibragoOptions>
                 return ValidateOptionsResult.Fail(
                     $"Nantes account '{account.AccountId}' requires a borrower display name.");
             }
+
+            if (account.BorrowerAliases.Any(alias =>
+                    string.IsNullOrWhiteSpace(alias.Key) ||
+                    string.IsNullOrWhiteSpace(alias.Value)))
+            {
+                return ValidateOptionsResult.Fail(
+                    $"Library account '{account.AccountId}' contains an empty borrower alias.");
+            }
         }
 
         var duplicateId = options.Accounts

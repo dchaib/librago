@@ -44,6 +44,12 @@ The initial connector exploration established the following source capabilities:
 
 Version 0.1 therefore treats author, material type, branch, and borrowing date as optional. A missing optional value must not prevent an otherwise valid loan from being synchronized.
 
+## Borrower display names
+
+Nozay may display a full borrower name while another network is configured with a shorter household display name. A configured Nozay account can provide `BorrowerAliases` to map a displayed Nozay name to the canonical name shown and filtered in Librago. Alias matching ignores case and repeated whitespace. An unmatched source name is preserved so that unexpected household activity remains visible.
+
+When Nozay parent access lists the whole family, only that parent account should be configured for synchronization. This avoids duplicate records from separately configured child accounts.
+
 ## Default sort
 
 Loans are sorted by due date ascending.

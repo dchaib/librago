@@ -86,6 +86,7 @@ public sealed partial class LoanSynchronizationService(
             accounts[0].Connector.Network.DisplayName,
             attemptedAt,
             result,
+            accounts.Select(account => account.Account.AccountId).ToArray(),
             cancellationToken);
     }
 

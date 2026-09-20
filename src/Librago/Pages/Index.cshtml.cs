@@ -52,7 +52,12 @@ public sealed class IndexModel(
         var now = TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), timeZone);
         Today = DateOnly.FromDateTime(now.DateTime);
 
-        var allLoans = await database.GetLoansAsync(cancellationToken);
+        var configuredAccountIds = options.Value.Accounts
+            .Select(account => account.AccountId)
+            .ToHashSet(StringComparer.OrdinalIgnoreCase);
+        var allLoans = (await database.GetLoansAsync(cancellationToken))
+            .Where(loan => configuredAccountIds.Contains(loan.AccountId))
+            .ToArray();
         var storedStates = await database.GetNetworkStatesAsync(cancellationToken);
         var configuredNetworks = options.Value.Accounts
             .Select(account => connectorResolver.Resolve(account.Network).Network)
@@ -100,7 +105,13 @@ public sealed class IndexModel(
                     state.NetworkKey,
                     network.Key,
                     StringComparison.Ordinal)),
-                now))
+                now,
+                options.Value.Accounts
+                    .Where(account => string.Equals(
+                        connectorResolver.Resolve(account.Network).Network.Key,
+                        network.Key,
+                        StringComparison.OrdinalIgnoreCase))
+                    .Select(account => account.AccountId)))
             .ToArray();
     }
 }
@@ -110,21 +121,27 @@ public sealed record NetworkStatusViewModel(
     string NetworkName,
     DateTimeOffset? LastCompleteSuccessAt,
     SynchronizationResult? Result,
+    bool HasCurrentAccountCoverage,
     bool IsStale)
 {
     public bool NeedsAttention =>
-        LastCompleteSuccessAt is null || IsStale || Result is not SynchronizationResult.Success;
+        LastCompleteSuccessAt is null ||
+        !HasCurrentAccountCoverage ||
+        IsStale ||
+        Result is not SynchronizationResult.Success;
 
     public static NetworkStatusViewModel Create(
         string networkKey,
         string networkName,
         NetworkSynchronizationState? state,
-        DateTimeOffset now) =>
+        DateTimeOffset now,
+        IEnumerable<string> accountIds) =>
         new(
             networkKey,
             networkName,
             state?.LastCompleteSuccessAt,
             state?.Result,
+            state?.CoversAccounts(accountIds) ?? false,
             state?.LastCompleteSuccessAt is { } lastSuccess &&
             now.ToUniversalTime() - lastSuccess.ToUniversalTime() > TimeSpan.FromHours(24));
 }

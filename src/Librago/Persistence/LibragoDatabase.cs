@@ -1,4 +1,5 @@
 using System.Globalization;
+using System.Text.Json;
 using Librago.Configuration;
 using Librago.Connectors;
 using Librago.Loans;
@@ -110,43 +111,6 @@ public sealed class LibragoDatabase
         await transaction.CommitAsync(cancellationToken);
     }
 
-    public async Task RemoveUnconfiguredAccountsAsync(
-        IEnumerable<string> configuredAccountIds,
-        CancellationToken cancellationToken)
-    {
-        var accountIds = configuredAccountIds.ToArray();
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
-
-        foreach (var table in new[] { "loans", "account_sync" })
-        {
-            await using var command = connection.CreateCommand();
-            command.Transaction = transaction;
-
-            if (accountIds.Length == 0)
-            {
-                command.CommandText = $"DELETE FROM {table};";
-            }
-            else
-            {
-                var parameterNames = accountIds
-                    .Select((_, index) => $"$accountId{index}")
-                    .ToArray();
-                command.CommandText =
-                    $"DELETE FROM {table} WHERE account_id NOT IN ({string.Join(", ", parameterNames)});";
-
-                for (var index = 0; index < accountIds.Length; index++)
-                {
-                    command.Parameters.AddWithValue(parameterNames[index], accountIds[index]);
-                }
-            }
-
-            await command.ExecuteNonQueryAsync(cancellationToken);
-        }
-
-        await transaction.CommitAsync(cancellationToken);
-    }
-
     public async Task MarkAccountFailedAsync(
         LibraryAccountOptions account,
         LibraryNetworkDescriptor network,
@@ -175,6 +139,7 @@ public sealed class LibragoDatabase
         string networkName,
         DateTimeOffset attemptedAt,
         SynchronizationResult result,
+        IReadOnlyCollection<string> accountIds,
         CancellationToken cancellationToken)
     {
         await using var connection = await OpenConnectionAsync(cancellationToken);
@@ -186,12 +151,14 @@ public sealed class LibragoDatabase
                 network_name,
                 last_attempt_at,
                 last_complete_success_at,
+                last_complete_success_account_ids,
                 result)
             VALUES (
                 $networkKey,
                 $networkName,
                 $attemptedAt,
                 CASE WHEN $result = 'Success' THEN $attemptedAt ELSE NULL END,
+                CASE WHEN $result = 'Success' THEN $accountIds ELSE NULL END,
                 $result)
             ON CONFLICT(network_key) DO UPDATE SET
                 network_name = excluded.network_name,
@@ -200,12 +167,17 @@ public sealed class LibragoDatabase
                     WHEN excluded.result = 'Success' THEN excluded.last_attempt_at
                     ELSE network_sync.last_complete_success_at
                 END,
+                last_complete_success_account_ids = CASE
+                    WHEN excluded.result = 'Success' THEN excluded.last_complete_success_account_ids
+                    ELSE network_sync.last_complete_success_account_ids
+                END,
                 result = excluded.result;
             """;
         command.Parameters.AddWithValue("$networkKey", networkKey);
         command.Parameters.AddWithValue("$networkName", networkName);
         command.Parameters.AddWithValue("$attemptedAt", FormatTimestamp(attemptedAt));
         command.Parameters.AddWithValue("$result", result.ToString());
+        command.Parameters.AddWithValue("$accountIds", SerializeAccountIds(accountIds));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 
@@ -262,7 +234,13 @@ public sealed class LibragoDatabase
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            SELECT network_key, network_name, last_attempt_at, last_complete_success_at, result
+            SELECT
+                network_key,
+                network_name,
+                last_attempt_at,
+                last_complete_success_at,
+                last_complete_success_account_ids,
+                result
             FROM network_sync
             ORDER BY network_name;
             """;
@@ -277,7 +255,10 @@ public sealed class LibragoDatabase
                 reader.IsDBNull(3)
                     ? null
                     : DateTimeOffset.Parse(reader.GetString(3), CultureInfo.InvariantCulture),
-                Enum.Parse<SynchronizationResult>(reader.GetString(4))));
+                reader.IsDBNull(4)
+                    ? null
+                    : DeserializeAccountIds(reader.GetString(4)),
+                Enum.Parse<SynchronizationResult>(reader.GetString(5))));
         }
 
         return states;
@@ -359,6 +340,7 @@ public sealed class LibragoDatabase
                 network_name TEXT NOT NULL,
                 last_attempt_at TEXT NOT NULL,
                 last_complete_success_at TEXT NULL,
+                last_complete_success_account_ids TEXT NULL,
                 result TEXT NOT NULL
             );
 
@@ -438,4 +420,13 @@ public sealed class LibragoDatabase
 
     private static string FormatTimestamp(DateTimeOffset value) =>
         value.ToUniversalTime().ToString("O", CultureInfo.InvariantCulture);
+
+    private static string SerializeAccountIds(IEnumerable<string> accountIds) =>
+        JsonSerializer.Serialize(accountIds
+            .OrderBy(accountId => accountId, StringComparer.OrdinalIgnoreCase)
+            .ToArray());
+
+    private static string[] DeserializeAccountIds(string value) =>
+        JsonSerializer.Deserialize<string[]>(value) ??
+        throw new InvalidOperationException("A network synchronization state has invalid account ids.");
 }

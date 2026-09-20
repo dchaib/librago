@@ -51,10 +51,6 @@ var app = builder.Build();
 
 var database = app.Services.GetRequiredService<LibragoDatabase>();
 await database.InitializeAsync(CancellationToken.None);
-await database.RemoveUnconfiguredAccountsAsync(
-    app.Services.GetRequiredService<IOptions<LibragoOptions>>().Value.Accounts
-        .Select(account => account.AccountId),
-    CancellationToken.None);
 
 if (!app.Environment.IsDevelopment())
 {

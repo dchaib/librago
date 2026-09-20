@@ -26,6 +26,9 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
         var client = Factory.CreateClient();
         await SeedLoansAsync();
 
+        var unconfigured = await client.GetStringAsync("/");
+        Assert.DoesNotContain("Removed account loan", unconfigured);
+
         var byNetwork = await client.GetStringAsync("/?SelectedNetwork=nozay");
         Assert.Contains("Nozay Alpha", byNetwork);
         Assert.Contains("Nozay Beta", byNetwork);
@@ -96,6 +99,12 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
         await SeedAccountAsync(
             database,
             resolver,
+            Account("removed-account", "Nozay", ""),
+            [Snapshot("removed", "Lecteur supprimé", "Removed account loan")],
+            refreshedAt);
+        await SeedAccountAsync(
+            database,
+            resolver,
             Account("nozay-account", "Nozay", ""),
             [
                 Snapshot("nozay-alpha", "Lecteur Alpha", "Nozay Alpha"),
@@ -123,6 +132,7 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
             network.DisplayName,
             refreshedAt,
             SynchronizationResult.Success,
+            [account.AccountId],
             CancellationToken.None);
     }
 

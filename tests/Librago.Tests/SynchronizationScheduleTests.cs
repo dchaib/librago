@@ -10,7 +10,7 @@ public sealed class SynchronizationScheduleTests
     public void GetInitialDelayReturnsZeroWhenAConfiguredNetworkHasNoState()
     {
         var delay = SynchronizationSchedule.GetInitialDelay(
-            ["nantes", "nozay"],
+            [Network("nantes"), Network("nozay")],
             [State("nantes", Now.AddHours(-1))],
             TimeSpan.FromHours(6),
             Now);
@@ -22,7 +22,7 @@ public sealed class SynchronizationScheduleTests
     public void GetInitialDelayReturnsZeroWhenThePreviousAttemptIsDue()
     {
         var delay = SynchronizationSchedule.GetInitialDelay(
-            ["nantes"],
+            [Network("nantes")],
             [State("nantes", Now.AddHours(-6))],
             TimeSpan.FromHours(6),
             Now);
@@ -34,7 +34,7 @@ public sealed class SynchronizationScheduleTests
     public void GetInitialDelayWaitsUntilTheEarliestConfiguredNetworkIsDue()
     {
         var delay = SynchronizationSchedule.GetInitialDelay(
-            ["nantes", "nozay"],
+            [Network("nantes"), Network("nozay")],
             [State("nantes", Now.AddHours(-1)), State("nozay", Now.AddHours(-2))],
             TimeSpan.FromHours(6),
             Now);
@@ -43,5 +43,26 @@ public sealed class SynchronizationScheduleTests
     }
 
     private static NetworkSynchronizationState State(string networkKey, DateTimeOffset attemptedAt) =>
-        new(networkKey, networkKey, attemptedAt, attemptedAt, SynchronizationResult.Success);
+        new(networkKey, networkKey, attemptedAt, attemptedAt, [networkKey], SynchronizationResult.Success);
+
+    [Fact]
+    public void GetInitialDelayReturnsZeroWhenAccountsChangedSinceLastCompleteSuccess()
+    {
+        var delay = SynchronizationSchedule.GetInitialDelay(
+            [new ConfiguredNetwork("nantes", ["account-a", "account-b"])],
+            [new NetworkSynchronizationState(
+                "nantes",
+                "Nantes",
+                Now.AddHours(-1),
+                Now.AddHours(-1),
+                ["account-a"],
+                SynchronizationResult.Success)],
+            TimeSpan.FromHours(6),
+            Now);
+
+        Assert.Equal(TimeSpan.Zero, delay);
+    }
+
+    private static ConfiguredNetwork Network(string networkKey) =>
+        new(networkKey, [networkKey]);
 }

@@ -3,7 +3,7 @@ namespace Librago.Synchronization;
 internal static class SynchronizationSchedule
 {
     public static TimeSpan GetInitialDelay(
-        IEnumerable<string> configuredNetworkKeys,
+        IEnumerable<ConfiguredNetwork> configuredNetworks,
         IReadOnlyCollection<NetworkSynchronizationState> states,
         TimeSpan interval,
         DateTimeOffset now)
@@ -13,9 +13,10 @@ internal static class SynchronizationSchedule
             StringComparer.OrdinalIgnoreCase);
         DateTimeOffset? nextAttemptAt = null;
 
-        foreach (var networkKey in configuredNetworkKeys.Distinct(StringComparer.OrdinalIgnoreCase))
+        foreach (var configuredNetwork in configuredNetworks)
         {
-            if (!statesByNetwork.TryGetValue(networkKey, out var state))
+            if (!statesByNetwork.TryGetValue(configuredNetwork.NetworkKey, out var state) ||
+                !state.CoversAccounts(configuredNetwork.AccountIds))
             {
                 return TimeSpan.Zero;
             }

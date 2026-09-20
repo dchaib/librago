@@ -70,7 +70,7 @@ public sealed class LoanSynchronizationServiceTests
     }
 
     [Fact]
-    public async Task RemovingAnAccountRemovesItsStoredLoansAndSynchronizationState()
+    public async Task StoredLoansRemainAvailableWhenAnAccountIsNoLongerConfigured()
     {
         var temporaryDirectory = Path.Combine(
             Path.GetTempPath(),
@@ -80,7 +80,6 @@ public sealed class LoanSynchronizationServiceTests
 
         try
         {
-            var currentAccount = Account("current-account");
             var removedAccount = Account("removed-account");
             var options = Options.Create(new LibragoOptions
             {
@@ -91,25 +90,15 @@ public sealed class LoanSynchronizationServiceTests
             var refreshedAt = new DateTimeOffset(2026, 9, 13, 8, 0, 0, TimeSpan.Zero);
             await database.InitializeAsync(CancellationToken.None);
             await database.ReplaceAccountLoansAsync(
-                currentAccount,
-                network,
-                [Snapshot("current", "Current")],
-                refreshedAt,
-                CancellationToken.None);
-            await database.ReplaceAccountLoansAsync(
                 removedAccount,
                 network,
                 [Snapshot("removed", "Removed")],
                 refreshedAt,
                 CancellationToken.None);
 
-            await database.RemoveUnconfiguredAccountsAsync(
-                [currentAccount.AccountId],
-                CancellationToken.None);
-
             var loans = await database.GetLoansAsync(CancellationToken.None);
             Assert.Single(loans);
-            Assert.Equal(currentAccount.AccountId, loans[0].AccountId);
+            Assert.Equal(removedAccount.AccountId, loans[0].AccountId);
         }
         finally
         {

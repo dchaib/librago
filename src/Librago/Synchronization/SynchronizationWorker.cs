@@ -33,13 +33,18 @@ public sealed partial class SynchronizationWorker(
 
     private async Task<TimeSpan> GetInitialDelayAsync(CancellationToken cancellationToken)
     {
-        var configuredNetworkKeys = options.Value.Accounts
-            .Select(account => connectorResolver.Resolve(account.Network).Network.Key)
+        var configuredNetworks = options.Value.Accounts
+            .GroupBy(
+                account => connectorResolver.Resolve(account.Network).Network.Key,
+                StringComparer.OrdinalIgnoreCase)
+            .Select(group => new ConfiguredNetwork(
+                group.Key,
+                group.Select(account => account.AccountId).ToArray()))
             .ToArray();
         var states = await database.GetNetworkStatesAsync(cancellationToken);
 
         return SynchronizationSchedule.GetInitialDelay(
-            configuredNetworkKeys,
+            configuredNetworks,
             states,
             options.Value.SynchronizationInterval,
             timeProvider.GetUtcNow());

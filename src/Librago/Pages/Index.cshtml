@@ -30,6 +30,10 @@
         }
         else
         {
+            @if (!status.HasCurrentAccountCoverage)
+            {
+                <span>La configuration des comptes a changé depuis la dernière actualisation complète.</span>
+            }
             @if (status.Result is SynchronizationResult.Partial)
             {
                 <span>La dernière synchronisation est partielle. Les prêts précédents sont conservés.</span>

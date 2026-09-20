@@ -23,6 +23,28 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.4xx
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and validate source
+        run: |
+          dotnet restore Librago.slnx --locked-mode
+          dotnet format Librago.slnx --verify-no-changes --no-restore
+          dotnet build Librago.slnx --configuration Release --no-restore
+          dotnet test Librago.slnx --configuration Release --no-build --no-restore
+
+      - name: Verify artifact secret exclusion
+        shell: pwsh
+        run: ./scripts/verify-artifact-secrets.ps1 -Image librago:release-check
+
+      - name: Verify hardened container runtime
+        shell: pwsh
+        run: ./scripts/verify-container.ps1 -Image librago:release-check
+
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v4
         with:

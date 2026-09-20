@@ -102,6 +102,10 @@ Conceptually, Librago should distinguish:
 
 On startup, Librago synchronizes immediately when a configured network has no previous attempt or when its previous attempt is due according to the configured interval. Otherwise, it waits until the next due synchronization. This prevents application restarts from causing unnecessary upstream requests.
 
+A network's last complete successful synchronization applies only to the exact set of configured accounts that completed it. Adding, removing, or restoring an account requires a new complete synchronization before the network is presented as fully current.
+
+When an account is removed from configuration, its stored loans are hidden and are no longer synchronized. They are retained locally so that a temporary configuration mistake does not destroy the last known state. Re-adding the same stable `AccountId` requires a new synchronization before its data is treated as current.
+
 ## Stale data
 
 For version 0.1, network data is stale when there has been no complete successful synchronization for more than 24 hours.

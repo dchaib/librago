@@ -40,6 +40,8 @@ dotnet run --project src/Librago
 
 Edit the ignored `src/Librago/appsettings.Local.json` file with local account configuration before starting the application. Never commit this file or paste its contents into an issue.
 
+This file is intentionally excluded from build and container artifacts. Supply it as a read-only external configuration file when deploying the container.
+
 Each entry under `Librago:Accounts` has a stable local `AccountId`, a `Network` (`Nantes` or `Nozay`), optional borrower display name, and the library credentials. `AccountId` is not a library-issued identifier; choose an opaque local value such as `nantes-reader-a`.
 
 For a family Nozay account, configure that parent account only. Its optional `BorrowerAliases` object maps the borrower names displayed by Nozay to the display names used by Librago. Matching ignores case and repeated whitespace; an unmatched name stays unchanged. This prevents duplicate borrowers when another network uses a shorter configured display name.

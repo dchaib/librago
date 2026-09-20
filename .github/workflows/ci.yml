@@ -36,5 +36,10 @@ jobs:
       - name: Test
         run: dotnet test Librago.slnx --configuration Release --no-build --no-restore --collect:"XPlat Code Coverage"
 
-      - name: Build container image
-        run: docker build --tag librago:ci .
+      - name: Verify artifact secret exclusion
+        shell: pwsh
+        run: ./scripts/verify-artifact-secrets.ps1 -Image librago:ci
+
+      - name: Verify hardened container runtime
+        shell: pwsh
+        run: ./scripts/verify-container.ps1 -Image librago:ci

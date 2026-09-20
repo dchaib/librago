@@ -63,6 +63,7 @@ public sealed class NantesLibraryConnector : ILibraryConnector
                 if (loans.Count != page.Total)
                 {
                     throw new LibraryConnectorException(
+                        LibraryConnectorFailureKind.UnexpectedResponse,
                         "The Nantes loans response ended before all reported loans were returned.");
                 }
 
@@ -85,14 +86,15 @@ public sealed class NantesLibraryConnector : ILibraryConnector
                 cancellationToken);
             return string.IsNullOrWhiteSpace(settings?.SiteKey)
                 ? throw new LibraryConnectorException(
+                    LibraryConnectorFailureKind.UnexpectedResponse,
                     "The Nantes settings response did not contain a site key.")
                 : settings.SiteKey;
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
             throw new LibraryConnectorException(
-                "The Nantes settings response was not valid JSON in the expected format.",
-                exception);
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nantes settings response was not valid JSON in the expected format.");
         }
     }
 
@@ -123,14 +125,15 @@ public sealed class NantesLibraryConnector : ILibraryConnector
                 cancellationToken);
             return string.IsNullOrWhiteSpace(authentication?.Token)
                 ? throw new LibraryConnectorException(
+                    LibraryConnectorFailureKind.Authentication,
                     "Nantes authentication did not return a session token.")
                 : authentication.Token;
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
             throw new LibraryConnectorException(
-                "The Nantes authentication response was not valid JSON in the expected format.",
-                exception);
+                LibraryConnectorFailureKind.Authentication,
+                "The Nantes authentication response was not valid JSON in the expected format.");
         }
     }
 
@@ -146,6 +149,7 @@ public sealed class NantesLibraryConnector : ILibraryConnector
 
         await response.Content.LoadIntoBufferAsync(cancellationToken);
         throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.Upstream,
             $"{operation} failed with HTTP status {(int)response.StatusCode}.");
     }
 

@@ -41,11 +41,11 @@ public sealed class NozayLibraryConnector : ILibraryConnector
             step = "reading the loans";
             return await ReadLoansAsync(page, account, cancellationToken);
         }
-        catch (PlaywrightException exception)
+        catch (PlaywrightException)
         {
             throw new LibraryConnectorException(
-                $"The Nozay portal failed while {step}.",
-                exception);
+                LibraryConnectorFailureKind.Upstream,
+                $"The Nozay portal failed while {step}.");
         }
     }
 
@@ -110,6 +110,7 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         if (response is not null && response.Status >= 400)
         {
             throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.Upstream,
                 $"The Nozay portal returned HTTP status {response.Status}.");
         }
     }
@@ -123,9 +124,13 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         if (await table.CountAsync() == 0)
         {
             var loginStillVisible = await page.Locator("input[name='username']").CountAsync() > 0;
-            throw new LibraryConnectorException(loginStillVisible
-                ? "Nozay authentication did not reach the account page."
-                : "The Nozay loans table was not found.");
+            throw new LibraryConnectorException(
+                loginStillVisible
+                    ? LibraryConnectorFailureKind.Authentication
+                    : LibraryConnectorFailureKind.UnexpectedResponse,
+                loginStillVisible
+                    ? "Nozay authentication did not reach the account page."
+                    : "The Nozay loans table was not found.");
         }
 
         var rows = table.Locator("tbody tr");

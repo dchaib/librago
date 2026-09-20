@@ -5,6 +5,7 @@ using Librago.Loans;
 using Librago.Synchronization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
+using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Logging.Abstractions;
 using Microsoft.Extensions.Options;
 
@@ -46,7 +47,9 @@ public sealed class LoanSynchronizationServiceTests
 
             clock.UtcNow = clock.UtcNow.AddHours(1);
             connector.Handler = account => account.AccountId == "account-b"
-                ? throw new LibraryConnectorException("Synthetic failure.")
+                ? throw new LibraryConnectorException(
+                    LibraryConnectorFailureKind.InvalidData,
+                    "Synthetic failure.")
                 : [Snapshot(account.AccountId, "Updated")];
 
             await service.SynchronizeAllAsync(CancellationToken.None);
@@ -107,6 +110,50 @@ public sealed class LoanSynchronizationServiceTests
             var loans = await database.GetLoansAsync(CancellationToken.None);
             Assert.Single(loans);
             Assert.Equal(currentAccount.AccountId, loans[0].AccountId);
+        }
+        finally
+        {
+            Directory.Delete(temporaryDirectory, recursive: true);
+        }
+    }
+
+    [Fact]
+    public async Task DoesNotLogConnectorExceptionDetails()
+    {
+        var temporaryDirectory = Path.Combine(
+            Path.GetTempPath(),
+            "librago-tests",
+            Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temporaryDirectory);
+
+        try
+        {
+            var account = Account("account-a");
+            var options = Options.Create(new LibragoOptions
+            {
+                DatabasePath = Path.Combine(temporaryDirectory, "test.db"),
+                Accounts = [account]
+            });
+            var database = new LibragoDatabase(options, new TestWebHostEnvironment(temporaryDirectory));
+            await database.InitializeAsync(CancellationToken.None);
+            var logger = new CapturingLogger<LoanSynchronizationService>();
+            var service = new LoanSynchronizationService(
+                options,
+                new LibraryConnectorResolver([
+                    new FakeConnector(_ => throw new LibraryConnectorException(
+                        LibraryConnectorFailureKind.Authentication,
+                        "SYNTHETIC_AUDIT_PASSWORD"))
+                ]),
+                database,
+                TimeProvider.System,
+                logger);
+
+            await service.SynchronizeAllAsync(CancellationToken.None);
+
+            var message = Assert.Single(logger.Messages);
+            Assert.DoesNotContain("SYNTHETIC_AUDIT_PASSWORD", message);
+            Assert.Contains("Authentication", message);
+            Assert.Contains(account.AccountId, message);
         }
         finally
         {
@@ -186,5 +233,26 @@ public sealed class LoanSynchronizationServiceTests
         public string ContentRootPath { get; set; } = contentRootPath;
 
         public IFileProvider ContentRootFileProvider { get; set; } = new NullFileProvider();
+    }
+
+    private sealed class CapturingLogger<T> : ILogger<T>
+    {
+        public List<string> Messages { get; } = [];
+
+        public IDisposable? BeginScope<TState>(TState state)
+            where TState : notnull => null;
+
+        public bool IsEnabled(LogLevel logLevel) => true;
+
+        public void Log<TState>(
+            LogLevel logLevel,
+            EventId eventId,
+            TState state,
+            Exception? exception,
+            Func<TState, Exception?, string> formatter)
+        {
+            Messages.Add(formatter(state, exception));
+            Assert.Null(exception);
+        }
     }
 }

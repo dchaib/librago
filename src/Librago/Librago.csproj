@@ -12,6 +12,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <Content Update="appsettings.Local.json"
+             CopyToOutputDirectory="Never"
+             CopyToPublishDirectory="Never" />
+  </ItemGroup>
+
+  <ItemGroup>
     <InternalsVisibleTo Include="Librago.Tests" />
   </ItemGroup>
 </Project>

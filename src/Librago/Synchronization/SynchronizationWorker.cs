@@ -59,15 +59,15 @@ public sealed partial class SynchronizationWorker(
         }
         catch (Exception exception)
         {
-            LogCycleFailure(logger, exception);
+            LogCycleFailure(logger, exception.GetType().Name);
         }
     }
 
     [LoggerMessage(
         EventId = 1003,
         Level = LogLevel.Error,
-        Message = "The synchronization cycle failed unexpectedly.")]
-    private static partial void LogCycleFailure(ILogger logger, Exception exception);
+        Message = "The synchronization cycle failed unexpectedly ({ExceptionType}).")]
+    private static partial void LogCycleFailure(ILogger logger, string exceptionType);
 
     [LoggerMessage(
         EventId = 1004,

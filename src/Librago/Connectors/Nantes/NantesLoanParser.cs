@@ -17,16 +17,18 @@ internal static class NantesLoanParser
         {
             response = JsonSerializer.Deserialize<NantesLoansResponse>(json, JsonOptions);
         }
-        catch (JsonException exception)
+        catch (JsonException)
         {
             throw new LibraryConnectorException(
-                "The Nantes loans response was not valid JSON in the expected format.",
-                exception);
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nantes loans response was not valid JSON in the expected format.");
         }
 
         if (response is null || response.Total is null or < 0)
         {
-            throw new LibraryConnectorException("The Nantes loans response was incomplete.");
+            throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nantes loans response was incomplete.");
         }
 
         if (response.Items is null)
@@ -36,7 +38,9 @@ internal static class NantesLoanParser
                 return new NantesLoanPage([], 0);
             }
 
-            throw new LibraryConnectorException("The Nantes loans response did not contain its items.");
+            throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nantes loans response did not contain its items.");
         }
 
         var loans = response.Items.Select(item => Map(item, borrower)).ToArray();
@@ -46,6 +50,7 @@ internal static class NantesLoanParser
     private static LoanSnapshot Map(NantesLoanItem item, string borrower)
     {
         var data = item.Data ?? throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.InvalidData,
             "A Nantes loan did not contain its data object.");
         var title = Required(data.Title, "title");
         var dueOn = ParseDate(Required(data.ReturnDate, "return date"), "return date");
@@ -79,12 +84,16 @@ internal static class NantesLoanParser
             return date;
         }
 
-        throw new LibraryConnectorException($"A Nantes loan contained an invalid {field}.");
+        throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.InvalidData,
+            $"A Nantes loan contained an invalid {field}.");
     }
 
     private static string Required(string? value, string field) =>
         string.IsNullOrWhiteSpace(value)
-            ? throw new LibraryConnectorException($"A Nantes loan did not contain a {field}.")
+            ? throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.InvalidData,
+                $"A Nantes loan did not contain a {field}.")
             : value.Trim();
 
     private static string? Clean(string? value) =>

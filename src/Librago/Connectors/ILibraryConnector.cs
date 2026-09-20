@@ -12,15 +12,21 @@ public interface ILibraryConnector
         CancellationToken cancellationToken);
 }
 
+public enum LibraryConnectorFailureKind
+{
+    Authentication,
+    Upstream,
+    UnexpectedResponse,
+    InvalidData
+}
+
 public sealed class LibraryConnectorException : Exception
 {
-    public LibraryConnectorException(string message)
+    public LibraryConnectorException(LibraryConnectorFailureKind failureKind, string message)
         : base(message)
     {
+        FailureKind = failureKind;
     }
 
-    public LibraryConnectorException(string message, Exception innerException)
-        : base(message, innerException)
-    {
-    }
+    public LibraryConnectorFailureKind FailureKind { get; }
 }

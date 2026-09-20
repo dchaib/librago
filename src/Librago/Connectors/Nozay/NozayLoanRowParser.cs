@@ -16,13 +16,16 @@ internal static partial class NozayLoanRowParser
         if (cells.Count < 8)
         {
             throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.InvalidData,
                 "A Nozay loan row did not contain the expected eight columns.");
         }
 
         var sourceBorrower = Clean(cells[0]) ?? Clean(configuredBorrower) ?? throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.InvalidData,
             "A Nozay loan did not identify its borrower.");
         var borrower = ResolveBorrowerAlias(sourceBorrower, borrowerAliases);
         var title = Clean(cells[3]) ?? throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.InvalidData,
             "A Nozay loan did not contain a title.");
         var dueOn = ParseDueDate(cells[6]);
         var externalId = ExtractOpaqueId(renewalHref, RenewalIdRegex())
@@ -57,7 +60,9 @@ internal static partial class NozayLoanRowParser
             return date;
         }
 
-        throw new LibraryConnectorException("A Nozay loan contained an invalid return date.");
+        throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.InvalidData,
+            "A Nozay loan contained an invalid return date.");
     }
 
     private static string? ExtractOpaqueId(string? href, Regex regex)

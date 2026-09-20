@@ -66,7 +66,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
         var loans = await NozayLibraryConnector.ReadAllLoansAsync(page, Account(), CancellationToken.None);
 
         Assert.Equal(2, loans.Count);
-        Assert.All(loans, loan => Assert.StartsWith("synthetic-", loan.ExternalId));
+        Assert.All(loans, loan => Assert.StartsWith("nozay-loan:", loan.ExternalId));
     }
 
     public async Task InitializeAsync()

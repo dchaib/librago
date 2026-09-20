@@ -28,13 +28,17 @@ internal static partial class NozayLoanRowParser
             LibraryConnectorFailureKind.InvalidData,
             "A Nozay loan did not contain a title.");
         var dueOn = ParseDueDate(cells[6]);
-        var externalId = ExtractOpaqueId(renewalHref, RenewalIdRegex())
-            ?? ExtractOpaqueId(titleHref, NoticeIdRegex())
-            ?? ExternalLoanId.FromFallback(
+        var loanId = ExtractOpaqueId(renewalHref, RenewalIdRegex());
+        var noticeId = ExtractOpaqueId(titleHref, NoticeIdRegex());
+        var externalId = loanId is null
+            ? ExternalLoanId.FromFallback(
                 sourceBorrower,
+                noticeId,
                 title,
                 cells[4],
-                dueOn.ToString("O", CultureInfo.InvariantCulture));
+                cells[5],
+                dueOn.ToString("O", CultureInfo.InvariantCulture))
+            : $"nozay-loan:{loanId}";
 
         return new LoanSnapshot(
             externalId,
@@ -45,6 +49,40 @@ internal static partial class NozayLoanRowParser
             Clean(cells[5]),
             null,
             dueOn);
+    }
+
+    public static IReadOnlyList<LoanSnapshot> AssignFallbackOccurrences(
+        IReadOnlyList<LoanSnapshot> loans)
+    {
+        var snapshots = loans.ToArray();
+
+        foreach (var group in snapshots
+                     .Select((loan, index) => new { Loan = loan, Index = index })
+                     .GroupBy(item => item.Loan.ExternalId, StringComparer.Ordinal))
+        {
+            if (group.Count() == 1)
+            {
+                continue;
+            }
+
+            if (!group.Key.StartsWith("generated:", StringComparison.Ordinal))
+            {
+                throw new LibraryConnectorException(
+                    LibraryConnectorFailureKind.UnexpectedResponse,
+                    "The Nozay loans response contained the same loan id more than once.");
+            }
+
+            var occurrence = 1;
+            foreach (var item in group)
+            {
+                snapshots[item.Index] = item.Loan with
+                {
+                    ExternalId = $"{item.Loan.ExternalId}:occurrence:{occurrence++}"
+                };
+            }
+        }
+
+        return snapshots;
     }
 
     private static DateOnly ParseDueDate(string value)

@@ -133,7 +133,7 @@ public sealed class NozayLibraryConnector : ILibraryConnector
                 "The Nozay loans table did not contain its expected number of loans.");
         }
 
-        return loansPage.Loans;
+        return NozayLoanRowParser.AssignFallbackOccurrences(loansPage.Loans);
     }
 
     internal static async Task<IReadOnlyList<LoanSnapshot>> ReadAllLoansAsync(
@@ -175,7 +175,7 @@ public sealed class NozayLibraryConnector : ILibraryConnector
                 "The Nozay loans pages did not contain their expected number of loans.");
         }
 
-        return loans;
+        return NozayLoanRowParser.AssignFallbackOccurrences(loans);
     }
 
     private static async Task<NozayLoansPage> ReadLoansPageAsync(

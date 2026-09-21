@@ -6,20 +6,9 @@ Questions should be removed once answered and, when relevant, the resulting deci
 
 ## Technical spike
 
-### How does account synchronization fail?
+### Does Nozay always expose a reliable total number of loans?
 
-Determine whether failures can occur independently per account and what can be reliably detected.
-
-### What is the source behavior for zero loans?
-
-Verify that connectors can distinguish:
-- a successful response with zero loans;
-- authentication/session failure;
-- unexpected or partial response.
-
-### What synchronization cadence is appropriate?
-
-Version 0.1 requires automatic synchronization, but cadence is not yet specified.
+Nozay validates a reported total when the loans table provides one, but a visible table without a total is currently accepted. Verify that the source always provides a reliable total so that an empty response can be distinguished from a partial one in every case.
 
 ## Later product questions
 

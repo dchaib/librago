@@ -44,6 +44,12 @@ The initial connector exploration established the following source capabilities:
 
 Version 0.1 therefore treats author, material type, branch, and borrowing date as optional. A missing optional value must not prevent an otherwise valid loan from being synchronized.
 
+## Source response validation
+
+Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API. Nozay rejects a login page, a missing loans table, and a table whose reported total does not match the parsed rows; a table reporting zero loans is a successful empty response.
+
+Whether Nozay always provides a reliable total remains an open technical question. When the visible table does not include one, the connector currently accepts the parsed rows.
+
 ## Borrower display names
 
 Nozay may display a full borrower name while another network is configured with a shorter household display name. A configured Nozay account can provide `BorrowerAliases` to map a displayed Nozay name to the canonical name shown and filtered in Librago. Alias matching ignores case and repeated whitespace. An unmatched source name is preserved so that unexpected household activity remains visible.
@@ -88,19 +94,19 @@ Urgency must not be communicated by color alone.
 
 Librago preserves the last known state when synchronization fails.
 
-A synchronization attempt may conceptually be:
+A synchronization attempt has one of these results:
 - `Success`
 - `Partial`
 - `Failed`
 
 A library network is fully up to date only when all configured accounts for that network synchronize successfully.
 
-Conceptually, Librago should distinguish:
+Librago distinguishes:
 - last synchronization attempt;
 - last complete successful synchronization;
 - synchronization result/status.
 
-On startup, Librago synchronizes immediately when a configured network has no previous attempt or when its previous attempt is due according to the configured interval. Otherwise, it waits until the next due synchronization. This prevents application restarts from causing unnecessary upstream requests.
+On startup, Librago synchronizes immediately when a configured network has no previous attempt or when its previous attempt is due according to the configured interval. Otherwise, it waits until the next due synchronization. This prevents application restarts from causing unnecessary upstream requests. The default interval is six hours and can be configured.
 
 A network's last complete successful synchronization applies only to the exact set of configured accounts that completed it. Adding, removing, or restoring an account requires a new complete synchronization before the network is presented as fully current.
 

@@ -17,56 +17,68 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
         await page.SetContentAsync("<input name=\"username\"><table id=\"borrower_loans\"></table>");
 
         var exception = await Assert.ThrowsAsync<LibraryConnectorException>(
-            () => NozayLibraryConnector.ReadLoansAsync(page, Account(), CancellationToken.None));
+            () => NozayLibraryConnector.ReadLoansAsync(page, Account(), 0, CancellationToken.None));
 
         Assert.Equal(LibraryConnectorFailureKind.Authentication, exception.FailureKind);
     }
 
     [Fact]
-    public async Task ReadLoansAcceptsAConfirmedEmptyTable()
+    public async Task ReadLoansAcceptsTheObservedExplicitEmptyState()
     {
         var page = await NewPageAsync();
         await page.SetContentAsync("""
-            <table id="borrower_loans" data-loans-total="0">
-              <thead><tr><th>Emprunteur</th></tr></thead>
-              <tbody></tbody>
-            </table>
+            <div class="contenuInner"><p class="error">Pas de prêts en cours</p></div>
             """);
 
-        var loans = await NozayLibraryConnector.ReadLoansAsync(page, Account(), CancellationToken.None);
+        var loans = await NozayLibraryConnector.ReadLoansAsync(page, Account(), 0, CancellationToken.None);
 
         Assert.Empty(loans);
     }
 
     [Fact]
-    public async Task ReadLoansRejectsAnIncompleteTable()
+    public async Task ReadLoansRejectsAMissingTableWithoutTheExplicitEmptyState()
     {
         var page = await NewPageAsync();
-        await page.SetContentAsync(Table("data-loans-total=\"2\"", "synthetic-1"));
+        await page.SetContentAsync("<div class=\"contenuInner\"></div>");
 
         var exception = await Assert.ThrowsAsync<LibraryConnectorException>(
-            () => NozayLibraryConnector.ReadLoansAsync(page, Account(), CancellationToken.None));
+            () => NozayLibraryConnector.ReadLoansAsync(page, Account(), 0, CancellationToken.None));
 
         Assert.Equal(LibraryConnectorFailureKind.UnexpectedResponse, exception.FailureKind);
     }
 
     [Fact]
-    public async Task ReadAllLoansFollowsLoanPaginationAndChecksTheTotal()
+    public async Task ReadLoanCountReadsTheObservedNonZeroAccountSummary()
     {
         var page = await NewPageAsync();
-        await page.RouteAsync("**/*", async route =>
-        {
-            var content = route.Request.Url.Contains("page=2", StringComparison.Ordinal)
-                ? Table(string.Empty, "synthetic-2")
-                : $"{Table("data-loans-total=\"2\"", "synthetic-1")}<nav class=\"pagination\"><a href=\"?page=2\">Suivant</a></nav>";
-            await route.FulfillAsync(new RouteFulfillOptions { Body = content, ContentType = "text/html" });
-        });
-        await page.GotoAsync("https://nozay.test/abonne/prets/id_profil/1");
+        await page.SetContentAsync(AccountSummary("Vous avez 12 prêts en cours"));
 
-        var loans = await NozayLibraryConnector.ReadAllLoansAsync(page, Account(), CancellationToken.None);
+        var count = await NozayLibraryConnector.ReadLoanCountAsync(page, CancellationToken.None);
 
-        Assert.Equal(2, loans.Count);
-        Assert.All(loans, loan => Assert.StartsWith("nozay-loan:", loan.ExternalId));
+        Assert.Equal(12, count);
+    }
+
+    [Fact]
+    public async Task ReadLoanCountReadsTheObservedZeroLoanAccountSummary()
+    {
+        var page = await NewPageAsync();
+        await page.SetContentAsync(AccountSummary("Vous n'avez aucun prêt en cours."));
+
+        var count = await NozayLibraryConnector.ReadLoanCountAsync(page, CancellationToken.None);
+
+        Assert.Equal(0, count);
+    }
+
+    [Fact]
+    public async Task ReadLoansRejectsAListThatDoesNotMatchTheAccountCount()
+    {
+        var page = await NewPageAsync();
+        await page.SetContentAsync(Table(string.Empty, "synthetic-1"));
+
+        var exception = await Assert.ThrowsAsync<LibraryConnectorException>(
+            () => NozayLibraryConnector.ReadLoansAsync(page, Account(), 2, CancellationToken.None));
+
+        Assert.Equal(LibraryConnectorFailureKind.UnexpectedResponse, exception.FailureKind);
     }
 
     public async Task InitializeAsync()
@@ -96,9 +108,12 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
         Password = "synthetic-password"
     };
 
+    private static string AccountSummary(string summary) =>
+        $"<div class=\"abonneFiche prets\"><a href=\"/abonne/prets/id_profil/synthetic\">{summary}</a></div>";
+
     private static string Table(string attributes, string loanId) =>
         $"""
-        <table id="borrower_loans" {attributes}>
+        <table id="borrower_loans" class="models tablesorter loans" data-emptymessage="Aucune donnée" {attributes}>
           <tbody>
             <tr>
               <td>Lecteur synthétique</td><td>Livre</td><td></td>

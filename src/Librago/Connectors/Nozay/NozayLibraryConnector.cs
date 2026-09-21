@@ -1,12 +1,15 @@
+using System.Globalization;
+using System.Text.RegularExpressions;
 using Librago.Configuration;
 using Librago.Loans;
 using Microsoft.Playwright;
 
 namespace Librago.Connectors.Nozay;
 
-public sealed class NozayLibraryConnector : ILibraryConnector
+public sealed partial class NozayLibraryConnector : ILibraryConnector
 {
     private const string HomeUrl = "https://www.cc-nozay-bibliotheques.fr/accueil";
+    private const string AccountUrl = "https://www.cc-nozay-bibliotheques.fr/abonne/fiche/id_profil/1";
     private const string LoansUrl = "https://www.cc-nozay-bibliotheques.fr/abonne/prets/id_profil/1";
 
     public LibraryNetworkDescriptor Network { get; } = new(
@@ -41,10 +44,13 @@ public sealed class NozayLibraryConnector : ILibraryConnector
             await PassAnubisChallengeAsync(page, cancellationToken);
             step = "authenticating";
             await AuthenticateAsync(page, account, cancellationToken);
+            step = "reading the account loan count";
+            await NavigateAsync(page, AccountUrl, cancellationToken);
+            var expectedLoanCount = await ReadLoanCountAsync(page, cancellationToken);
             step = "opening the loans page";
             await NavigateAsync(page, LoansUrl, cancellationToken);
             step = "reading the loans";
-            return await ReadAllLoansAsync(page, account, cancellationToken);
+            return await ReadLoansAsync(page, account, expectedLoanCount, cancellationToken);
         }
         catch (PlaywrightException)
         {
@@ -96,7 +102,7 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         cancellationToken.ThrowIfCancellationRequested();
 
         await Task.WhenAll(
-            page.WaitForURLAsync("**/abonne/**"),
+            page.WaitForLoadStateAsync(LoadState.DOMContentLoaded),
             password.PressAsync("Enter"));
         cancellationToken.ThrowIfCancellationRequested();
     }
@@ -123,59 +129,18 @@ public sealed class NozayLibraryConnector : ILibraryConnector
     internal static async Task<IReadOnlyList<LoanSnapshot>> ReadLoansAsync(
         IPage page,
         LibraryAccountOptions account,
+        int expectedLoanCount,
         CancellationToken cancellationToken)
     {
         var loansPage = await ReadLoansPageAsync(page, account, cancellationToken);
-        if (loansPage.ExpectedCount is not null && loansPage.ExpectedCount != loansPage.Loans.Count)
+        if (expectedLoanCount != loansPage.Loans.Count)
         {
             throw new LibraryConnectorException(
                 LibraryConnectorFailureKind.UnexpectedResponse,
-                "The Nozay loans table did not contain its expected number of loans.");
+                "The Nozay loans page did not contain the number of loans reported by the account page.");
         }
 
         return NozayLoanRowParser.AssignFallbackOccurrences(loansPage.Loans);
-    }
-
-    internal static async Task<IReadOnlyList<LoanSnapshot>> ReadAllLoansAsync(
-        IPage page,
-        LibraryAccountOptions account,
-        CancellationToken cancellationToken)
-    {
-        var pendingUrls = new Queue<Uri>([new Uri(page.Url)]);
-        var visitedUrls = new HashSet<string>(StringComparer.Ordinal);
-        var loans = new List<LoanSnapshot>();
-        int? expectedCount = null;
-
-        while (pendingUrls.TryDequeue(out var url))
-        {
-            if (!visitedUrls.Add(url.AbsoluteUri))
-            {
-                continue;
-            }
-
-            if (!string.Equals(page.Url, url.AbsoluteUri, StringComparison.Ordinal))
-            {
-                await NavigateAsync(page, url.AbsoluteUri, cancellationToken);
-            }
-
-            var loansPage = await ReadLoansPageAsync(page, account, cancellationToken);
-            loans.AddRange(loansPage.Loans);
-            expectedCount ??= loansPage.ExpectedCount;
-
-            foreach (var pageUrl in await GetPaginationUrlsAsync(page, url))
-            {
-                pendingUrls.Enqueue(pageUrl);
-            }
-        }
-
-        if (expectedCount is not null && expectedCount != loans.Count)
-        {
-            throw new LibraryConnectorException(
-                LibraryConnectorFailureKind.UnexpectedResponse,
-                "The Nozay loans pages did not contain their expected number of loans.");
-        }
-
-        return NozayLoanRowParser.AssignFallbackOccurrences(loans);
     }
 
     private static async Task<NozayLoansPage> ReadLoansPageAsync(
@@ -183,13 +148,25 @@ public sealed class NozayLibraryConnector : ILibraryConnector
         LibraryAccountOptions account,
         CancellationToken cancellationToken)
     {
-        var table = page.Locator("#borrower_loans");
         var loginStillVisible = await page.Locator("input[name='username']").IsVisibleAsync();
         if (loginStillVisible)
         {
             throw new LibraryConnectorException(
                 LibraryConnectorFailureKind.Authentication,
                 "Nozay authentication did not reach the account page.");
+        }
+
+        var table = page.Locator("#borrower_loans");
+        if (await table.CountAsync() == 0)
+        {
+            if (await HasExplicitEmptyLoansMessageAsync(page))
+            {
+                return new NozayLoansPage([]);
+            }
+
+            throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nozay loans table was not found.");
         }
 
         try
@@ -233,8 +210,7 @@ public sealed class NozayLibraryConnector : ILibraryConnector
                 account.BorrowerAliases));
         }
 
-        var expectedCount = await GetExpectedLoanCountAsync(table);
-        return new NozayLoansPage(loans, expectedCount);
+        return new NozayLoansPage(loans);
     }
 
     private static async Task<string?> GetFirstHrefAsync(ILocator cell)
@@ -245,34 +221,62 @@ public sealed class NozayLibraryConnector : ILibraryConnector
             : await links.First.GetAttributeAsync("href");
     }
 
-    private static async Task<int?> GetExpectedLoanCountAsync(ILocator table)
+    internal static async Task<int> ReadLoanCountAsync(
+        IPage page,
+        CancellationToken cancellationToken)
     {
-        var value = await table.GetAttributeAsync("data-loans-total") ??
-                    await table.GetAttributeAsync("data-total");
-
-        return int.TryParse(value, out var count) && count >= 0 ? count : null;
-    }
-
-    private static async Task<IReadOnlyList<Uri>> GetPaginationUrlsAsync(IPage page, Uri currentUrl)
-    {
-        var paginationLinks = page.Locator(".pagination a[href], [rel='next'][href]");
-        var urls = new List<Uri>();
-
-        for (var index = 0; index < await paginationLinks.CountAsync(); index++)
+        cancellationToken.ThrowIfCancellationRequested();
+        if (await page.Locator("input[name='username']").IsVisibleAsync())
         {
-            var href = await paginationLinks.Nth(index).GetAttributeAsync("href");
-            if (href is not null && Uri.TryCreate(currentUrl, href, out var url) &&
-                string.Equals(url.Host, currentUrl.Host, StringComparison.OrdinalIgnoreCase) &&
-                url.AbsolutePath.StartsWith("/abonne/prets", StringComparison.OrdinalIgnoreCase))
-            {
-                urls.Add(url);
-            }
+            throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.Authentication,
+                "Nozay authentication did not reach the account page.");
         }
 
-        return urls;
+        var summary = page.Locator(".abonneFiche.prets");
+        try
+        {
+            await summary.WaitForAsync(new LocatorWaitForOptions { State = WaitForSelectorState.Visible });
+        }
+        catch (PlaywrightException)
+        {
+            throw new LibraryConnectorException(
+                LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nozay account page did not contain its loans summary.");
+        }
+
+        var text = await summary.InnerTextAsync();
+        if (NoLoansRegex().IsMatch(text))
+        {
+            return 0;
+        }
+
+        var match = LoanCountRegex().Match(text);
+        if (match.Success && int.TryParse(
+                match.Groups["count"].Value,
+                CultureInfo.InvariantCulture,
+                out var count))
+        {
+            return count;
+        }
+
+        throw new LibraryConnectorException(
+            LibraryConnectorFailureKind.UnexpectedResponse,
+            "The Nozay account page did not report a recognizable number of current loans.");
     }
 
-    private sealed record NozayLoansPage(
-        IReadOnlyList<LoanSnapshot> Loans,
-        int? ExpectedCount);
+    private static async Task<bool> HasExplicitEmptyLoansMessageAsync(IPage page) =>
+        (await page.Locator(".contenuInner > p.error").AllTextContentsAsync())
+        .Any(text => string.Equals(
+            Regex.Replace(text, @"\s+", " ").Trim(),
+            "Pas de prêts en cours",
+            StringComparison.Ordinal));
+
+    [GeneratedRegex(@"Vous\s+n['’]avez\s+aucun\s+prêt\s+en\s+cours\.?", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex NoLoansRegex();
+
+    [GeneratedRegex(@"Vous\s+avez\s+(?<count>\d+)\s+prêts?\s+en\s+cours", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
+    private static partial Regex LoanCountRegex();
+
+    private sealed record NozayLoansPage(IReadOnlyList<LoanSnapshot> Loans);
 }

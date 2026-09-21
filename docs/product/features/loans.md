@@ -46,9 +46,7 @@ Version 0.1 therefore treats author, material type, branch, and borrowing date a
 
 ## Source response validation
 
-Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API. Nozay rejects a login page, a missing loans table, and a table whose reported total does not match the parsed rows; a table reporting zero loans is a successful empty response.
-
-Whether Nozay always provides a reliable total remains an open technical question. When the visible table does not include one, the connector currently accepts the parsed rows.
+Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
 
 ## Borrower display names
 

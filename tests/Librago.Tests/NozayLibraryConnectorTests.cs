@@ -13,6 +13,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoansRejectsTheLoginPage()
     {
+        // Confirmed source marker: the Nozay authentication form uses this username field.
         var page = await NewPageAsync();
         await page.SetContentAsync("<input name=\"username\"><table id=\"borrower_loans\"></table>");
 
@@ -25,6 +26,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoansAcceptsTheObservedExplicitEmptyState()
     {
+        // Confirmed source shape, anonymized from an observed Nozay page with zero current loans.
         var page = await NewPageAsync();
         await page.SetContentAsync("""
             <div class="contenuInner"><p class="error">Pas de prêts en cours</p></div>
@@ -38,6 +40,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoansRejectsAMissingTableWithoutTheExplicitEmptyState()
     {
+        // Synthetic invariant: an unrecognizable page must not replace known data.
         var page = await NewPageAsync();
         await page.SetContentAsync("<div class=\"contenuInner\"></div>");
 
@@ -50,6 +53,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoanCountReadsTheObservedNonZeroAccountSummary()
     {
+        // Confirmed source shape, anonymized from an observed Nozay account page.
         var page = await NewPageAsync();
         await page.SetContentAsync(AccountSummary("Vous avez 12 prêts en cours"));
 
@@ -61,6 +65,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoanCountReadsTheObservedZeroLoanAccountSummary()
     {
+        // Confirmed source shape, anonymized from an observed Nozay account page.
         var page = await NewPageAsync();
         await page.SetContentAsync(AccountSummary("Vous n'avez aucun prêt en cours."));
 
@@ -72,6 +77,7 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
     [Fact]
     public async Task ReadLoansRejectsAListThatDoesNotMatchTheAccountCount()
     {
+        // Synthetic invariant: an incomplete list must not replace known data.
         var page = await NewPageAsync();
         await page.SetContentAsync(Table(string.Empty, "synthetic-1"));
 

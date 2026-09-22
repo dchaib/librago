@@ -36,17 +36,28 @@ Additional metadata such as author, volume number, cover image, or material type
 
 ## Observed source data
 
-The initial connector exploration established the following source capabilities:
+The initial connector exploration established the following source capabilities. Source observations use these labels:
 
-- Nantes exposes title, author, borrowing date, due date, document number, ISBN, material category, series information, and branch data through a JSON API;
-- Nozay exposes borrower, material type, thumbnail, title, author, library, due date, and renewal information in an HTML table;
-- Nozay does not expose the borrowing date in the observed loans page.
+- **Confirmed**: directly observed from the source and represented only by anonymized fixtures or descriptions;
+- **Assumed**: an implementation expectation that has not yet been observed from the source;
+- **Synthetic invariant**: a deliberately invented failure or edge case used to test Librago's own behavior, not the external source.
+
+| Source observation | Status | Basis |
+| --- | --- | --- |
+| Nantes settings response contains `ckSite`. | Confirmed | Observed response. |
+| Nantes successful authentication response contains `token`. | Confirmed | Observed response. |
+| Nantes nonempty loans response contains `items`, `total`, and loan `data` with title, author, borrowing date, due date, document number, ISBN, material category, series information, and branch data. | Confirmed | Observed response. |
+| Nantes zero-loan response shape. | Assumed | See the open technical question. |
+| Nozay loans page exposes borrower, material type, thumbnail, title, author, library, due date, and renewal information in an HTML table. | Confirmed | Observed page. |
+| Nozay account page reports either zero current loans or a numeric current-loan count. | Confirmed | Observed page. |
+| Nozay exposes a paginated loans list. | Assumed false until observed | Pagination is not implemented. |
+| Nozay does not expose a borrowing date in the loans page. | Confirmed | Observed page. |
 
 Version 0.1 therefore treats author, material type, branch, and borrowing date as optional. A missing optional value must not prevent an otherwise valid loan from being synchronized.
 
 ## Source response validation
 
-Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
+Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API; the observed nonempty response contains both `items` and `total`. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
 
 ## Borrower display names
 

@@ -1,0 +1,76 @@
+name: Publish release image
+
+on:
+  release:
+    types: [published]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish-image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Check out release tag
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.event.release.tag_name }}
+
+      - name: Set up .NET
+        uses: actions/setup-dotnet@v6
+        with:
+          dotnet-version: 10.0.4xx
+          cache: true
+          cache-dependency-path: '**/packages.lock.json'
+
+      - name: Restore and validate source
+        run: |
+          dotnet restore Librago.slnx --locked-mode
+          dotnet format Librago.slnx --verify-no-changes --no-restore
+          dotnet build Librago.slnx --configuration Release --no-restore
+
+      - name: Install Playwright Chromium
+        run: pwsh src/Librago/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+
+      - name: Test
+        run: dotnet test Librago.slnx --configuration Release --no-build --no-restore
+
+      - name: Verify artifact secret exclusion
+        shell: pwsh
+        run: ./scripts/verify-artifact-secrets.ps1 -Image librago:release-check
+
+      - name: Verify hardened container runtime
+        shell: pwsh
+        run: ./scripts/verify-container.ps1 -Image librago:release-check
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v4
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract image metadata
+        id: metadata
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
+          tags: |
+            type=semver,pattern={{version}},value=${{ github.event.release.tag_name }}
+            type=raw,value=latest,enable=${{ !github.event.release.prerelease }}
+
+      - name: Build and publish image
+        uses: docker/build-push-action@v7
+        with:
+          context: .
+          platforms: linux/amd64
+          push: true
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}

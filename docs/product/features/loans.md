@@ -34,6 +34,37 @@ Secondary:
 
 Additional metadata such as author, volume number, cover image, or material type should be evaluated once source data is known.
 
+## Observed source data
+
+The initial connector exploration established the following source capabilities. Source observations use these labels:
+
+- **Confirmed**: directly observed from the source and represented only by anonymized fixtures or descriptions;
+- **Assumed**: an implementation expectation that has not yet been observed from the source;
+- **Synthetic invariant**: a deliberately invented failure or edge case used to test Librago's own behavior, not the external source.
+
+| Source observation | Status | Basis |
+| --- | --- | --- |
+| Nantes settings response contains `ckSite`. | Confirmed | Observed response. |
+| Nantes successful authentication response contains `token`. | Confirmed | Observed response. |
+| Nantes nonempty loans response contains `items`, `total`, and loan `data` with title, author, borrowing date, due date, document number, ISBN, material category, series information, and branch data. | Confirmed | Observed response. |
+| Nantes zero-loan response shape. | Assumed | See the open technical question. |
+| Nozay loans page exposes borrower, material type, thumbnail, title, author, library, due date, and renewal information in an HTML table. | Confirmed | Observed page. |
+| Nozay account page reports either zero current loans or a numeric current-loan count. | Confirmed | Observed page. |
+| Nozay exposes a paginated loans list. | Assumed false until observed | Pagination is not implemented. |
+| Nozay does not expose a borrowing date in the loans page. | Confirmed | Observed page. |
+
+Version 0.1 therefore treats author, material type, branch, and borrowing date as optional. A missing optional value must not prevent an otherwise valid loan from being synchronized.
+
+## Source response validation
+
+Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API; the observed nonempty response contains both `items` and `total`. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
+
+## Borrower display names
+
+Nozay may display a full borrower name while another network is configured with a shorter household display name. A configured Nozay account can provide `BorrowerAliases` to map a displayed Nozay name to the canonical name shown and filtered in Librago. Alias matching ignores case and repeated whitespace. An unmatched source name is preserved so that unexpected household activity remains visible.
+
+When Nozay parent access lists the whole family, only that parent account should be configured for synchronization. This avoids duplicate records from separately configured child accounts.
+
 ## Default sort
 
 Loans are sorted by due date ascending.
@@ -72,17 +103,23 @@ Urgency must not be communicated by color alone.
 
 Librago preserves the last known state when synchronization fails.
 
-A synchronization attempt may conceptually be:
+A synchronization attempt has one of these results:
 - `Success`
 - `Partial`
 - `Failed`
 
 A library network is fully up to date only when all configured accounts for that network synchronize successfully.
 
-Conceptually, Librago should distinguish:
+Librago distinguishes:
 - last synchronization attempt;
 - last complete successful synchronization;
 - synchronization result/status.
+
+On startup, Librago synchronizes immediately when a configured network has no previous attempt or when its previous attempt is due according to the configured interval. Otherwise, it waits until the next due synchronization. This prevents application restarts from causing unnecessary upstream requests. The default interval is six hours and can be configured.
+
+A network's last complete successful synchronization applies only to the exact set of configured accounts that completed it. Adding, removing, or restoring an account requires a new complete synchronization before the network is presented as fully current.
+
+When an account is removed from configuration, its stored loans are hidden and are no longer synchronized. They are retained locally so that a temporary configuration mistake does not destroy the last known state. Re-adding the same stable `AccountId` requires a new synchronization before its data is treated as current.
 
 ## Stale data
 

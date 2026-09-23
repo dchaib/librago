@@ -1,0 +1,344 @@
+:root {
+    color: #1f2924;
+    background: #f4f1e8;
+    font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    font-synthesis: none;
+    --ink: #1f2924;
+    --muted: #627069;
+    --paper: #fffdf7;
+    --line: #d8d8cb;
+    --accent: #146c5a;
+    --accent-dark: #0a4f41;
+    --warning-bg: #fff3cc;
+    --warning-line: #c47a00;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    margin: 0;
+    min-width: 20rem;
+    background:
+        radial-gradient(circle at top right, rgb(20 108 90 / 9%), transparent 32rem),
+        #f4f1e8;
+}
+
+.page-shell {
+    width: min(72rem, calc(100% - 2rem));
+    margin: 0 auto;
+    padding: 3.5rem 0 4rem;
+}
+
+.hero {
+    max-width: 44rem;
+    margin-bottom: 2rem;
+}
+
+.eyebrow {
+    margin: 0 0 0.45rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+}
+
+h1,
+h2,
+p {
+    margin-top: 0;
+}
+
+h1 {
+    margin-bottom: 0.55rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(2.5rem, 8vw, 4.75rem);
+    font-weight: 500;
+    letter-spacing: -0.045em;
+    line-height: 0.98;
+}
+
+.hero__subtitle {
+    margin-bottom: 0;
+    color: var(--muted);
+    font-size: clamp(1rem, 2vw, 1.2rem);
+}
+
+.notice {
+    display: grid;
+    gap: 0.25rem;
+    margin: 0 0 1rem;
+    padding: 1rem 1.1rem;
+    border: 1px solid var(--line);
+    border-left-width: 0.35rem;
+    border-radius: 0.75rem;
+    background: var(--paper);
+}
+
+.notice--warning {
+    border-left-color: var(--warning-line);
+    background: var(--warning-bg);
+}
+
+.notice--info {
+    border-left-color: var(--accent);
+}
+
+.filters {
+    display: flex;
+    align-items: end;
+    gap: 0.8rem;
+    margin: 2rem 0 1.25rem;
+    padding: 1rem;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: rgb(255 253 247 / 78%);
+}
+
+.filters label {
+    display: grid;
+    flex: 1;
+    gap: 0.35rem;
+    color: var(--muted);
+    font-size: 0.82rem;
+    font-weight: 700;
+}
+
+select,
+button {
+    min-height: 2.75rem;
+    border: 1px solid #aab1aa;
+    border-radius: 0.6rem;
+    font: inherit;
+}
+
+select {
+    width: 100%;
+    padding: 0 2.5rem 0 0.8rem;
+    color: var(--ink);
+    background: #fff;
+}
+
+button {
+    padding: 0 1.25rem;
+    border-color: var(--accent);
+    color: #fff;
+    background: var(--accent);
+    cursor: pointer;
+    font-weight: 750;
+}
+
+button:hover {
+    background: var(--accent-dark);
+}
+
+button:focus-visible,
+select:focus-visible,
+a:focus-visible {
+    outline: 3px solid #e2a928;
+    outline-offset: 2px;
+}
+
+.filters__reset {
+    min-height: 2.75rem;
+    padding: 0.75rem 0.35rem;
+    color: var(--accent-dark);
+    font-weight: 700;
+}
+
+.result-count {
+    margin-bottom: 0.75rem;
+    color: var(--muted);
+    font-size: 0.9rem;
+    font-weight: 700;
+}
+
+.loan-list {
+    display: grid;
+    gap: 0.8rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.loan-card {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(12rem, 15rem);
+    overflow: hidden;
+    border: 1px solid var(--line);
+    border-radius: 1rem;
+    background: var(--paper);
+    box-shadow: 0 0.4rem 1.3rem rgb(45 55 48 / 6%);
+}
+
+.loan-card__body {
+    padding: 1.2rem 1.35rem;
+}
+
+.loan-card__network {
+    margin-bottom: 0.35rem;
+    color: var(--accent);
+    font-size: 0.78rem;
+    font-weight: 800;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.loan-card h2 {
+    margin-bottom: 0.25rem;
+    font-family: Georgia, "Times New Roman", serif;
+    font-size: clamp(1.2rem, 3vw, 1.55rem);
+    font-weight: 600;
+    line-height: 1.15;
+}
+
+.loan-card__author {
+    margin-bottom: 1rem;
+    color: var(--muted);
+}
+
+.loan-card__details {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem 2rem;
+    margin: 1rem 0 0;
+}
+
+.loan-card__details div {
+    display: grid;
+    gap: 0.1rem;
+}
+
+.loan-card__details dt {
+    color: var(--muted);
+    font-size: 0.74rem;
+    font-weight: 700;
+    text-transform: uppercase;
+}
+
+.loan-card__details dd {
+    margin: 0;
+    font-size: 0.92rem;
+}
+
+.deadline {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 1.2rem;
+    border-left: 0.4rem solid transparent;
+    background: #edf0eb;
+}
+
+.deadline strong {
+    font-size: 1.1rem;
+}
+
+.deadline span {
+    color: #465049;
+    font-size: 0.84rem;
+}
+
+.deadline--overdue {
+    border-left-color: #982b2b;
+    background: #f9dddd;
+}
+
+.deadline--very-close {
+    border-left-color: #bd5c17;
+    background: #ffeadb;
+}
+
+.deadline--close {
+    border-left-color: #c28a00;
+    background: #fff1c9;
+}
+
+.deadline--watch {
+    border-left-color: #60805e;
+    background: #edf1df;
+}
+
+.deadline--normal {
+    border-left-color: #80928a;
+}
+
+.empty-state {
+    margin: 2rem 0;
+    padding: clamp(2rem, 7vw, 4rem) 1.25rem;
+    border: 1px dashed #aeb3aa;
+    border-radius: 1rem;
+    text-align: center;
+}
+
+.empty-state h2 {
+    margin-bottom: 0.4rem;
+}
+
+.empty-state p {
+    margin-bottom: 0;
+    color: var(--muted);
+}
+
+.sync-status {
+    margin-top: 2.5rem;
+    padding-top: 1.4rem;
+    border-top: 1px solid var(--line);
+}
+
+.sync-status h2 {
+    font-size: 0.82rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.sync-status ul {
+    display: grid;
+    gap: 0.4rem;
+    margin: 0;
+    padding: 0;
+    list-style: none;
+}
+
+.sync-status li {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    color: var(--muted);
+    font-size: 0.85rem;
+}
+
+.sync-status strong {
+    color: var(--ink);
+}
+
+@media (max-width: 42rem) {
+    .page-shell {
+        width: min(100% - 1rem, 36rem);
+        padding-top: 2rem;
+    }
+
+    .filters {
+        align-items: stretch;
+        flex-direction: column;
+    }
+
+    .loan-card {
+        grid-template-columns: 1fr;
+    }
+
+    .deadline {
+        border-top: 1px solid var(--line);
+        border-left-width: 0.4rem;
+    }
+
+    .sync-status li {
+        align-items: flex-start;
+        flex-direction: column;
+        gap: 0.1rem;
+    }
+}
+

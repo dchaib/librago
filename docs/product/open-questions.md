@@ -6,34 +6,9 @@ Questions should be removed once answered and, when relevant, the resulting deci
 
 ## Technical spike
 
-### What loan metadata is actually available?
+### What response does Nantes return when there are no current loans?
 
-Determine whether each network reliably exposes:
-- title;
-- author;
-- series;
-- volume number;
-- material/document type;
-- cover image;
-- borrowing date;
-- due date;
-- stable external identifiers;
-- lending branch.
-
-### How does account synchronization fail?
-
-Determine whether failures can occur independently per account and what can be reliably detected.
-
-### What is the source behavior for zero loans?
-
-Verify that connectors can distinguish:
-- a successful response with zero loans;
-- authentication/session failure;
-- unexpected or partial response.
-
-### What synchronization cadence is appropriate?
-
-Version 0.1 requires automatic synchronization, but cadence is not yet specified.
+The observed nonempty loans response contains an `items` array and a `total`. Verify the source response for zero loans so that successful empty data can be distinguished from an unexpected incomplete response.
 
 ## Later product questions
 

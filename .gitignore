@@ -1,0 +1,13 @@
+bin/
+obj/
+.vs/
+.idea/
+.vscode/
+TestResults/
+artifacts/
+src/Librago/data
+appsettings.Local.json
+*.db
+*.db-shm
+*.db-wal
+playwright-report/

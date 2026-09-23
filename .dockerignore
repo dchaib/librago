@@ -1,0 +1,13 @@
+.git
+.github
+.vs
+.idea
+.vscode
+**/bin
+**/obj
+TestResults
+**/data/
+**/appsettings.Local.json
+**/*.db
+**/*.db-shm
+**/*.db-wal

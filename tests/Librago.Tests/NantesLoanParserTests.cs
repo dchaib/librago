@@ -73,13 +73,21 @@ public sealed class NantesLoanParserTests
     }
 
     [Fact]
-    public void ParseAcceptsTheAssumedEmptyItemsArray()
+    public void ParseAcceptsTheObservedEmptyItemsArray()
     {
-        // Assumed source shape; awaiting observation of a Nantes account with zero current loans.
+        // Confirmed source shape, observed for a Nantes account with zero current loans.
         var page = NantesLoanParser.Parse("{\"items\":[],\"total\":0}", "Lecteur A");
 
         Assert.Empty(page.Loans);
         Assert.Equal(0, page.Total);
+    }
+
+    [Fact]
+    public void ParseRejectsMissingItemsWhenTotalIsZero()
+    {
+        // Synthetic invariant: an incomplete response must not clear known loans.
+        Assert.Throws<LibraryConnectorException>(
+            () => NantesLoanParser.Parse("{\"total\":0}", "Lecteur A"));
     }
 
     [Fact]

@@ -47,7 +47,7 @@ The initial connector exploration established the following source capabilities.
 | Nantes settings response contains `ckSite`. | Confirmed | Observed response. |
 | Nantes successful authentication response contains `token`. | Confirmed | Observed response. |
 | Nantes nonempty loans response contains `items`, `total`, and loan `data` with title, author, borrowing date, due date, document number, ISBN, material category, series information, and branch data. | Confirmed | Observed response. |
-| Nantes zero-loan response shape. | Assumed | See the open technical question. |
+| Nantes zero-loan response is `{"items":[],"total":0}`. | Confirmed | Observed response. |
 | Nozay loans page exposes borrower, material type, thumbnail, title, author, library, due date, and renewal information in an HTML table. | Confirmed | Observed page. |
 | Nozay account page reports either zero current loans or a numeric current-loan count. | Confirmed | Observed page. |
 | Nozay exposes a paginated loans list. | Assumed false until observed | Pagination is not implemented. |
@@ -57,7 +57,7 @@ Version 0.1 therefore treats author, material type, branch, and borrowing date a
 
 ## Source response validation
 
-Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes validates the total returned by its API; the observed nonempty response contains both `items` and `total`. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
+Connectors distinguish a successful empty loan list from authentication/session failures and unexpected responses. Nantes requires both `items` and `total` in its response and validates the total returned by its API. Its observed zero-loan response is `{"items":[],"total":0}`; a missing `items` array is rejected even when `total` is zero. Nozay reads the current-loan count from the authenticated account page and verifies that it matches the rows retrieved from the observed loans page. The observed account-page summary explicitly distinguishes zero current loans from a positive count. The observed loans page explicitly displays `Pas de prêts en cours` when there are none; a missing loans table without that message is rejected. Pagination is not implemented until it is observed in the source.
 
 ## Borrower display names
 

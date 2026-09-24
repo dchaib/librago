@@ -33,11 +33,6 @@ internal static class NantesLoanParser
 
         if (response.Items is null)
         {
-            if (response.Total == 0)
-            {
-                return new NantesLoanPage([], 0);
-            }
-
             throw new LibraryConnectorException(
                 LibraryConnectorFailureKind.UnexpectedResponse,
                 "The Nantes loans response did not contain its items.");

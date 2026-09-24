@@ -19,7 +19,7 @@ RUN dotnet publish src/Librago/Librago.csproj \
     --output /app
 RUN chmod 755 /app/.playwright/node/linux-x64/node
 
-FROM mcr.microsoft.com/playwright/dotnet:v1.62.0-noble AS runtime
+FROM mcr.microsoft.com/playwright/dotnet:v1.63.0-noble AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \

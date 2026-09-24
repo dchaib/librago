@@ -25,30 +25,32 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
     {
         var client = Factory.CreateClient();
         await SeedLoansAsync();
+        var cancellationToken = TestContext.Current.CancellationToken;
 
-        var unconfigured = await client.GetStringAsync("/");
+        var unconfigured = await client.GetStringAsync("/", cancellationToken);
         Assert.DoesNotContain("Removed account loan", unconfigured);
 
-        var byNetwork = await client.GetStringAsync("/?SelectedNetwork=nozay");
+        var byNetwork = await client.GetStringAsync("/?SelectedNetwork=nozay", cancellationToken);
         Assert.Contains("Nozay Alpha", byNetwork);
         Assert.Contains("Nozay Beta", byNetwork);
         Assert.DoesNotContain("Nantes Alpha", byNetwork);
         Assert.Matches(SelectedOption("nozay"), byNetwork);
 
-        var byBorrower = await client.GetStringAsync("/?SelectedBorrower=Lecteur%20Alpha");
+        var byBorrower = await client.GetStringAsync("/?SelectedBorrower=Lecteur%20Alpha", cancellationToken);
         Assert.Contains("Nantes Alpha", byBorrower);
         Assert.Contains("Nozay Alpha", byBorrower);
         Assert.DoesNotContain("Nozay Beta", byBorrower);
         Assert.Matches(SelectedOption("Lecteur Alpha"), byBorrower);
 
         var combined = await client.GetStringAsync(
-            "/?SelectedNetwork=nozay&SelectedBorrower=Lecteur%20Alpha");
+            "/?SelectedNetwork=nozay&SelectedBorrower=Lecteur%20Alpha",
+            cancellationToken);
         Assert.Contains("Nozay Alpha", combined);
         Assert.DoesNotContain("Nantes Alpha", combined);
         Assert.DoesNotContain("Nozay Beta", combined);
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
         Directory.CreateDirectory(_temporaryDirectory);
         _factory = new WebApplicationFactory<Program>().WithWebHostBuilder(builder =>
@@ -68,10 +70,10 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
             });
         });
 
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         if (_factory is not null)
         {

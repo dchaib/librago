@@ -6,6 +6,15 @@
   "packageRules": [
     {
       "matchPackageNames": [
+        "mcr.microsoft.com/dotnet/sdk"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
+    {
+      "matchPackageNames": [
         "Microsoft.Playwright",
         "mcr.microsoft.com/playwright/dotnet"
       ],

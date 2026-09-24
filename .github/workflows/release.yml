@@ -23,6 +23,10 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
+      - name: Verify Playwright versions
+        shell: pwsh
+        run: ./scripts/verify-playwright-versions.ps1
+
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:

@@ -1,9 +1,19 @@
 {
   "$schema": "https://docs.renovatebot.com/renovate-schema.json",
   "extends": [
-    "config:recommended"
+    "config:recommended",
+    ":semanticCommits"
   ],
   "packageRules": [
+    {
+      "matchPackageNames": [
+        "mcr.microsoft.com/dotnet/sdk"
+      ],
+      "matchUpdateTypes": [
+        "major"
+      ],
+      "dependencyDashboardApproval": true
+    },
     {
       "matchPackageNames": [
         "Microsoft.Playwright",

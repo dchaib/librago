@@ -7,20 +7,13 @@
   "packageRules": [
     {
       "matchPackageNames": [
-        "mcr.microsoft.com/dotnet/sdk"
+        "mcr.microsoft.com/dotnet/sdk",
+        "mcr.microsoft.com/dotnet/runtime-deps"
       ],
       "matchUpdateTypes": [
         "major"
       ],
       "dependencyDashboardApproval": true
-    },
-    {
-      "matchPackageNames": [
-        "Microsoft.Playwright",
-        "mcr.microsoft.com/playwright/dotnet"
-      ],
-      "groupName": "Playwright",
-      "minimumGroupSize": 2
     }
   ]
 }

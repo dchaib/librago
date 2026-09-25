@@ -23,10 +23,6 @@ jobs:
         with:
           ref: ${{ github.event.release.tag_name }}
 
-      - name: Verify Playwright versions
-        shell: pwsh
-        run: ./scripts/verify-playwright-versions.ps1
-
       - name: Set up .NET
         uses: actions/setup-dotnet@v6
         with:
@@ -41,7 +37,7 @@ jobs:
           dotnet build Librago.slnx --configuration Release --no-restore
 
       - name: Install Playwright Chromium
-        run: pwsh src/Librago/bin/Release/net10.0/playwright.ps1 install --with-deps chromium
+        run: pwsh src/Librago/bin/Release/net10.0/playwright.ps1 install --with-deps --only-shell chromium
 
       - name: Test
         run: dotnet test --solution Librago.slnx --configuration Release --no-build --no-restore

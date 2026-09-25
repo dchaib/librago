@@ -8,18 +8,22 @@ ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
 
 COPY Directory.Build.props Directory.Packages.props NuGet.Config global.json ./
 COPY src/Librago/Librago.csproj src/Librago/packages.lock.json src/Librago/
-RUN dotnet restore src/Librago/Librago.csproj --runtime linux-x64 --locked-mode
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet restore src/Librago/Librago.csproj \
+    --runtime linux-x64 \
+    --property:SelfContained=true \
+    --locked-mode
 
 COPY src/Librago/ src/Librago/
-RUN dotnet publish src/Librago/Librago.csproj \
+RUN --mount=type=cache,target=/root/.nuget/packages \
+    dotnet publish src/Librago/Librago.csproj \
     --configuration Release \
     --runtime linux-x64 \
     --self-contained true \
     --no-restore \
     --output /app
-RUN chmod 755 /app/.playwright/node/linux-x64/node
 
-FROM mcr.microsoft.com/playwright/dotnet:v1.63.0-noble AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \
@@ -29,12 +33,20 @@ ENV ASPNETCORE_HTTP_PORTS=8080 \
     XDG_CACHE_HOME=/tmp/.cache \
     XDG_CONFIG_HOME=/tmp/.config
 
-RUN install -d -m 1777 /data
-
 COPY --from=build /app/ ./
+
+RUN chmod 755 /app/.playwright/node/linux-x64/node \
+    && /app/.playwright/node/linux-x64/node /app/.playwright/package/cli.js install --with-deps --no-shell chromium \
+    && command -v Xvfb \
+    && apt-get update \
+    && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends curl \
+    && rm -rf /var/lib/apt/lists/*
+
+RUN install -d -o app -g app -m 0750 /data
+
 COPY --chmod=755 docker-entrypoint.sh /usr/local/bin/librago-entrypoint.sh
 
-USER pwuser
+USER app
 EXPOSE 8080
 ENTRYPOINT ["/usr/local/bin/librago-entrypoint.sh"]
 CMD ["./Librago"]

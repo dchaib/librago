@@ -59,6 +59,7 @@ try {
         "--mount", "type=bind,src=$configPath,dst=/config/appsettings.Local.json,readonly",
         $Image)
     Wait-ForHealth
+    Invoke-Container @("exec", $containerName, "/bin/sh", "-c", 'test "$(id -u)" -ne 0')
     Invoke-Container @("cp", "$containerName`:/data/librago.db", (Join-Path $taskRoot "before-restart.db"))
 
     Invoke-Container @("restart", $containerName)
@@ -73,16 +74,15 @@ try {
     $browserProbe = @'
 const { chromium } = require('/app/.playwright/package');
 (async () => {
-  const browser = await chromium.launch({ headless: true, chromiumSandbox: true });
-  await browser.close();
+  for (const headless of [true, false]) {
+    const browser = await chromium.launch({ headless, channel: 'chromium', chromiumSandbox: true });
+    await browser.close();
+  }
 })().catch(error => { console.error(error.name); process.exit(1); });
 '@
     Invoke-Container @(
-        "run", "--rm", "--init", "--read-only", "--tmpfs", "/tmp", "--shm-size", "1gb",
-        "--security-opt", "no-new-privileges:true",
-        "--security-opt", "seccomp=./seccomp_profile.json",
-        "--entrypoint", "/app/.playwright/node/linux-x64/node",
-        $Image, "-e", $browserProbe)
+        "exec", "--env", "DISPLAY=:99", $containerName,
+        "/app/.playwright/node/linux-x64/node", "-e", $browserProbe)
 }
 finally {
     & docker rm --force $containerName 2>$null | Out-Null

@@ -66,3 +66,7 @@ docker compose up --build -d
 The web interface is exposed on port 8080. The container layout separates immutable application files (`/app`), read-only external configuration (`/config`), persistent SQLite data (`/data` in the mounted volume), and ephemeral state (`/tmp`).
 
 The container starts Xvfb so that connectors requiring a visible Chromium session can run without a desktop environment.
+
+The application runs as the `app` user provided by the .NET base image (UID/GID `1654:1654`). A new named volume mounted at `/data` is prepared for this user. The image does not change mounted file ownership at startup.
+
+If you override the container user or bind-mount `/data`, arrange write access to the mounted directory and its files for the chosen UID/GID before starting Librago. The external configuration must also be readable by the chosen user.

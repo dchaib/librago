@@ -6,7 +6,6 @@ Questions should be removed once answered and, when relevant, the resulting deci
 
 ## Later product questions
 
-- reservation statuses and sorting;
 - exact notification schedule;
 - opening-hours model and exceptions;
 - network and branch preference model;

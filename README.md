@@ -22,7 +22,7 @@ The project is designed to support multiple library networks through network-spe
 
 ## Project status
 
-Version 0.1 is under active development. Its first slice consolidates current loans from the Nantes and Nozay library networks.
+Version 0.1 is released. It consolidates current loans from the Nantes and Nozay library networks. Version 0.2, covering current reservations, is being specified.
 
 See [`docs/README.md`](docs/README.md) for an overview of the project documentation.
 

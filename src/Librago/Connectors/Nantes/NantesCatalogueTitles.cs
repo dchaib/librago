@@ -40,7 +40,8 @@ internal static class NantesCatalogueTitles
                 request.Headers.Add("X-InMedia-Authorization", $"Bearer {token} {siteKey}");
                 request.Content = new FormUrlEncodedContent(new Dictionary<string, string>
                 {
-                    ["locale"] = "fr", ["ids"] = string.Join(',', batch.Select(e => e.QueryId))
+                    ["locale"] = "fr",
+                    ["ids"] = string.Join(',', batch.Select(e => e.QueryId))
                 });
                 using var response = await client.SendAsync(request, deadline.Token);
                 response.EnsureSuccessStatusCode();

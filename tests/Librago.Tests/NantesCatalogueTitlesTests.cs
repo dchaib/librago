@@ -108,7 +108,8 @@ public sealed class NantesCatalogueTitlesTests
             }
             return Task.FromResult(Response(JsonSerializer.Serialize(new
             {
-                total = 1, items = new[] { new { data = new { documentNumber = "a", omnidexId = "a", seqNo = 1, title = "Titre brut / Auteur",
+                total = 1,
+                items = new[] { new { data = new { documentNumber = "a", omnidexId = "a", seqNo = 1, title = "Titre brut / Auteur",
                     returnDate = valid ? "29/09/2026" : "invalid", expiryDate = valid ? "29/09/2026" : "invalid" } } }
             })));
         });
@@ -208,11 +209,14 @@ public sealed class NantesCatalogueTitlesTests
             var ids = body.Split("&ids=")[1].Split(',');
             batchSizes.Add(ids.Length);
             if (batchSizes.Count == 2) return Response("unusable");
-            return Response(JsonSerializer.Serialize(new { resultSet = ids.Reverse().Select(id => new
+            return Response(JsonSerializer.Serialize(new
             {
-                id = new[] { new { value = "p::usmarcdef_" + id.PadLeft(10, '0') } },
-                title = new[] { new { value = "Notice " + id } }
-            }) }));
+                resultSet = ids.Reverse().Select(id => new
+                {
+                    id = new[] { new { value = "p::usmarcdef_" + id.PadLeft(10, '0') } },
+                    title = new[] { new { value = "Notice " + id } }
+                })
+            }));
         });
         using var client = Client(handler);
         var logger = new RecordingLogger();

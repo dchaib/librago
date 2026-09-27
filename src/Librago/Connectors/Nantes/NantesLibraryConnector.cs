@@ -6,6 +6,9 @@ namespace Librago.Connectors.Nantes;
 
 public sealed partial class NantesLibraryConnector(ILogger<NantesLibraryConnector> logger) : ILibraryConnector
 {
+    private static readonly Action<ILogger, string, string, string, Exception?> LogCaptureFailure = LoggerMessage.Define<string, string, string>(
+        LogLevel.Warning, new EventId(1203), "Nantes {DataKind} retrieval failed ({Reason}; exception type {ExceptionType}).");
+
     public LibraryNetworkDescriptor Network { get; } = new(
         "Nantes",
         "nantes",
@@ -30,14 +33,14 @@ public sealed partial class NantesLibraryConnector(ILogger<NantesLibraryConnecto
 
         using (session.Client)
         {
-            var loans = await CaptureAsync(() => GetLoansAsync(session, account, cancellationToken), cancellationToken);
-            var reservations = await CaptureAsync(() => GetReservationsAsync(session, account, cancellationToken), cancellationToken);
+            var loans = await CaptureAsync(() => GetLoansAsync(session, account, cancellationToken), "loans", cancellationToken);
+            var reservations = await CaptureAsync(() => GetReservationsAsync(session, account, cancellationToken), "reservations", cancellationToken);
             return new AccountSnapshot(loans, reservations);
         }
     }
 
-    private static async Task<ConnectorResult<T>> CaptureAsync<T>(
-        Func<Task<T>> action, CancellationToken cancellationToken)
+    private async Task<ConnectorResult<T>> CaptureAsync<T>(
+        Func<Task<T>> action, string dataKind, CancellationToken cancellationToken)
     {
         try
         {
@@ -49,11 +52,24 @@ public sealed partial class NantesLibraryConnector(ILogger<NantesLibraryConnecto
         }
         catch (LibraryConnectorException exception)
         {
+            LogCaptureFailure(logger, dataKind, GetDiagnosticReason(exception), exception.GetType().Name, null);
             return ConnectorResult<T>.Create(default, exception.FailureKind);
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            LogCaptureFailure(logger, dataKind, "UnhandledException", exception.GetType().Name, null);
             return ConnectorResult<T>.Create(default, LibraryConnectorFailureKind.UnexpectedResponse);
         }
     }
+
+    // Only fixed diagnostic codes are logged; exception messages may contain upstream data.
+    private static string GetDiagnosticReason(LibraryConnectorException exception) => exception.Message switch
+    {
+        "The Nantes loans response was not valid JSON in the expected format." => "InvalidLoansJson",
+        "The Nantes loans response was incomplete." => "InvalidLoansEnvelope",
+        "The Nantes loans response did not contain its items." => "MissingLoanItems",
+        "The Nantes loans response contained duplicate identities." => "DuplicateLoanIdentities",
+        "The Nantes loans response ended before all reported loans were returned." => "LoanCountMismatch",
+        _ => exception.FailureKind.ToString()
+    };
 }

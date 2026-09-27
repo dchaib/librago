@@ -20,7 +20,9 @@ Detailed behavior is described in [`features/loans.md`](features/loans.md).
 
 ## 0.2 — Reservations
 
-Consolidated reservation list, status, availability, pickup deadline, borrower, library network, and possibly cancellation.
+Read-only consolidated list of current reservations, with status, pickup information, dates, queue position, and filters by network, pickup library, borrower, and status. Cancellation is deferred.
+
+Detailed behavior is described in [`features/reservations.md`](features/reservations.md).
 
 ## 0.3 — Notifications
 
@@ -57,6 +59,7 @@ Intentionally deferred but tracked:
 - application-level authentication and OIDC;
 - manual synchronization controls;
 - synchronization history;
+- reservation cancellation;
 - configuration management;
 - multi-user access;
 - multi-language support;

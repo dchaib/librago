@@ -41,22 +41,32 @@ public sealed partial class SynchronizationWorker(
                 group.Key,
                 group.Select(account => account.AccountId).ToArray()))
             .ToArray();
-        var states = await database.GetNetworkStatesAsync(cancellationToken);
+        var states = await database.GetLoanNetworkStatesAsync(cancellationToken);
+        var reservationStates = await database.GetReservationNetworkStatesAsync(cancellationToken);
 
-        return SynchronizationSchedule.GetInitialDelay(
+        var loanDelay = SynchronizationSchedule.GetInitialDelay(
             configuredNetworks,
             states,
             options.Value.SynchronizationInterval,
             timeProvider.GetUtcNow());
+        var reservationDelay = SynchronizationSchedule.GetInitialDelay(
+            configuredNetworks, reservationStates, options.Value.SynchronizationInterval,
+            timeProvider.GetUtcNow());
+        return loanDelay < reservationDelay ? loanDelay : reservationDelay;
     }
 
     private async Task RunSynchronizationAsync(CancellationToken cancellationToken)
     {
+        await using var scope = scopeFactory.CreateAsyncScope();
+        var synchronization = scope.ServiceProvider.GetRequiredService<AccountSynchronizationService>();
+        await TrySynchronizeAsync(() => synchronization.SynchronizeAllAsync(cancellationToken), cancellationToken);
+    }
+
+    private async Task TrySynchronizeAsync(Func<Task> synchronize, CancellationToken cancellationToken)
+    {
         try
         {
-            await using var scope = scopeFactory.CreateAsyncScope();
-            var synchronizer = scope.ServiceProvider.GetRequiredService<LoanSynchronizationService>();
-            await synchronizer.SynchronizeAllAsync(cancellationToken);
+            await synchronize();
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

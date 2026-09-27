@@ -93,6 +93,41 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
         _browser = await _playwright.Chromium.LaunchAsync(new BrowserTypeLaunchOptions { Headless = true });
     }
 
+    [Fact]
+    public async Task ReservationsRequireTheTableAndACompleteCount()
+    {
+        var page = await NewPageAsync();
+        await page.SetContentAsync("<table class='tablesorter reservations'><thead><tr><th>Titre</th></tr></thead><tbody></tbody></table>");
+        Assert.Empty(await NozayLibraryConnector.ReadReservationsAsync(page, Account(), 0, CancellationToken.None));
+        await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadReservationsAsync(page, Account(), 1, CancellationToken.None));
+        await page.SetContentAsync("<p>Aucune réservation</p>");
+        await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadReservationsAsync(page, Account(), 0, CancellationToken.None));
+    }
+
+    [Fact]
+    public async Task ReservationsExtractIdentityWithoutFollowingDeletionLinks()
+    {
+        var page = await NewPageAsync();
+        const string row = """
+            <tr><td>Lecteur exemple</td><td>Livre</td><td></td><td>Titre exemple</td>
+            <td>Auteur</td><td>Centre</td><td>Disponible</td><td>1</td>
+            <td><a href="/abonne/reservations/id_profil/2/id_delete/123_456">Supprimer</a></td></tr>
+            """;
+        await page.SetContentAsync($"<table class='reservations'><tbody>{row}</tbody></table>");
+        var item = Assert.Single(await NozayLibraryConnector.ReadReservationsAsync(page, Account(), 1, CancellationToken.None));
+        Assert.Equal("nozay-reservation:123_456", item.ExternalId);
+        Assert.Equal("about:blank", page.Url);
+        await page.SetContentAsync($"<table class='reservations'><tbody>{row}{row}</tbody></table>");
+        await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadReservationsAsync(page, Account(), 2, CancellationToken.None));
+        await page.SetContentAsync("<input name='username'><table class='reservations'><tbody></tbody></table>");
+        var failure = await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadReservationsAsync(page, Account(), 0, CancellationToken.None));
+        Assert.Equal(LibraryConnectorFailureKind.Authentication, failure.FailureKind);
+    }
+
     public async ValueTask DisposeAsync()
     {
         if (_browser is not null)

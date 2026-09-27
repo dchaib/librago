@@ -1,7 +1,7 @@
 using Librago.Configuration;
 using Librago.Connectors;
 using Librago.Persistence;
-using Librago.Loans;
+using Librago.Reservations;
 using Librago.Synchronization;
 using System.Globalization;
 using Microsoft.AspNetCore.Mvc;
@@ -11,7 +11,7 @@ using Microsoft.Extensions.Options;
 
 namespace Librago.Pages;
 
-public sealed class IndexModel(
+public sealed class ReservationsModel(
     LibragoDatabase database,
     IOptions<LibragoOptions> options,
     LibraryConnectorResolver connectorResolver,
@@ -23,7 +23,17 @@ public sealed class IndexModel(
     [BindProperty(SupportsGet = true)]
     public string? SelectedBorrower { get; set; }
 
-    public IReadOnlyList<Loan> Loans { get; private set; } = [];
+    [BindProperty(SupportsGet = true)]
+    public string? SelectedPickupLibrary { get; set; }
+
+    [BindProperty(SupportsGet = true)]
+    public string? SelectedStatus { get; set; }
+
+    public IReadOnlyList<SelectListItem> PickupLibraryOptions { get; private set; } = [];
+    public IReadOnlyList<SelectListItem> StatusOptions { get; } = Enum.GetValues<ReservationStatus>()
+        .Select(status => new SelectListItem(ReservationPresentation.StatusLabel(status), status.ToString())).ToArray();
+
+    public IReadOnlyList<Reservation> Reservations { get; private set; } = [];
 
     public IReadOnlyList<SelectListItem> NetworkOptions { get; private set; } = [];
 
@@ -35,7 +45,9 @@ public sealed class IndexModel(
 
     public bool HasActiveFilters =>
         !string.IsNullOrWhiteSpace(SelectedNetwork) ||
-        !string.IsNullOrWhiteSpace(SelectedBorrower);
+        !string.IsNullOrWhiteSpace(SelectedBorrower) ||
+        !string.IsNullOrWhiteSpace(SelectedPickupLibrary) ||
+        !string.IsNullOrWhiteSpace(SelectedStatus);
 
     public DateOnly Today { get; private set; }
 
@@ -55,18 +67,18 @@ public sealed class IndexModel(
         var configuredAccountIds = options.Value.Accounts
             .Select(account => account.AccountId)
             .ToHashSet(StringComparer.OrdinalIgnoreCase);
-        var allLoans = (await database.GetLoansAsync(cancellationToken))
-            .Where(loan => configuredAccountIds.Contains(loan.AccountId))
+        var allReservations = (await database.GetReservationsAsync(cancellationToken))
+            .Where(reservation => configuredAccountIds.Contains(reservation.AccountId))
             .ToArray();
-        var storedStates = await database.GetLoanNetworkStatesAsync(cancellationToken);
+        var storedStates = await database.GetReservationNetworkStatesAsync(cancellationToken);
         var configuredNetworks = options.Value.Accounts
             .Select(account => connectorResolver.Resolve(account.Network).Network)
             .DistinctBy(network => network.Key, StringComparer.Ordinal)
             .OrderBy(network => network.DisplayName, StringComparer.CurrentCultureIgnoreCase)
             .ToArray();
 
-        NetworkOptions = allLoans
-            .Select(loan => new { loan.NetworkKey, loan.NetworkName })
+        NetworkOptions = allReservations
+            .Select(reservation => new { reservation.NetworkKey, reservation.NetworkName })
             .Concat(configuredNetworks.Select(network => new
             {
                 NetworkKey = network.Key,
@@ -77,24 +89,36 @@ public sealed class IndexModel(
             .Select(network => new SelectListItem(network.NetworkName, network.NetworkKey))
             .ToArray();
 
-        BorrowerOptions = allLoans
-            .Select(loan => loan.Borrower)
+        BorrowerOptions = allReservations
+            .Select(reservation => reservation.Item.Borrower)
             .Distinct(StringComparer.CurrentCultureIgnoreCase)
             .OrderBy(borrower => borrower, StringComparer.CurrentCultureIgnoreCase)
             .Select(borrower => new SelectListItem(borrower, borrower))
             .ToArray();
 
-        Loans = allLoans
-            .Where(loan => string.IsNullOrWhiteSpace(SelectedNetwork) ||
+        var libraries = allReservations.Where(r => r.Item.PickupLibrary is not null)
+            .DistinctBy(r => r.PickupFilterKey).ToArray();
+        PickupLibraryOptions = libraries.OrderBy(r => r.Item.PickupLibrary, StringComparer.CurrentCultureIgnoreCase)
+            .ThenBy(r => r.NetworkName, StringComparer.CurrentCultureIgnoreCase)
+            .Select(r => new SelectListItem(
+                libraries.Any(other => other.NetworkKey != r.NetworkKey &&
+                    string.Equals(other.Item.PickupLibrary, r.Item.PickupLibrary, StringComparison.OrdinalIgnoreCase))
+                    ? $"{r.Item.PickupLibrary} — {r.NetworkName}" : r.Item.PickupLibrary,
+                r.PickupFilterKey)).ToArray();
+
+        Reservations = ReservationPresentation.Sort(allReservations
+            .Where(reservation => string.IsNullOrWhiteSpace(SelectedNetwork) ||
                            string.Equals(
-                               loan.NetworkKey,
+                               reservation.NetworkKey,
                                SelectedNetwork,
                                StringComparison.OrdinalIgnoreCase))
-            .Where(loan => string.IsNullOrWhiteSpace(SelectedBorrower) ||
+            .Where(reservation => string.IsNullOrWhiteSpace(SelectedBorrower) ||
                            string.Equals(
-                               loan.Borrower,
+                               reservation.Item.Borrower,
                                SelectedBorrower,
                                StringComparison.OrdinalIgnoreCase))
+            .Where(r => string.IsNullOrWhiteSpace(SelectedPickupLibrary) || r.PickupFilterKey == SelectedPickupLibrary)
+            .Where(r => string.IsNullOrWhiteSpace(SelectedStatus) || r.Item.Status.ToString() == SelectedStatus))
             .ToArray();
 
         NetworkStatuses = configuredNetworks
@@ -116,32 +140,4 @@ public sealed class IndexModel(
     }
 }
 
-public sealed record NetworkStatusViewModel(
-    string NetworkKey,
-    string NetworkName,
-    DateTimeOffset? LastCompleteSuccessAt,
-    SynchronizationResult? Result,
-    bool HasCurrentAccountCoverage,
-    bool IsStale)
-{
-    public bool NeedsAttention =>
-        LastCompleteSuccessAt is null ||
-        !HasCurrentAccountCoverage ||
-        IsStale ||
-        Result is not SynchronizationResult.Success;
 
-    public static NetworkStatusViewModel Create(
-        string networkKey,
-        string networkName,
-        NetworkSynchronizationState? state,
-        DateTimeOffset now,
-        IEnumerable<string> accountIds) =>
-        new(
-            networkKey,
-            networkName,
-            state?.LastCompleteSuccessAt,
-            state?.Result,
-            state?.CoversAccounts(accountIds) ?? false,
-            state?.LastCompleteSuccessAt is { } lastSuccess &&
-            now.ToUniversalTime() - lastSuccess.ToUniversalTime() > TimeSpan.FromHours(24));
-}

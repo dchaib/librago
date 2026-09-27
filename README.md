@@ -22,13 +22,15 @@ The project is designed to support multiple library networks through network-spe
 
 ## Project status
 
-Version 0.1 is under active development. Its first slice consolidates current loans from the Nantes and Nozay library networks.
+The project is under active development. See [`docs/product/roadmap.md`](docs/product/roadmap.md) for more information.
 
 See [`docs/README.md`](docs/README.md) for an overview of the project documentation.
 
 ## Development
 
 Librago requires the .NET 10 SDK. The Nozay connector also requires a Playwright Chromium installation.
+
+After updating Playwright dependencies, rerun the Chromium installation command below for the new build. Installing with `--only-shell` is sufficient for headless tests, but not for the Nozay connector, which uses a visible browser.
 
 ```powershell
 Copy-Item src/Librago/appsettings.Local.example.json src/Librago/appsettings.Local.json

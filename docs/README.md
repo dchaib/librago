@@ -8,6 +8,7 @@ The goal is to keep different kinds of decisions in the right place so the docum
 
 - The root `README.md` is the public-facing introduction.
 - Product documentation explains what Librago should do and why.
+- Library-network documentation describes available data and connector constraints.
 - Architecture Decision Records explain structural technical decisions and their rationale.
 - Agent working rules belong in `AGENTS.md`.
 - Open questions should remain explicit instead of being silently resolved in implementation.
@@ -43,7 +44,7 @@ Detailed specification of a feature close to implementation.
 
 Examples:
 - `product/features/loans.md`
-- later, potentially `product/features/reservations.md`
+- `product/features/reservations.md`
 - later, potentially `product/features/search.md`
 
 May contain:
@@ -61,6 +62,21 @@ May contain:
 Only unresolved product questions.
 
 Once answered, remove the question and move the resulting decision into the appropriate product document when relevant.
+
+### `networks/<network>.md`
+
+Current reference for a library network's connector.
+
+Contains:
+- supported capabilities and available fields;
+- source-to-domain mappings;
+- account scope and source limitations;
+- completeness and identity requirements;
+- integration questions still to resolve.
+
+Keep these references concise and useful for implementation and maintenance. Record the current contract and its limitations. Exploration chronology, manual test reports, raw captures, and copies of third-party source code do not belong in these documents. Network details should link to the relevant product specification without duplicating its behavior rules.
+
+Use the same structure for each network: scope and implementation entry points, access/session handling, then retrieval, mapping, identity, and validation for each interaction. State which interactions are implemented and which are planned. Mark assumptions and missing information explicitly. Document only the endpoints, selectors, and fields needed by Librago's current or next slice.
 
 ### `adr/`
 
@@ -108,6 +124,8 @@ It may contain:
 | What should be built next? | `product/roadmap.md` |
 | How should a specific feature behave? | `product/features/<feature>.md` |
 | What product question is unresolved? | `product/open-questions.md` |
+| Which data and constraints does a library network expose? | `networks/<network>.md` |
+| What integration question is unresolved? | The relevant `networks/<network>.md` |
 | Why did we choose an architecture or technology? | `adr/` |
 | How should an agent work in the repo? | `AGENTS.md` |
 | What should a new visitor know first? | root `README.md` |

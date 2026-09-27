@@ -1,0 +1,52 @@
+@model Librago.Reservations.ReservationCardViewModel
+@using Librago.Reservations
+@using Librago.Loans
+@{
+    var reservation = Model.Reservation;
+    var item = reservation.Item;
+    var deadline = item.PickupDeadline;
+    var isAvailable = item.Status == ReservationStatus.Available;
+    var severity = isAvailable && deadline is { } date ? LoanPresentation.SeverityClass(date, Model.Today) : "";
+}
+<li class="loan-card">
+    <div class="loan-card__body">
+        <p class="loan-card__network">@reservation.NetworkName</p>
+        <h2>@item.Title</h2>
+        @if (item.Author is not null) { <p class="loan-card__author">@item.Author</p> }
+        <dl class="loan-card__details">
+            <div><dt>Réservé par</dt><dd>@item.Borrower</dd></div>
+            @if (item.PickupLibrary is not null) { <div><dt>À retirer à</dt><dd>@item.PickupLibrary</dd></div> }
+            @if (item.QueuePosition is { } rank) { <div><dt>Rang</dt><dd>@rank</dd></div> }
+            <div>
+                <dt>Réservé le</dt>
+                <dd>@LoanPresentation.FormatDate(reservation.ReservedOn)@if (item.ReservedOn is null) { <a href="#estimated-dates" aria-label="Date estimée d’après la première observation par Librago">*</a> }</dd>
+            </div>
+            @if (reservation.AvailableOn is { } availableOn)
+            {
+                <div><dt>Disponible depuis le</dt><dd>@LoanPresentation.FormatDate(availableOn)@if (item.AvailableOn is null) { <a href="#estimated-dates" aria-label="Date estimée d’après la première observation comme disponible par Librago">*</a> }</dd></div>
+            }
+            @if (item.SuspensionStartsOn is { } starts) { <div><dt>Suspension depuis le</dt><dd>@LoanPresentation.FormatDate(starts)</dd></div> }
+            @if (item.SuspensionEndsOn is { } ends) { <div><dt>Fin de suspension le</dt><dd>@LoanPresentation.FormatDate(ends)</dd></div> }
+        </dl>
+    </div>
+    <div class="deadline @severity">
+        @if (isAvailable && deadline is { } availableDeadline)
+        {
+            <strong>@ReservationPresentation.FormatDeadline(availableDeadline, Model.Today)</strong>
+            <span>Retrait au plus tard le @LoanPresentation.FormatDate(availableDeadline)</span>
+        }
+        else
+        {
+            <strong>@(isAvailable ? ReservationPresentation.StatusLabel(item.Status) : item.StatusLabel ?? ReservationPresentation.StatusLabel(item.Status))</strong>
+            @if (item.StatusLabel is not null && item.Status is ReservationStatus.Unknown or ReservationStatus.Suspended)
+            {
+                <span>@ReservationPresentation.StatusLabel(item.Status)</span>
+            }
+            @if (deadline is { } pickupDeadline)
+            {
+                <span>Retrait au plus tard le @LoanPresentation.FormatDate(pickupDeadline)</span>
+            }
+            else if (isAvailable) { <span>Date limite de retrait non communiquée</span> }
+        }
+    </div>
+</li>

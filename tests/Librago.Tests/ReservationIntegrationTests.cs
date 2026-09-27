@@ -216,7 +216,15 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         {
             await connection.OpenAsync(TestContext.Current.CancellationToken);
             await using var command = connection.CreateCommand();
-            command.CommandText = "ALTER TABLE loan_account_sync RENAME TO account_sync; ALTER TABLE loan_network_sync RENAME TO network_sync; DROP TABLE reservations; DROP TABLE reservation_network_sync; PRAGMA user_version = 1;";
+            command.CommandText = """
+                CREATE TABLE account_sync (
+                    account_id TEXT PRIMARY KEY, network_key TEXT NOT NULL,
+                    last_attempt_at TEXT NOT NULL, last_success_at TEXT NULL, result TEXT NOT NULL);
+                ALTER TABLE loan_network_sync RENAME TO network_sync;
+                DROP TABLE reservations;
+                DROP TABLE reservation_network_sync;
+                PRAGMA user_version = 1;
+                """;
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
         await database.InitializeAsync(CancellationToken.None);
@@ -225,6 +233,71 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         await Assert.ThrowsAsync<LibraryConnectorException>(() => database.ReplaceAccountReservationsAsync(
             account, network, [Item("1", "Duplicate"), Item("1", "Duplicate")], Observation.AddDays(1), CancellationToken.None));
         Assert.Equal("Original", Assert.Single(await database.GetReservationsAsync(CancellationToken.None)).Item.Title);
+    }
+
+    [Theory]
+    [InlineData(2)]
+    [InlineData(3)]
+    public async Task MigrationRemovesUnusedAccountStateAndPreservesDocumentsAndNetworkFreshness(int version)
+    {
+        var database = Database;
+        var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
+        var network = Resolver.Resolve("Nantes").Network;
+        var attemptedAt = new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero);
+        await database.ReplaceAccountLoansAsync(account, network,
+            [new LoanSnapshot("1", "Lecteur Alpha", "Prêt conservé", null, null, null, null, Observation)],
+            attemptedAt, CancellationToken.None);
+        await SeedAsync(account.AccountId, "Nantes", Item("1", "Réservation conservée"));
+        await database.SetLoanNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
+            SynchronizationResult.Success, [account.AccountId], CancellationToken.None);
+        await database.SetReservationNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
+            SynchronizationResult.Success, [account.AccountId], CancellationToken.None);
+
+        var options = Factory.Services.GetRequiredService<IOptions<LibragoOptions>>();
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+            $"Data Source={options.Value.DatabasePath};Pooling=False");
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            CREATE TABLE loan_account_sync (
+                account_id TEXT PRIMARY KEY, network_key TEXT NOT NULL,
+                last_attempt_at TEXT NOT NULL, last_success_at TEXT NULL, result TEXT NOT NULL);
+            INSERT INTO loan_account_sync VALUES (
+                'nantes-account', 'nantes', '2026-09-26T08:00:00Z', '2026-09-26T08:00:00Z', 'Success');
+            """;
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        if (version == 2)
+        {
+            command.CommandText = """
+                ALTER TABLE loan_account_sync RENAME TO account_sync;
+                ALTER TABLE loan_network_sync RENAME TO network_sync;
+                """;
+            await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        }
+        command.CommandText = $"PRAGMA user_version = {version};";
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+
+        await database.InitializeAsync(CancellationToken.None);
+        await database.InitializeAsync(CancellationToken.None);
+        Assert.Equal("Prêt conservé", Assert.Single(await database.GetLoansAsync(CancellationToken.None)).Title);
+        var reservation = Assert.Single(await database.GetReservationsAsync(CancellationToken.None));
+        Assert.Equal("Réservation conservée", reservation.Item.Title);
+        Assert.Equal(Observation, reservation.FirstObservedOn);
+        Assert.Equal(Observation, reservation.FirstAvailableOn);
+        foreach (var state in new[] {
+                     Assert.Single(await database.GetLoanNetworkStatesAsync(CancellationToken.None)),
+                     Assert.Single(await database.GetReservationNetworkStatesAsync(CancellationToken.None)) })
+        {
+            Assert.Equal(network.Key, state.NetworkKey);
+            Assert.Equal(attemptedAt, state.LastAttemptAt);
+            Assert.Equal(attemptedAt, state.LastCompleteSuccessAt);
+            Assert.Equal(SynchronizationResult.Success, state.Result);
+            Assert.True(state.CoversAccounts([account.AccountId]));
+        }
+        command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('account_sync', 'loan_account_sync');";
+        Assert.Equal(0L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+        command.CommandText = "PRAGMA user_version;";
+        Assert.Equal(4L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
     }
 
     private sealed class FakeConnector(LibraryNetworkDescriptor network) : ILibraryConnector

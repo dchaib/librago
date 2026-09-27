@@ -112,4 +112,17 @@ public sealed partial class LibragoDatabase
         await transaction.CommitAsync(cancellationToken);
     }
 
+    private static async Task ApplyVersionFourAsync(SqliteConnection connection, CancellationToken cancellationToken)
+    {
+        await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
+        await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
+        command.CommandText = """
+            DROP TABLE loan_account_sync;
+            PRAGMA user_version = 4;
+            """;
+        await command.ExecuteNonQueryAsync(cancellationToken);
+        await transaction.CommitAsync(cancellationToken);
+    }
+
 }

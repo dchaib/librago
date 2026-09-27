@@ -38,25 +38,6 @@ public sealed partial class LibragoDatabase
                 cancellationToken);
         }
 
-        await using (var state = connection.CreateCommand())
-        {
-            state.Transaction = transaction;
-            state.CommandText =
-                """
-                INSERT INTO loan_account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
-                VALUES ($accountId, $networkKey, $attemptedAt, $attemptedAt, 'Success')
-                ON CONFLICT(account_id) DO UPDATE SET
-                    network_key = excluded.network_key,
-                    last_attempt_at = excluded.last_attempt_at,
-                    last_success_at = excluded.last_success_at,
-                    result = excluded.result;
-                """;
-            state.Parameters.AddWithValue("$accountId", account.AccountId);
-            state.Parameters.AddWithValue("$networkKey", network.Key);
-            state.Parameters.AddWithValue("$attemptedAt", FormatTimestamp(attemptedAt));
-            await state.ExecuteNonQueryAsync(cancellationToken);
-        }
-
         await transaction.CommitAsync(cancellationToken);
     }
 

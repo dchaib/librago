@@ -89,20 +89,6 @@ public sealed partial class AccountSynchronizationService(
         {
             var failure = GetFailureKind(exception);
             LogFailure(logger, "loans", configured.Connector.Network.Key, configured.Account.AccountId, failure);
-            try
-            {
-                await database.MarkLoanAccountFailedAsync(configured.Account, configured.Connector.Network,
-                    attemptedAt, cancellationToken);
-            }
-            catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
-            {
-                throw;
-            }
-            catch (Exception stateException)
-            {
-                LogFailure(logger, "loan state", configured.Connector.Network.Key,
-                    configured.Account.AccountId, GetFailureKind(stateException));
-            }
             return false;
         }
     }

@@ -128,7 +128,8 @@ public sealed class NantesLoanParserTests
         var json = "{\"items\":[{\"data\":{" + field + "\"documentNumber\":\"synthetic\",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}],\"total\":1}";
         var error = Assert.Throws<LibraryConnectorException>(() => NantesLoanParser.Parse(json, "Lecteur"));
         Assert.Equal(LibraryConnectorFailureKind.InvalidData, error.FailureKind);
-    }    [Theory]
+    }
+    [Theory]
     [InlineData(true, false)]
     [InlineData(true, true)]
     [InlineData(false, false)]
@@ -168,4 +169,5 @@ public sealed class NantesLoanParserTests
                 Content = new StringContent("{\"items\":[" + items + "],\"total\":2}")
             });
         }
-    }}
+    }
+}

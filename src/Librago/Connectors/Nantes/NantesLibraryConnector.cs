@@ -20,7 +20,7 @@ public sealed partial class NantesLibraryConnector(ILogger<NantesLibraryConnecto
         NantesSession session;
         try
         {
-            session = await OpenSessionAsync(account, cancellationToken);
+            session = (await OpenSessionAsync(account, cancellationToken)) with { Logger = logger };
         }
         catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)
         {

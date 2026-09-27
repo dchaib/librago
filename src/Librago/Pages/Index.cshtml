@@ -100,36 +100,44 @@
     <ol class="loan-list">
         @foreach (var loan in Model.Loans)
         {
-            var severity = LoanPresentation.SeverityClass(loan.DueOn, Model.Today);
+            var severity = LoanPresentation.SeverityClass(loan.Item.DueOn, Model.Today);
             <li class="loan-card">
                 <div class="loan-card__body">
                     <p class="loan-card__network">@loan.NetworkName</p>
-                    <h2>@loan.Title</h2>
-                    @if (!string.IsNullOrWhiteSpace(loan.Author))
+                    <h2>@loan.Item.Title</h2>
+                    @if (!string.IsNullOrWhiteSpace(loan.Item.Author))
                     {
-                        <p class="loan-card__author">@loan.Author</p>
+                        <p class="loan-card__author">@loan.Item.Author</p>
                     }
                     <dl class="loan-card__details">
                         <div>
                             <dt>Emprunté par</dt>
-                            <dd>@loan.Borrower</dd>
+                            <dd>@loan.Item.Borrower</dd>
                         </div>
-                        @if (!string.IsNullOrWhiteSpace(loan.Branch))
+                        @if (!string.IsNullOrWhiteSpace(loan.Item.Library))
                         {
                             <div>
                                 <dt>Bibliothèque</dt>
-                                <dd>@loan.Branch</dd>
+                                <dd>@loan.Item.Library</dd>
                             </div>
                         }
+                        <div>
+                            <dt>Emprunté le</dt>
+                            <dd>@LoanPresentation.FormatDate(loan.BorrowedOn)@if (loan.Item.BorrowedOn is null) { <a href="#estimated-dates" aria-label="Date estimée d’après la première observation par Librago">*</a> }</dd>
+                        </div>
                     </dl>
                 </div>
                 <div class="deadline @severity">
-                    <strong>@LoanPresentation.FormatDeadline(loan.DueOn, Model.Today)</strong>
-                    <span>Retour au plus tard le @LoanPresentation.FormatDate(loan.DueOn)</span>
+                    <strong>@LoanPresentation.FormatDeadline(loan.Item.DueOn, Model.Today)</strong>
+                    <span>Retour au plus tard le @LoanPresentation.FormatDate(loan.Item.DueOn)</span>
                 </div>
             </li>
         }
     </ol>
+    @if (Model.Loans.Any(loan => loan.Item.BorrowedOn is null))
+    {
+        <p id="estimated-dates" class="estimate-explanation">* Date estimée d’après la première observation par Librago. Elle peut être postérieure à la date réelle, notamment lors de la première utilisation ou après une interruption de synchronisation.</p>
+    }
 }
 
 @if (Model.NetworkStatuses.Count > 0)

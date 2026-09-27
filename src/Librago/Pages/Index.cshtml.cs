@@ -78,7 +78,7 @@ public sealed class IndexModel(
             .ToArray();
 
         BorrowerOptions = allLoans
-            .Select(loan => loan.Borrower)
+            .Select(loan => loan.Item.Borrower)
             .Distinct(StringComparer.CurrentCultureIgnoreCase)
             .OrderBy(borrower => borrower, StringComparer.CurrentCultureIgnoreCase)
             .Select(borrower => new SelectListItem(borrower, borrower))
@@ -92,7 +92,7 @@ public sealed class IndexModel(
                                StringComparison.OrdinalIgnoreCase))
             .Where(loan => string.IsNullOrWhiteSpace(SelectedBorrower) ||
                            string.Equals(
-                               loan.Borrower,
+                               loan.Item.Borrower,
                                SelectedBorrower,
                                StringComparison.OrdinalIgnoreCase))
             .ToArray();

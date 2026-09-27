@@ -2,17 +2,13 @@ namespace Librago.Loans;
 
 public sealed record Loan(
     string AccountId,
-    string ExternalId,
     string NetworkKey,
     string NetworkName,
-    string Borrower,
-    string Title,
-    string? Author,
-    string? MaterialType,
-    string? Branch,
-    DateOnly? BorrowedOn,
-    DateOnly DueOn,
-    DateTimeOffset RefreshedAt);
+    LoanSnapshot Item,
+    DateOnly FirstObservedOn)
+{
+    public DateOnly BorrowedOn => Item.BorrowedOn ?? FirstObservedOn;
+}
 
 public sealed record LoanSnapshot(
     string ExternalId,
@@ -20,7 +16,8 @@ public sealed record LoanSnapshot(
     string Title,
     string? Author,
     string? MaterialType,
-    string? Branch,
+    string? LibraryId,
+    string? Library,
     DateOnly? BorrowedOn,
     DateOnly DueOn);
 

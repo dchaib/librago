@@ -93,6 +93,39 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
     }
 
     [Fact]
+    public async Task LoanBorrowingEstimatesSurviveRestartAndSuppliedDatesTakePriority()
+    {
+        var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
+        var network = Resolver.Resolve("Nantes").Network;
+        var observedAt = new DateTimeOffset(2026, 9, 26, 22, 30, 0, TimeSpan.Zero);
+        var item = new LoanSnapshot("1", "Lecteur Alpha", "Titre", null, null, null, null, null, Observation.AddDays(30));
+        await Database.ReplaceAccountLoansAsync(account, network, [item], observedAt, CancellationToken.None);
+        var first = Assert.Single(await Database.GetLoansAsync(CancellationToken.None));
+        Assert.Null(first.Item.BorrowedOn);
+        Assert.Equal(Observation.AddDays(1), first.BorrowedOn);
+        var client = Factory.CreateClient();
+        var html = WebUtility.HtmlDecode(await client.GetStringAsync("/", TestContext.Current.CancellationToken));
+        Assert.Contains("Emprunté le", html);
+        Assert.Contains("href=\"#estimated-dates\"", html);
+        var restarted = new LibragoDatabase(Factory.Services.GetRequiredService<IOptions<LibragoOptions>>(),
+            Factory.Services.GetRequiredService<IWebHostEnvironment>());
+        await restarted.InitializeAsync(CancellationToken.None);
+        await restarted.ReplaceAccountLoansAsync(account, network, [item with { DueOn = item.DueOn.AddDays(7) }],
+            observedAt.AddDays(3), CancellationToken.None);
+        Assert.Equal(first.BorrowedOn,
+            Assert.Single(await restarted.GetLoansAsync(CancellationToken.None)).BorrowedOn);
+        await restarted.ReplaceAccountLoansAsync(account, network, [item with { BorrowedOn = Observation }],
+            observedAt.AddDays(4), CancellationToken.None);
+        Assert.Equal(Observation, Assert.Single(await restarted.GetLoansAsync(CancellationToken.None)).BorrowedOn);
+        html = await client.GetStringAsync("/", TestContext.Current.CancellationToken);
+        Assert.DoesNotContain("id=\"estimated-dates\"", html);
+        await restarted.ReplaceAccountLoansAsync(account, network, [], observedAt.AddDays(5), CancellationToken.None);
+        await restarted.ReplaceAccountLoansAsync(account, network, [item], observedAt.AddDays(6), CancellationToken.None);
+        Assert.Equal(Observation.AddDays(7),
+            Assert.Single(await restarted.GetLoansAsync(CancellationToken.None)).BorrowedOn);
+    }
+
+    [Fact]
     public async Task RefreshFailuresPreserveReservationsAndLoanFreshnessIsIndependent()
     {
         var options = Factory.Services.GetRequiredService<IOptions<LibragoOptions>>();
@@ -209,7 +242,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
         var network = Resolver.Resolve("Nantes").Network;
         await database.ReplaceAccountLoansAsync(account, network,
-            [new LoanSnapshot("1", "Lecteur Alpha", "Prêt conservé", null, null, null, null, Observation)],
+            [new LoanSnapshot("1", "Lecteur Alpha", "Prêt conservé", null, null, null, null, null, Observation)],
             DateTimeOffset.UtcNow, CancellationToken.None);
         var options = Factory.Services.GetRequiredService<IOptions<LibragoOptions>>();
         await using (var connection = new Microsoft.Data.Sqlite.SqliteConnection($"Data Source={options.Value.DatabasePath};Pooling=False"))
@@ -223,12 +256,15 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
                 ALTER TABLE loan_network_sync RENAME TO network_sync;
                 DROP TABLE reservations;
                 DROP TABLE reservation_network_sync;
+                ALTER TABLE loans DROP COLUMN first_observed_on;
+                ALTER TABLE loans RENAME COLUMN library TO branch;
+                ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T08:00:00Z';
                 PRAGMA user_version = 1;
                 """;
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
         await database.InitializeAsync(CancellationToken.None);
-        Assert.Equal("Prêt conservé", Assert.Single(await database.GetLoansAsync(CancellationToken.None)).Title);
+        Assert.Equal("Prêt conservé", Assert.Single(await database.GetLoansAsync(CancellationToken.None)).Item.Title);
         await SeedAsync("nantes-account", "Nantes", Item("1", "Original"));
         await Assert.ThrowsAsync<LibraryConnectorException>(() => database.ReplaceAccountReservationsAsync(
             account, network, [Item("1", "Duplicate"), Item("1", "Duplicate")], Observation.AddDays(1), CancellationToken.None));
@@ -238,14 +274,14 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
     [Theory]
     [InlineData(2)]
     [InlineData(3)]
-    public async Task MigrationRemovesUnusedAccountStateAndPreservesDocumentsAndNetworkFreshness(int version)
+    public async Task MigrationPreservesLoansAndNetworkFreshnessAndResetsReservations(int version)
     {
         var database = Database;
         var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
         var network = Resolver.Resolve("Nantes").Network;
         var attemptedAt = new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero);
         await database.ReplaceAccountLoansAsync(account, network,
-            [new LoanSnapshot("1", "Lecteur Alpha", "Prêt conservé", null, null, null, null, Observation)],
+            [new LoanSnapshot("1", "Lecteur Alpha", "Prêt conservé", null, null, null, null, null, Observation)],
             attemptedAt, CancellationToken.None);
         await SeedAsync(account.AccountId, "Nantes", Item("1", "Réservation conservée"));
         await database.SetLoanNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
@@ -274,30 +310,109 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
                 """;
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
-        command.CommandText = $"PRAGMA user_version = {version};";
+        command.CommandText = $"ALTER TABLE loans DROP COLUMN first_observed_on; ALTER TABLE loans RENAME COLUMN library TO branch; ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T08:00:00Z'; PRAGMA user_version = {version};";
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
 
         await database.InitializeAsync(CancellationToken.None);
         await database.InitializeAsync(CancellationToken.None);
-        Assert.Equal("Prêt conservé", Assert.Single(await database.GetLoansAsync(CancellationToken.None)).Title);
-        var reservation = Assert.Single(await database.GetReservationsAsync(CancellationToken.None));
-        Assert.Equal("Réservation conservée", reservation.Item.Title);
-        Assert.Equal(Observation, reservation.FirstObservedOn);
-        Assert.Equal(Observation, reservation.FirstAvailableOn);
-        foreach (var state in new[] {
-                     Assert.Single(await database.GetLoanNetworkStatesAsync(CancellationToken.None)),
-                     Assert.Single(await database.GetReservationNetworkStatesAsync(CancellationToken.None)) })
-        {
-            Assert.Equal(network.Key, state.NetworkKey);
-            Assert.Equal(attemptedAt, state.LastAttemptAt);
-            Assert.Equal(attemptedAt, state.LastCompleteSuccessAt);
-            Assert.Equal(SynchronizationResult.Success, state.Result);
-            Assert.True(state.CoversAccounts([account.AccountId]));
-        }
+        Assert.Equal("Prêt conservé", Assert.Single(await database.GetLoansAsync(CancellationToken.None)).Item.Title);
+        Assert.Equal(Observation, Assert.Single(await database.GetLoansAsync(CancellationToken.None)).BorrowedOn);
+        Assert.Empty(await database.GetReservationsAsync(CancellationToken.None));
+        var state = Assert.Single(await database.GetLoanNetworkStatesAsync(CancellationToken.None));
+        Assert.Equal(network.Key, state.NetworkKey);
+        Assert.Equal(attemptedAt, state.LastAttemptAt);
+        Assert.Equal(attemptedAt, state.LastCompleteSuccessAt);
+        Assert.Equal(SynchronizationResult.Success, state.Result);
+        Assert.True(state.CoversAccounts([account.AccountId]));
+        Assert.Empty(await database.GetReservationNetworkStatesAsync(CancellationToken.None));
         command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('account_sync', 'loan_account_sync');";
         Assert.Equal(0L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
         command.CommandText = "PRAGMA user_version;";
-        Assert.Equal(4L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(5L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task VersionFourMigrationBackfillsLocalDatesAndRemovesRefreshTimestamps()
+    {
+        var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
+        var network = Resolver.Resolve("Nantes").Network;
+        var item = new LoanSnapshot("1", "Lecteur Alpha", "Titre", null, null, null, "Bibliothèque exemple", null, Observation.AddDays(30));
+        await Database.ReplaceAccountLoansAsync(account, network, [item, item with { ExternalId = "2" }],
+            new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero), CancellationToken.None);
+        var options = Factory.Services.GetRequiredService<IOptions<LibragoOptions>>();
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+            $"Data Source={options.Value.DatabasePath};Pooling=False");
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = """
+            ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T22:30:00Z';
+            UPDATE loans SET refreshed_at = '2026-09-26T08:00:00Z' WHERE external_id = '2';
+            ALTER TABLE loans DROP COLUMN first_observed_on;
+            ALTER TABLE loans RENAME COLUMN library TO branch;
+            PRAGMA user_version = 4;
+            """;
+        await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
+        await Database.InitializeAsync(CancellationToken.None);
+        await Database.InitializeAsync(CancellationToken.None);
+        var loans = await Database.GetLoansAsync(CancellationToken.None);
+        Assert.All(loans, loan => Assert.Equal("Bibliothèque exemple", loan.Item.Library));
+        Assert.Equal(Observation.AddDays(1), loans.Single(l => l.Item.ExternalId == "1").FirstObservedOn);
+        Assert.Equal(Observation, loans.Single(l => l.Item.ExternalId == "2").FirstObservedOn);
+        command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('loans') WHERE name = 'refreshed_at';";
+        Assert.Equal(0L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+        command.CommandText = "SELECT \"notnull\" FROM pragma_table_info('loans') WHERE name = 'first_observed_on';";
+        Assert.Equal(1L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+        await Database.ReplaceAccountLoansAsync(account, network, [item, item with { ExternalId = "2" }],
+            new DateTimeOffset(2026, 10, 1, 8, 0, 0, TimeSpan.Zero), CancellationToken.None);
+        Assert.Equal(Observation.AddDays(1), (await Database.GetLoansAsync(CancellationToken.None))
+            .Single(l => l.Item.ExternalId == "1").FirstObservedOn);
+    }
+
+    [Fact]
+    public async Task ReservationColumnsPreserveAllSnapshotFieldsAndOptionalNulls()
+    {
+        var full = new ReservationSnapshot("full", "Lecteur Alpha", "Titre complet", ReservationStatus.Suspended,
+            "Suspendue", "Auteur exemple", "Livre", "example", "Bibliothèque exemple",
+            Observation.AddDays(-4), Observation.AddDays(-1), Observation.AddDays(5), 0,
+            Observation.AddDays(1), Observation.AddDays(2));
+        var minimal = new ReservationSnapshot("minimal", "Lecteur Alpha", "Titre minimal", ReservationStatus.Unknown);
+        await SeedAsync("nantes-account", "Nantes", full, minimal);
+        var restarted = new LibragoDatabase(Factory.Services.GetRequiredService<IOptions<LibragoOptions>>(),
+            Factory.Services.GetRequiredService<IWebHostEnvironment>());
+        await restarted.InitializeAsync(CancellationToken.None);
+        var reservations = await restarted.GetReservationsAsync(CancellationToken.None);
+        Assert.Equal(full, reservations.Single(r => r.Item.ExternalId == "full").Item);
+        Assert.Equal(minimal, reservations.Single(r => r.Item.ExternalId == "minimal").Item);
+        var options = Factory.Services.GetRequiredService<IOptions<LibragoOptions>>();
+        await using var connection = new Microsoft.Data.Sqlite.SqliteConnection(
+            $"Data Source={options.Value.DatabasePath};Pooling=False");
+        await connection.OpenAsync(TestContext.Current.CancellationToken);
+        await using var command = connection.CreateCommand();
+        command.CommandText = "SELECT COUNT(*) FROM pragma_table_info('reservations') WHERE name = 'snapshot';";
+        Assert.Equal(0L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+    }
+
+    [Fact]
+    public async Task LoanLibraryIdentitySurvivesRestartAndCanBeAbsent()
+    {
+        var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
+        var network = Resolver.Resolve("Nantes").Network;
+        var item = new LoanSnapshot("1", "Lecteur Alpha", "Titre", null, null, "example", "Bibliothèque exemple",
+            null, Observation.AddDays(30));
+        var observedAt = new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero);
+        await Database.ReplaceAccountLoansAsync(account, network,
+            [item, item with { ExternalId = "2", LibraryId = null }], observedAt, CancellationToken.None);
+        var restarted = new LibragoDatabase(Factory.Services.GetRequiredService<IOptions<LibragoOptions>>(),
+            Factory.Services.GetRequiredService<IWebHostEnvironment>());
+        await restarted.InitializeAsync(CancellationToken.None);
+        var loans = await restarted.GetLoansAsync(CancellationToken.None);
+        Assert.Equal(item, loans.Single(l => l.Item.ExternalId == "1").Item);
+        Assert.Null(loans.Single(l => l.Item.ExternalId == "2").Item.LibraryId);
+        await restarted.ReplaceAccountLoansAsync(account, network, [item with { LibraryId = "updated" }],
+            observedAt.AddDays(1), CancellationToken.None);
+        var refreshed = Assert.Single(await restarted.GetLoansAsync(CancellationToken.None));
+        Assert.Equal("updated", refreshed.Item.LibraryId);
+        Assert.Equal(Observation, refreshed.FirstObservedOn);
     }
 
     private sealed class FakeConnector(LibraryNetworkDescriptor network) : ILibraryConnector

@@ -31,7 +31,8 @@ public sealed class NozayLoanRowParserTests
         Assert.Equal("La cabane aux étoiles", loan.Title);
         Assert.Equal("Alex Dupont", loan.Author);
         Assert.Equal("Livre", loan.MaterialType);
-        Assert.Equal("Exemple", loan.Branch);
+        Assert.Equal("Exemple", loan.Library);
+        Assert.Null(loan.LibraryId);
         Assert.Null(loan.BorrowedOn);
         Assert.Equal(new DateOnly(2026, 9, 18), loan.DueOn);
     }

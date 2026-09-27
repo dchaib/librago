@@ -172,6 +172,7 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
             title,
             "Auteur synthétique",
             "Livre",
+            null,
             "Bibliothèque exemple",
             new DateOnly(2026, 9, 1),
             new DateOnly(2026, 9, 20));

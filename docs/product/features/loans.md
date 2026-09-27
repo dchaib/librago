@@ -30,15 +30,27 @@ Primary:
 Secondary:
 - borrower;
 - absolute due date;
-- borrowing date, if useful.
+- borrowing date.
 
 Additional metadata such as author, volume number, cover image, or material type should be evaluated once source data is known.
 
 ## Optional information and completeness
 
-Author, material type, library branch, and borrowing date are optional. A missing optional value must not prevent an otherwise valid loan from appearing.
+Author, material type, library, and borrowing date are optional. A missing optional value must not prevent an otherwise valid loan from appearing.
+
+`Library` is the library reported for the loan. Current source data does not establish that it is necessarily the borrowing or return location. Reservations use `PickupLibrary` for their explicit pickup location.
+
+`LibraryId` is optional and scoped to the library network. Preserve it when supplied, independently of the display name. Existing loans migrated from earlier schemas have no library identity until a successful synchronization supplies one.
 
 Distinguish a successful empty list from a failed or incomplete refresh. An incomplete response must preserve the last known state rather than make loans disappear.
+
+## Borrowing date
+
+Display the network-provided borrowing date when available. Otherwise, estimate it from the first observation of the loan in the configured application time zone. Mark estimates with an asterisk linking to an explanation that they can be later than the actual borrowing date.
+
+Preserve the first observation across refreshes and restarts for the same account, network, and loan identity. A supplied date takes priority. A loan removed by a successful refresh and later observed again gets a new estimate. Failed refreshes preserve the previous state.
+
+For loans stored before this feature, use their last recorded refresh as the earliest known observation. The return deadline continues to come from the network.
 
 ## Borrower display names
 

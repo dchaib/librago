@@ -62,6 +62,7 @@ internal static class NantesLoanParser
             title,
             Clean(data.Author),
             Clean(data.CategoryLabel),
+            Clean(data.Branch?.Code),
             Clean(data.Branch?.Description),
             borrowedOn,
             dueOn);
@@ -141,6 +142,9 @@ internal static class NantesLoanParser
 
     private sealed class NantesBranch
     {
+        [JsonPropertyName("branchCode")]
+        public string? Code { get; init; }
+
         [JsonPropertyName("desc")]
         public string? Description { get; init; }
     }

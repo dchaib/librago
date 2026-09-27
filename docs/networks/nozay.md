@@ -47,7 +47,8 @@ Column indices are zero-based; the current parser requires at least eight cells.
 | 2 — thumbnail | No current snapshot value | Not needed for the current loan implementation |
 | 3 — title and first link | Title; notice ID for identity fallback | Title required; notice ID from `/id/{value}` |
 | 4 — author | Author | Optional |
-| 5 — library | Library branch | Optional |
+| 5 — library | Library | Optional |
+| Library identity | Absent | Leave null |
 | 6 — due-date text and first link | Due date; preferred loan ID | Required date; loan ID from `/id_pret/{value}` |
 | Borrowing date | Absent | Leave null |
 

@@ -18,6 +18,18 @@ public sealed partial class LibragoDatabase
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 
+        var previous = new Dictionary<string, DateOnly>(StringComparer.Ordinal);
+        await using (var read = connection.CreateCommand())
+        {
+            read.Transaction = transaction;
+            read.CommandText = "SELECT external_id, first_observed_on FROM loans WHERE account_id = $account AND network_key = $network;";
+            read.Parameters.AddWithValue("$account", account.AccountId);
+            read.Parameters.AddWithValue("$network", network.Key);
+            await using var reader = await read.ExecuteReaderAsync(cancellationToken);
+            while (await reader.ReadAsync(cancellationToken))
+                previous.Add(reader.GetString(0), ReadNullableDate(reader, 1)!.Value);
+        }
+
         await using (var delete = connection.CreateCommand())
         {
             delete.Transaction = transaction;
@@ -34,7 +46,7 @@ public sealed partial class LibragoDatabase
                 account,
                 network,
                 loan,
-                attemptedAt,
+                previous.TryGetValue(loan.ExternalId, out var first) ? first : ObservationDate(attemptedAt),
                 cancellationToken);
         }
 
@@ -58,10 +70,11 @@ public sealed partial class LibragoDatabase
                 title,
                 author,
                 material_type,
-                branch,
+                library_id,
+                library,
                 borrowed_on,
                 due_on,
-                refreshed_at
+                first_observed_on
             FROM loans
             ORDER BY due_on, title;
             """;
@@ -71,17 +84,19 @@ public sealed partial class LibragoDatabase
         {
             loans.Add(new Loan(
                 reader.GetString(0),
-                reader.GetString(1),
                 reader.GetString(2),
                 reader.GetString(3),
-                reader.GetString(4),
-                reader.GetString(5),
-                ReadNullableString(reader, 6),
-                ReadNullableString(reader, 7),
-                ReadNullableString(reader, 8),
-                ReadNullableDate(reader, 9),
-                DateOnly.ParseExact(reader.GetString(10), "yyyy-MM-dd", CultureInfo.InvariantCulture),
-                DateTimeOffset.Parse(reader.GetString(11), CultureInfo.InvariantCulture)));
+                new LoanSnapshot(
+                    reader.GetString(1),
+                    reader.GetString(4),
+                    reader.GetString(5),
+                    ReadNullableString(reader, 6),
+                    ReadNullableString(reader, 7),
+                    ReadNullableString(reader, 8),
+                    ReadNullableString(reader, 9),
+                    ReadNullableDate(reader, 10),
+                    DateOnly.ParseExact(reader.GetString(11), "yyyy-MM-dd", CultureInfo.InvariantCulture)),
+                ReadNullableDate(reader, 12)!.Value));
         }
 
         return loans;
@@ -94,7 +109,7 @@ public sealed partial class LibragoDatabase
         LibraryAccountOptions account,
         LibraryNetworkDescriptor network,
         LoanSnapshot loan,
-        DateTimeOffset refreshedAt,
+        DateOnly firstObservedOn,
         CancellationToken cancellationToken)
     {
         await using var command = connection.CreateCommand();
@@ -110,10 +125,11 @@ public sealed partial class LibragoDatabase
                 title,
                 author,
                 material_type,
-                branch,
+                library_id,
+                library,
                 borrowed_on,
                 due_on,
-                refreshed_at)
+                first_observed_on)
             VALUES (
                 $accountId,
                 $externalId,
@@ -123,10 +139,11 @@ public sealed partial class LibragoDatabase
                 $title,
                 $author,
                 $materialType,
-                $branch,
+                $libraryId,
+                $library,
                 $borrowedOn,
                 $dueOn,
-                $refreshedAt);
+                $firstObservedOn);
             """;
         command.Parameters.AddWithValue("$accountId", account.AccountId);
         command.Parameters.AddWithValue("$externalId", loan.ExternalId);
@@ -136,12 +153,13 @@ public sealed partial class LibragoDatabase
         command.Parameters.AddWithValue("$title", loan.Title);
         command.Parameters.AddWithValue("$author", (object?)loan.Author ?? DBNull.Value);
         command.Parameters.AddWithValue("$materialType", (object?)loan.MaterialType ?? DBNull.Value);
-        command.Parameters.AddWithValue("$branch", (object?)loan.Branch ?? DBNull.Value);
+        command.Parameters.AddWithValue("$libraryId", (object?)loan.LibraryId ?? DBNull.Value);
+        command.Parameters.AddWithValue("$library", (object?)loan.Library ?? DBNull.Value);
         command.Parameters.AddWithValue(
             "$borrowedOn",
             loan.BorrowedOn is null ? DBNull.Value : FormatDate(loan.BorrowedOn.Value));
         command.Parameters.AddWithValue("$dueOn", FormatDate(loan.DueOn));
-        command.Parameters.AddWithValue("$refreshedAt", FormatTimestamp(refreshedAt));
+        command.Parameters.AddWithValue("$firstObservedOn", FormatDate(firstObservedOn));
         await command.ExecuteNonQueryAsync(cancellationToken);
     }
 

@@ -46,6 +46,7 @@ internal static partial class NozayLoanRowParser
             title,
             Clean(cells[4]),
             Clean(cells[1]),
+            null,
             Clean(cells[5]),
             null,
             dueOn);

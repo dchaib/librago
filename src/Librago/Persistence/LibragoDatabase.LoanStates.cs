@@ -1,36 +1,10 @@
 using System.Globalization;
-using Librago.Configuration;
-using Librago.Connectors;
 using Librago.Synchronization;
 
 namespace Librago.Persistence;
 
 public sealed partial class LibragoDatabase
 {
-    public async Task MarkLoanAccountFailedAsync(
-        LibraryAccountOptions account,
-        LibraryNetworkDescriptor network,
-        DateTimeOffset attemptedAt,
-        CancellationToken cancellationToken)
-    {
-        await using var connection = await OpenConnectionAsync(cancellationToken);
-        await using var command = connection.CreateCommand();
-        command.CommandText =
-            """
-            INSERT INTO loan_account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
-            VALUES ($accountId, $networkKey, $attemptedAt, NULL, 'Failed')
-            ON CONFLICT(account_id) DO UPDATE SET
-                network_key = excluded.network_key,
-                last_attempt_at = excluded.last_attempt_at,
-                result = excluded.result;
-            """;
-        command.Parameters.AddWithValue("$accountId", account.AccountId);
-        command.Parameters.AddWithValue("$networkKey", network.Key);
-        command.Parameters.AddWithValue("$attemptedAt", FormatTimestamp(attemptedAt));
-        await command.ExecuteNonQueryAsync(cancellationToken);
-    }
-
-
     public async Task SetLoanNetworkStateAsync(
         string networkKey,
         string networkName,

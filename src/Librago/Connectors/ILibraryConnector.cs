@@ -1,5 +1,6 @@
 using Librago.Configuration;
 using Librago.Loans;
+using Librago.Reservations;
 
 namespace Librago.Connectors;
 
@@ -8,6 +9,10 @@ public interface ILibraryConnector
     LibraryNetworkDescriptor Network { get; }
 
     Task<IReadOnlyList<LoanSnapshot>> GetLoansAsync(
+        LibraryAccountOptions account,
+        CancellationToken cancellationToken);
+
+    Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
         LibraryAccountOptions account,
         CancellationToken cancellationToken);
 }

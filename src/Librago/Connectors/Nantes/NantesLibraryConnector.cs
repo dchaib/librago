@@ -7,20 +7,43 @@ using System.Text.Json;
 using System.Text.Json.Serialization;
 using Librago.Configuration;
 using Librago.Loans;
+using Librago.Reservations;
 
 namespace Librago.Connectors.Nantes;
 
-public sealed class NantesLibraryConnector : ILibraryConnector
+public sealed class NantesLibraryConnector(ILogger<NantesLibraryConnector> logger) : ILibraryConnector
 {
     private const string BaseUrl = "https://catalogue-bibliotheque.nantes.fr";
     private const string MicrositeId = "7e262e6b-99ca-4cc8-ae15-329af743a48d";
     private const int PageSize = 100;
     private static readonly JsonSerializerOptions JsonOptions = new(JsonSerializerDefaults.Web);
+    private static readonly Action<ILogger, string, Exception?> LogUnknownStatus = LoggerMessage.Define<string>(
+        LogLevel.Warning, new EventId(1201), "An unrecognized reservation status was returned by Nantes ({StatusCode}).");
 
     public LibraryNetworkDescriptor Network { get; } = new(
         "Nantes",
         "nantes",
         "Bibliothèque municipale de Nantes");
+
+    public async Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
+        LibraryAccountOptions account, CancellationToken cancellationToken)
+    {
+        using var handler = new HttpClientHandler { UseCookies = true, CookieContainer = new CookieContainer(), AllowAutoRedirect = false };
+        using var client = new HttpClient(handler) { BaseAddress = new Uri(BaseUrl) };
+        client.DefaultRequestHeaders.Add("X-microsite-id", MicrositeId);
+        client.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
+        var siteKey = await GetSiteKeyAsync(client, cancellationToken);
+        var token = await AuthenticateAsync(client, account, cancellationToken);
+        const string query = "?type=reservations&pageNo=1&pageSize=100&locale=fr";
+        client.DefaultRequestHeaders.Add("X-InMedia-Authorization",
+            $"Bearer {token} {siteKey} {CalculateRequestSignature(query)}");
+        using var response = await client.GetAsync($"/in/rest/api/accountPage{query}", cancellationToken);
+        await RequireSuccessAsync(response, "Nantes reservations request", cancellationToken);
+        return NantesReservationParser.Parse(await response.Content.ReadAsStringAsync(cancellationToken), account.Borrower,
+            code => LogUnknownStatus(logger,
+                code is { Length: <= 80 } && System.Text.RegularExpressions.Regex.IsMatch(code,
+                    @"^ReservationCard\.RESV_[A-Z_]+$") ? code : "Unclassified", null));
+    }
 
     public async Task<IReadOnlyList<LoanSnapshot>> GetLoansAsync(
         LibraryAccountOptions account,

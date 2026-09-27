@@ -60,10 +60,10 @@ Two combinable filters are required:
 
 ## Deadline representation
 
-The relative delay is the primary urgency signal.
+Use two lines, consistent with the reservations list: a short relative delay as the primary urgency signal, followed by the action and absolute deadline, `Retour au plus tard le 29 septembre 2026`.
 
 French UI examples:
-- `Aujourd'hui`
+- `Aujourd’hui`
 - `Demain`
 - `Dans 2 jours`
 - `En retard de 3 jours`

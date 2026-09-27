@@ -6,11 +6,24 @@ using Microsoft.Playwright;
 
 namespace Librago.Connectors.Nozay;
 
-public sealed partial class NozayLibraryConnector : ILibraryConnector
+public sealed partial class NozayLibraryConnector(ILogger<NozayLibraryConnector> logger) : ILibraryConnector
 {
     private const string HomeUrl = "https://www.cc-nozay-bibliotheques.fr/accueil";
     private const string AccountUrl = "https://www.cc-nozay-bibliotheques.fr/abonne/fiche/id_profil/1";
     private const string LoansUrl = "https://www.cc-nozay-bibliotheques.fr/abonne/prets/id_profil/1";
+    private static readonly Action<ILogger, Exception?> LogMissingChromium = LoggerMessage.Define(
+        LogLevel.Warning, new EventId(1203),
+        "The Chromium browser required by Nozay is not installed for this Playwright version. Run: pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium (without --only-shell).");
+    private static readonly Action<ILogger, string, Exception?> LogBrowserFailure = LoggerMessage.Define<string>(
+        LogLevel.Warning, new EventId(1204), "The Nozay browser operation failed while {Step}.");
+
+    internal static void RequireChromiumExecutable(string executablePath, ILogger diagnosticLogger)
+    {
+        if (File.Exists(executablePath)) return;
+        LogMissingChromium(diagnosticLogger, null);
+        throw new LibraryConnectorException(LibraryConnectorFailureKind.Upstream,
+            "The Chromium executable required by Nozay is missing.");
+    }
 
     public LibraryNetworkDescriptor Network { get; } = new(
         "Nozay",
@@ -26,6 +39,7 @@ public sealed partial class NozayLibraryConnector : ILibraryConnector
 
         try
         {
+            RequireChromiumExecutable(playwright.Chromium.ExecutablePath, logger);
             await using var browser = await playwright.Chromium.LaunchAsync(
                 new BrowserTypeLaunchOptions
                 {
@@ -54,6 +68,7 @@ public sealed partial class NozayLibraryConnector : ILibraryConnector
         }
         catch (PlaywrightException)
         {
+            LogBrowserFailure(logger, step, null);
             throw new LibraryConnectorException(
                 LibraryConnectorFailureKind.Upstream,
                 $"The Nozay portal failed while {step}.");

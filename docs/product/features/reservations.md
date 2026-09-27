@@ -30,7 +30,7 @@ Use these groups in this priority order:
 | Suspended | The reservation is temporarily paused | `Suspendue` |
 | Unknown | The network's status cannot yet be classified | `État inconnu` |
 
-Display the network's status wording when supplied. For an unavailable reservation with no source wording, use `Pas encore disponible`. Preserve the distinction between soon available and physically in transit when the network provides it.
+Display the network's status wording when supplied, except for available reservations: show the pickup deadline as described below, or `Disponible` if no deadline is supplied. This avoids repeating incomplete source wording such as `À votre disposition jusqu’au`. For an unavailable reservation with no source wording, use `Pas encore disponible`. Preserve the distinction between soon available and physically in transit when the network provides it.
 
 An unknown status remains visible with the network's wording, or `État inconnu` if none is supplied. It must not be presented as available.
 
@@ -51,18 +51,18 @@ Each reservation identifies the item, borrower, library network, pickup library,
 
 Missing optional details must not hide an otherwise usable reservation.
 
-Author, material type, volume, and cover image are secondary information. Refine their presentation during UI implementation.
+Author, material type, volume, and cover image are secondary information. Show the author when supplied. Omit material type from the current list to keep the cards light and consistent with loans; refine volume and cover-image presentation later.
 
 ### Pickup deadline
 
-The pickup deadline is the primary date for an available reservation. Show its absolute date alongside an explicit relative deadline:
+The pickup deadline is the primary date for an available reservation. Use two lines, consistent with the loans list: a short relative delay, followed by the action and absolute deadline, `Retrait au plus tard le 30 septembre 2026`.
 
-- `À retirer au plus tard aujourd'hui`;
-- `À retirer au plus tard demain`;
-- `À retirer au plus tard dans 2 jours`;
+- `Aujourd’hui`;
+- `Demain`;
+- `Dans 2 jours`;
 - `Expirée depuis 2 jours` when the last pickup day has passed.
 
-The wording means the item can be collected now and must be collected by the indicated deadline. The last pickup day is inclusive; expiration starts on the following calendar day.
+The relative delay describes the deadline, not when the item becomes available: it can already be collected. The second line explicitly states the last pickup day, which is inclusive; expiration starts on the following calendar day.
 
 Use the same urgency thresholds as [loans](loans.md#deadline-severity): passed, 0–2 days, 3–6 days, 7–13 days, and 14 days or more. Make urgency perceptible without relying on color alone.
 

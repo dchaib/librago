@@ -9,9 +9,9 @@ using Microsoft.Extensions.Options;
 
 namespace Librago.Persistence;
 
-public sealed class LibragoDatabase
+public sealed partial class LibragoDatabase
 {
-    private const int CurrentSchemaVersion = 1;
+    private const int CurrentSchemaVersion = 2;
     private readonly string _connectionString;
 
     public LibragoDatabase(IOptions<LibragoOptions> options, IWebHostEnvironment environment)
@@ -56,6 +56,10 @@ public sealed class LibragoDatabase
         if (version < 1)
         {
             await ApplyVersionOneAsync(connection, cancellationToken);
+        }
+        if (version < 2)
+        {
+            await ApplyVersionTwoAsync(connection, cancellationToken);
         }
     }
 

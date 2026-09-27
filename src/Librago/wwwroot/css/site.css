@@ -88,6 +88,7 @@ h1 {
 
 .filters {
     display: flex;
+    flex-wrap: wrap;
     align-items: end;
     gap: 0.8rem;
     margin: 2rem 0 1.25rem;
@@ -100,11 +101,17 @@ h1 {
 .filters label {
     display: grid;
     flex: 1;
+    min-width: min(100%, 12rem);
     gap: 0.35rem;
     color: var(--muted);
     font-size: 0.82rem;
     font-weight: 700;
 }
+
+.view-navigation { display: flex; flex-wrap: wrap; gap: 1.25rem; margin-bottom: 2rem; }
+.view-navigation a { color: var(--accent-dark); font-weight: 700; padding: 0.5rem 0; }
+.estimate-explanation { margin-top: 1.25rem; color: var(--muted); font-size: 0.85rem; }
+.loan-card { overflow-wrap: anywhere; }
 
 select,
 button {

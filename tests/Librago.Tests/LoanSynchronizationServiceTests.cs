@@ -2,6 +2,7 @@ using Librago.Configuration;
 using Librago.Connectors;
 using Librago.Persistence;
 using Librago.Loans;
+using Librago.Reservations;
 using Librago.Synchronization;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.FileProviders;
@@ -192,6 +193,10 @@ public sealed class LoanSynchronizationServiceTests
             "Réseau synthétique");
 
         public Func<LibraryAccountOptions, IReadOnlyList<LoanSnapshot>> Handler { get; set; } = handler;
+
+        public Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
+            LibraryAccountOptions account, CancellationToken cancellationToken) =>
+            Task.FromResult<IReadOnlyList<ReservationSnapshot>>([]);
 
         public Task<IReadOnlyList<LoanSnapshot>> GetLoansAsync(
             LibraryAccountOptions account,

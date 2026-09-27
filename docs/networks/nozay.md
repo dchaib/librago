@@ -2,13 +2,15 @@
 
 ## Scope and implementation
 
-Current loans are implemented; current reservations are planned for version 0.2. Product behavior is defined in [Loans](../product/features/loans.md) and [Reservations](../product/features/reservations.md).
+Current loans and current reservations are implemented. Product behavior is defined in [Loans](../product/features/loans.md) and [Reservations](../product/features/reservations.md).
 
 Implementation entry points:
 
 - [NozayLibraryConnector](../../src/Librago/Connectors/Nozay/NozayLibraryConnector.cs): browser session, account count, and loan-page extraction.
 - [NozayLoanRowParser](../../src/Librago/Connectors/Nozay/NozayLoanRowParser.cs): column mapping, borrower aliases, and loan identity.
 - [NozayLibraryConnectorTests](../../tests/Librago.Tests/NozayLibraryConnectorTests.cs) and [NozayLoanRowParserTests](../../tests/Librago.Tests/NozayLoanRowParserTests.cs): current extraction and parser checks.
+- [NozayLibraryConnector.Reservations](../../src/Librago/Connectors/Nozay/NozayLibraryConnector.Reservations.cs): reservation summary, scoped navigation, and list extraction.
+- [NozayReservationRowParser](../../src/Librago/Connectors/Nozay/NozayReservationRowParser.cs) and [ReservationParserTests](../../tests/Librago.Tests/ReservationParserTests.cs): reservation mapping and synthetic parser checks.
 
 ## Access and session
 
@@ -92,6 +94,8 @@ Column indices are zero-based; the current reservation table has nine cells per 
 
 Normalize cell whitespace as for loans. The available-state content and date formatting still need confirmation before implementing deadline extraction.
 
+The implementation leaves pickup deadlines absent until that source shape is confirmed. First-observation estimates are supplied by persistence, not by the connector. Deletion links are read only for identity and are never followed. Only the portal's same-origin reservation-list route is accepted for navigation.
+
 ### Status mapping
 
 | Source label | Product group | Confidence |
@@ -109,6 +113,8 @@ Treat the entire deletion-link `id_delete` value, currently two numeric componen
 Validate data rows against the account count before excluding terminal records. Accept zero only with a recognized zero summary and the reservation table's empty body; a missing table or unreadable summary is an unexpected response. Reject a count mismatch rather than accepting partial data.
 
 Require an identifiable borrower and title. Blank state and missing optional dates are supported. Distinct reservations must remain distinct, and first-observation dates must survive status changes. Do not add reservation pagination until source behavior requires it.
+
+The connector reads the source's current list without inferring additional terminal states. Removed rows disappear on a successful refresh; unrecognized nonblank labels remain unknown until their meaning is confirmed.
 
 ## Failure handling
 

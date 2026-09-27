@@ -44,6 +44,7 @@ builder.Services.AddSingleton<ILibraryConnector, NantesLibraryConnector>();
 builder.Services.AddSingleton<ILibraryConnector, NozayLibraryConnector>();
 builder.Services.AddSingleton<LibraryConnectorResolver>();
 builder.Services.AddScoped<LoanSynchronizationService>();
+builder.Services.AddScoped<ReservationSynchronizationService>();
 builder.Services.AddHostedService<SynchronizationWorker>();
 builder.Services.AddRazorPages();
 

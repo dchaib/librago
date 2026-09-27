@@ -9,7 +9,6 @@ internal static partial class NozayLoanRowParser
     public static LoanSnapshot Parse(
         IReadOnlyList<string> cells,
         string? renewalHref,
-        string? titleHref,
         string configuredBorrower,
         IReadOnlyDictionary<string, string>? borrowerAliases = null)
     {
@@ -29,16 +28,10 @@ internal static partial class NozayLoanRowParser
             "A Nozay loan did not contain a title.");
         var dueOn = ParseDueDate(cells[6]);
         var loanId = ExtractOpaqueId(renewalHref, RenewalIdRegex());
-        var noticeId = ExtractOpaqueId(titleHref, NoticeIdRegex());
-        var externalId = loanId is null
-            ? ExternalLoanId.FromFallback(
-                sourceBorrower,
-                noticeId,
-                title,
-                cells[4],
-                cells[5],
-                dueOn.ToString("O", CultureInfo.InvariantCulture))
-            : $"nozay-loan:{loanId}";
+        if (string.IsNullOrWhiteSpace(loanId))
+            throw new LibraryConnectorException(LibraryConnectorFailureKind.InvalidData,
+                "A Nozay loan did not contain a valid loan identity.");
+        var externalId = $"nozay-loan:{loanId}";
 
         return new LoanSnapshot(
             externalId,
@@ -50,40 +43,6 @@ internal static partial class NozayLoanRowParser
             Clean(cells[5]),
             null,
             dueOn);
-    }
-
-    public static IReadOnlyList<LoanSnapshot> AssignFallbackOccurrences(
-        IReadOnlyList<LoanSnapshot> loans)
-    {
-        var snapshots = loans.ToArray();
-
-        foreach (var group in snapshots
-                     .Select((loan, index) => new { Loan = loan, Index = index })
-                     .GroupBy(item => item.Loan.ExternalId, StringComparer.Ordinal))
-        {
-            if (group.Count() == 1)
-            {
-                continue;
-            }
-
-            if (!group.Key.StartsWith("generated:", StringComparison.Ordinal))
-            {
-                throw new LibraryConnectorException(
-                    LibraryConnectorFailureKind.UnexpectedResponse,
-                    "The Nozay loans response contained the same loan id more than once.");
-            }
-
-            var occurrence = 1;
-            foreach (var item in group)
-            {
-                snapshots[item.Index] = item.Loan with
-                {
-                    ExternalId = $"{item.Loan.ExternalId}:occurrence:{occurrence++}"
-                };
-            }
-        }
-
-        return snapshots;
     }
 
     private static DateOnly ParseDueDate(string value)
@@ -147,9 +106,6 @@ internal static partial class NozayLoanRowParser
 
     [GeneratedRegex(@"/id_pret/([^/?#]+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
     private static partial Regex RenewalIdRegex();
-
-    [GeneratedRegex(@"/id/([^/?#]+)", RegexOptions.IgnoreCase | RegexOptions.CultureInvariant)]
-    private static partial Regex NoticeIdRegex();
 
     [GeneratedRegex(@"\s+", RegexOptions.CultureInvariant)]
     private static partial Regex WhitespaceRegex();

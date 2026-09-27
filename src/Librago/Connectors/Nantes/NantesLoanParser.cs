@@ -52,9 +52,13 @@ internal static class NantesLoanParser
         var borrowedOn = string.IsNullOrWhiteSpace(data.LoanDate)
             ? (DateOnly?)null
             : ParseDate(data.LoanDate, "loan date");
-        var externalId = string.IsNullOrWhiteSpace(data.DocumentNumber)
-            ? ExternalLoanId.FromFallback(data.Isbn13, data.Isbn, title, data.ReturnDate)
-            : data.DocumentNumber.Trim();
+        var externalId = data.OmnidexId.ValueKind switch
+        {
+            JsonValueKind.String => Required(data.OmnidexId.GetString(), "loan identity"),
+            JsonValueKind.Number => data.OmnidexId.GetRawText().Trim(),
+            _ => throw new LibraryConnectorException(LibraryConnectorFailureKind.InvalidData,
+                "A Nantes loan did not contain a valid loan identity.")
+        };
 
         return new LoanSnapshot(
             externalId,
@@ -124,14 +128,8 @@ internal static class NantesLoanParser
         [JsonPropertyName("loanDate")]
         public string? LoanDate { get; init; }
 
-        [JsonPropertyName("documentNumber")]
-        public string? DocumentNumber { get; init; }
-
-        [JsonPropertyName("isbn")]
-        public string? Isbn { get; init; }
-
-        [JsonPropertyName("isbn13")]
-        public string? Isbn13 { get; init; }
+        [JsonPropertyName("omnidexId")]
+        public JsonElement OmnidexId { get; init; }
 
         [JsonPropertyName("categoryLabel")]
         public string? CategoryLabel { get; init; }

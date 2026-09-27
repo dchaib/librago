@@ -24,7 +24,7 @@ Use Playwright Chromium with `Headless = false`, the browser sandbox enabled, an
 4. Open the authenticated account page, currently `/abonne/fiche/id_profil/1`, to obtain counts before reading lists.
 5. Keep the same browser context for the account summary and both list requests. Loans and reservations use one authentication and one browser session per account synchronization. Reject an authenticated-page read if the login input remains visible.
 
-When a parent account covers the family, configure that parent account only. Use the row's borrower name, falling back to the configured borrower if blank. Apply `BorrowerAliases` with case-insensitive matching after whitespace normalization; preserve unmatched names. Apply this to both loans and reservations. Generate fallback identities from source names before aliasing so display-name changes do not change identity.
+When a parent account covers the family, configure that parent account only. Use the row's borrower name, falling back to the configured borrower if blank. Apply `BorrowerAliases` with case-insensitive matching after whitespace normalization; preserve unmatched names. Apply this to both loans and reservations. Borrower aliases do not affect source loan or reservation identities.
 
 ## Loans
 
@@ -45,7 +45,7 @@ Column indices are zero-based; the current parser requires at least eight cells.
 | 0 — borrower | Borrower | Source name, configured fallback, then aliases; required |
 | 1 — support | Material type | Optional |
 | 2 — thumbnail | No current snapshot value | Not needed for the current loan implementation |
-| 3 — title and first link | Title; notice ID for identity fallback | Title required; notice ID from `/id/{value}` |
+| 3 — title | Title | Required; catalog notice links are not used for loan identity |
 | 4 — author | Author | Optional |
 | 5 — library | Library | Optional |
 | Library identity | Absent | Leave null |
@@ -58,7 +58,7 @@ Extract the `dd/MM/yyyy` date from the whole due-date cell, which can also conta
 
 Use `nozay-loan:{id}` from the loan link's `id_pret`. A catalog notice ID is not a loan ID.
 
-If the loan link supplies no ID, reuse `ExternalLoanId.FromFallback` with source borrower, notice ID, title, author, library, and parsed due date in ISO form. Retain separate occurrences of identical fallback fingerprints using the parser's occurrence suffixes. Duplicate explicit loan IDs are an unexpected response.
+A missing or invalid `id_pret` fails the entire account loan refresh with invalid data, including when a renewal link is absent. Duplicate loan IDs are an unexpected response. Preserve the previous loan state on failure; do not generate identities or occurrence suffixes.
 
 Validate parsed row count against the account summary. A missing table is accepted only with the exact normalized message `Pas de prêts en cours` in `.contenuInner > p.error`, and only if the expected count is zero. A present empty table also needs a matching zero count.
 

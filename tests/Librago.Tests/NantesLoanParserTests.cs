@@ -63,7 +63,7 @@ public sealed class NantesLoanParserTests
 
         var loan = Assert.Single(page.Loans);
         Assert.Equal(1, page.Total);
-        Assert.Equal("synthetic-loan", loan.ExternalId);
+        Assert.Equal("00000000000000", loan.ExternalId);
         Assert.Equal("Lecteur A", loan.Borrower);
         Assert.Equal("Titre synthétique", loan.Title);
         Assert.Equal("Auteur synthétique (1970-....)", loan.Author);
@@ -112,20 +112,20 @@ public sealed class NantesLoanParserTests
     [InlineData("123", "123")]
     public void IdentityAcceptsStringsAndNumbers(string id, string expected)
     {
-        var json = "{\"items\":[{\"data\":{\"omnidexId\":" + id + ",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}],\"total\":1}";
+        var json = "{\"items\":[{\"data\":{\"documentNumber\":" + id + ",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}],\"total\":1}";
         Assert.Equal(expected, Assert.Single(NantesLoanParser.Parse(json, "Lecteur").Loans).ExternalId);
     }
 
     [Theory]
     [InlineData("")]
-    [InlineData("\"omnidexId\":null,")]
-    [InlineData("\"omnidexId\":\"   \",")]
-    [InlineData("\"omnidexId\":true,")]
-    [InlineData("\"omnidexId\":{},")]
-    [InlineData("\"omnidexId\":[],")]
-    public void IdentityIsRequiredWithoutDocumentNumberFallback(string field)
+    [InlineData("\"documentNumber\":null,")]
+    [InlineData("\"documentNumber\":\"   \",")]
+    [InlineData("\"documentNumber\":true,")]
+    [InlineData("\"documentNumber\":{},")]
+    [InlineData("\"documentNumber\":[],")]
+    public void IdentityIsRequiredWithoutOmnidexIdFallback(string field)
     {
-        var json = "{\"items\":[{\"data\":{" + field + "\"documentNumber\":\"synthetic\",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}],\"total\":1}";
+        var json = "{\"items\":[{\"data\":{" + field + "\"omnidexId\":\"synthetic\",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}],\"total\":1}";
         var error = Assert.Throws<LibraryConnectorException>(() => NantesLoanParser.Parse(json, "Lecteur"));
         Assert.Equal(LibraryConnectorFailureKind.InvalidData, error.FailureKind);
     }
@@ -133,6 +133,7 @@ public sealed class NantesLoanParserTests
     [InlineData(true, false)]
     [InlineData(true, true)]
     [InlineData(false, false)]
+    [InlineData(false, true)]
     public async Task ConnectorChecksIdentitiesAcrossPages(bool duplicate, bool samePage)
     {
         using var client = new HttpClient(new LoanPagesHandler(duplicate, samePage)) { BaseAddress = new Uri("https://synthetic.invalid") };
@@ -162,8 +163,8 @@ public sealed class NantesLoanParserTests
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             page++;
-            string Item(string id) => "{\"data\":{\"omnidexId\":\"" + id + "\",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}";
-            var items = samePage ? Item("1") + "," + Item("1") : Item(page == 1 || duplicate ? "1" : "2");
+            string Item(string id) => "{\"data\":{\"documentNumber\":\"" + id + "\",\"omnidexId\":\"shared-notice\",\"title\":\"Titre\",\"returnDate\":\"18/09/2026\"}}";
+            var items = samePage ? Item("1") + "," + Item(duplicate ? "1" : "2") : Item(page == 1 || duplicate ? "1" : "2");
             return Task.FromResult(new HttpResponseMessage(System.Net.HttpStatusCode.OK)
             {
                 Content = new StringContent("{\"items\":[" + items + "],\"total\":2}")

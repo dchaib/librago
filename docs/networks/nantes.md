@@ -49,13 +49,13 @@ The response contains `items` and `total`; each item's fields are under `data`.
 | `categoryLabel` | Material type | Optional |
 | `branch.desc` | Library | Optional |
 | `branch.branchCode` | Library identity | Optional; scoped to the network, consistent with reservation pickup-library identities |
-| `omnidexId` | External loan identity | Required; string or number, normalized to a trimmed string |
+| `documentNumber` | External loan identity | Required; string or number, normalized to a trimmed string |
 
 Trim text; blank optional values become null. A supplied date must parse successfully. ISBN, series, and other source metadata are not needed for the current loan snapshot except as noted below.
 
 ### Identity and validation
 
-Use account-scoped `omnidexId` as the required external loan ID, based on manual observations. Accept strings or numbers and normalize to a trimmed string. Reject missing or invalid IDs and duplicate IDs across the complete paginated collection. Do not fall back to `documentNumber` or a generated identity.
+Use account-scoped `documentNumber` as the required external loan ID, restoring the previously used source field. Accept strings or numbers and normalize to a trimmed string. Manual synchronization has shown that distinct loans in one account can share `omnidexId`, so it must not identify loans. Reject missing or invalid document numbers and duplicate IDs across the complete paginated collection. Do not fall back to `omnidexId` or a generated identity. Existing data remains until a successful refresh; a changed identity resets its first-observation estimate without heuristic matching.
 
 Require `items` to be an array and `total` to be a nonnegative integer, even for an empty result. The valid empty loan response is `{ "items": [], "total": 0 }`. Each item must have `data`, title, and a valid due date; optional metadata can be absent.
 
@@ -117,6 +117,8 @@ The implementation accepts suspension dates in `dd/MM/yyyy`, pending source conf
 Use `LibraryConnectorException` categories: authentication for a missing session token, upstream for failed HTTP requests, unexpected response for invalid JSON/envelopes or incomplete lists, and invalid data for unusable record fields.
 
 Let synchronization preserve the previous state on failure. Keep credentials, cookies, tokens, borrower names, account identifiers, and raw responses out of diagnostics and committed artifacts.
+
+When retrieval fails, connector event 1203 identifies loans or reservations, a fixed diagnostic reason, and the exception type. Loan reasons distinguish invalid JSON (`InvalidLoansJson`), invalid envelopes (`InvalidLoansEnvelope`), missing items (`MissingLoanItems`), duplicate identities (`DuplicateLoanIdentities`), and count mismatches (`LoanCountMismatch`). Other connector failures use their failure category; unexpected exceptions use `UnhandledException`. Exception messages and stack traces are not logged. Event 1002 remains the synchronization-level failure summary; event 1202 concerns optional catalogue enrichment only.
 
 ## Integration questions
 

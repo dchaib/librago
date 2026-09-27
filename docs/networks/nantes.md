@@ -49,13 +49,13 @@ The response contains `items` and `total`; each item's fields are under `data`.
 | `categoryLabel` | Material type | Optional |
 | `branch.desc` | Library | Optional |
 | `branch.branchCode` | Library identity | Optional; scoped to the network, consistent with reservation pickup-library identities |
-| `documentNumber` | External loan identity | Preferred; see identity rules |
+| `omnidexId` | External loan identity | Required; string or number, normalized to a trimmed string |
 
 Trim text; blank optional values become null. A supplied date must parse successfully. ISBN, series, and other source metadata are not needed for the current loan snapshot except as noted below.
 
 ### Identity and validation
 
-Use trimmed `documentNumber` as the external loan ID. If absent, reuse `ExternalLoanId.FromFallback(isbn13, isbn, title, returnDate)`; this produces an opaque fingerprint rather than an item identifier suitable for reservation tracking.
+Use account-scoped `omnidexId` as the required external loan ID, based on manual observations. Accept strings or numbers and normalize to a trimmed string. Reject missing or invalid IDs and duplicate IDs across the complete paginated collection. Do not fall back to `documentNumber` or a generated identity.
 
 Require `items` to be an array and `total` to be a nonnegative integer, even for an empty result. The valid empty loan response is `{ "items": [], "total": 0 }`. Each item must have `data`, title, and a valid due date; optional metadata can be absent.
 

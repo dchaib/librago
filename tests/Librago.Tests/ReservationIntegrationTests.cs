@@ -29,6 +29,53 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         string borrower = "Lecteur Alpha") => new(id, borrower, title, status,
             PickupLibrary: "Centre", PickupDeadline: Observation.AddDays(2), QueuePosition: 1);
 
+    [Theory]
+    [InlineData(false)]
+    [InlineData(true)]
+    public async Task InvalidLoanIdentityDoesNotPreventReservationRefresh(bool duplicate)
+    {
+        var connector = new FakeConnector(Resolver.Resolve("Nantes").Network);
+        var options = Options.Create(new LibragoOptions { Accounts = [Account("nantes-account", "Nantes", "Lecteur")] });
+        var clock = new Clock(new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero));
+        var service = new AccountSynchronizationService(options, new LibraryConnectorResolver([connector]), Database,
+            clock, NullLogger<AccountSynchronizationService>.Instance);
+        var item = new LoanSnapshot("1", "Lecteur", "Titre", null, null, null, null, null, Observation.AddDays(10));
+        connector.Loans = [item];
+        await service.SynchronizeAllAsync(CancellationToken.None);
+        var original = Assert.Single(await Database.GetLoansAsync(CancellationToken.None));
+        var success = clock.Now;
+        clock.Now = clock.Now.AddDays(1);
+        connector.Loans = duplicate ? [item, item] : [item with { ExternalId = " " }];
+        connector.Title = "Updated";
+        await service.SynchronizeAllAsync(CancellationToken.None);
+        Assert.Equal(original, Assert.Single(await Database.GetLoansAsync(CancellationToken.None)));
+        var state = Assert.Single(await Database.GetLoanNetworkStatesAsync(CancellationToken.None));
+        Assert.Equal(SynchronizationResult.Failed, state.Result);
+        Assert.Equal(success, state.LastCompleteSuccessAt);
+        Assert.Equal("Updated", Assert.Single(await Database.GetReservationsAsync(CancellationToken.None)).Item.Title);
+        Assert.Equal(clock.Now, Assert.Single(await Database.GetReservationNetworkStatesAsync(CancellationToken.None)).LastCompleteSuccessAt);
+    }
+    [Fact]
+    public async Task InvalidLoanSnapshotsPreserveStateAndIdentitiesAreAccountScoped()
+    {
+        var account = Account("nantes-account", "Nantes", "Lecteur Alpha");
+        var network = Resolver.Resolve("Nantes").Network;
+        var at = new DateTimeOffset(2026, 9, 26, 8, 0, 0, TimeSpan.Zero);
+        var item = new LoanSnapshot("synthetic", "Lecteur", "Titre", null, null, null, null, null, Observation.AddDays(10));
+        await Database.ReplaceAccountLoansAsync(account, network, [item], at, CancellationToken.None);
+        var original = Assert.Single(await Database.GetLoansAsync(CancellationToken.None));
+        foreach (var invalid in new[] { new[] { item, item }, new[] { item with { ExternalId = " " } },
+                     new[] { item with { Title = "" } }, new[] { item with { Borrower = " " } } })
+        {
+            var error = await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+                Database.ReplaceAccountLoansAsync(account, network, invalid, at.AddDays(1), CancellationToken.None));
+            Assert.Equal(LibraryConnectorFailureKind.InvalidData, error.FailureKind);
+            Assert.Equal(original, Assert.Single(await Database.GetLoansAsync(CancellationToken.None)));
+        }
+        await Database.ReplaceAccountLoansAsync(Account("second-account", "Nantes", "Lecteur Beta"),
+            network, [item], at, CancellationToken.None);
+        Assert.Equal(2, (await Database.GetLoansAsync(CancellationToken.None)).Count);
+    }
     [Fact]
     public async Task AllFourFiltersCombineAndOptionsRemainIndependent()
     {
@@ -421,13 +468,14 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         public string Title { get; set; } = "Initial";
         public bool FailReservations { get; set; }
         public bool FailLoans { get; set; }
+        public IReadOnlyList<LoanSnapshot> Loans { get; set; } = [];
         public string? FailedAccount { get; set; }
         public Task<AccountSnapshot> GetAccountSnapshotAsync(LibraryAccountOptions account, CancellationToken cancellationToken)
         {
             var failReservations = FailReservations || account.AccountId == FailedAccount;
             var failLoans = FailLoans;
             return Task.FromResult(new AccountSnapshot(
-                ConnectorResult<IReadOnlyList<LoanSnapshot>>.Create(failLoans ? default : [],
+                ConnectorResult<IReadOnlyList<LoanSnapshot>>.Create(failLoans ? default : Loans,
                     failLoans ? LibraryConnectorFailureKind.Upstream : null),
                 ConnectorResult<IReadOnlyList<ReservationSnapshot>>.Create(failReservations ? default : [Item("1", Title)],
                     failReservations ? LibraryConnectorFailureKind.Upstream : null)));

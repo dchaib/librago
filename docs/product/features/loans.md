@@ -48,6 +48,8 @@ Distinguish a successful empty list from a failed or incomplete refresh. An inco
 
 Display the network-provided borrowing date when available. Otherwise, estimate it from the first observation of the loan in the configured application time zone. Mark estimates with an asterisk linking to an explanation that they can be later than the actual borrowing date.
 
+Require a nonempty source identity for each loan, unique within its account. Reject an entire account loan snapshot when an identity is missing or duplicated; preserve the previous state and allow reservations to update independently. Existing stored identities are retained until a successful refresh replaces them. Switching to a different source identity resets its first observation without heuristic matching.
+
 Preserve the first observation across refreshes and restarts for the same account, network, and loan identity. A supplied date takes priority. A loan removed by a successful refresh and later observed again gets a new estimate. Failed refreshes preserve the previous state.
 
 For loans stored before this feature, use their last recorded refresh as the earliest known observation. The return deadline continues to come from the network.

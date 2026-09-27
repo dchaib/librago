@@ -87,6 +87,25 @@ public sealed class NozayLibraryConnectorTests : IAsyncLifetime
         Assert.Equal(LibraryConnectorFailureKind.UnexpectedResponse, exception.FailureKind);
     }
 
+    [Fact]
+    public async Task LoanIdentitiesMustBeUniqueButTitlesMayRepeat()
+    {
+        var page = await NewPageAsync();
+        var html = Table("", "synthetic-1");
+        var start = html.IndexOf("<tr>", StringComparison.Ordinal);
+        var end = html.IndexOf("</tr>", StringComparison.Ordinal) + 5;
+        var row = html[start..end];
+        await page.SetContentAsync(html.Replace(row, row + row));
+        var error = await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadLoansAsync(page, Account(), 2, CancellationToken.None));
+        Assert.Equal(LibraryConnectorFailureKind.UnexpectedResponse, error.FailureKind);
+        await page.SetContentAsync(html.Replace(row, row + row.Replace("synthetic-1", "synthetic-2")));
+        Assert.Equal(2, (await NozayLibraryConnector.ReadLoansAsync(page, Account(), 2, CancellationToken.None)).Count);
+        await page.SetContentAsync(html.Replace("/id_pret/synthetic-1", ""));
+        error = await Assert.ThrowsAsync<LibraryConnectorException>(() =>
+            NozayLibraryConnector.ReadLoansAsync(page, Account(), 1, CancellationToken.None));
+        Assert.Equal(LibraryConnectorFailureKind.InvalidData, error.FailureKind);
+    }
     public async ValueTask InitializeAsync()
     {
         _playwright = await Playwright.CreateAsync();

@@ -24,7 +24,10 @@ public sealed partial class NozayLibraryConnector
         if (expectedLoanCount != loansPage.Loans.Count)
             throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
                 "The Nozay loans page did not contain the number of loans reported by the account page.");
-        return NozayLoanRowParser.AssignFallbackOccurrences(loansPage.Loans);
+        if (loansPage.Loans.Select(l => l.ExternalId).Distinct(StringComparer.Ordinal).Count() != loansPage.Loans.Count)
+            throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
+                "The Nozay loans response contained duplicate identities.");
+        return loansPage.Loans;
     }
 
     private static async Task<NozayLoansPage> ReadLoansPageAsync(
@@ -62,8 +65,7 @@ public sealed partial class NozayLibraryConnector
             for (var cellIndex = 0; cellIndex < cellCount; cellIndex++)
                 values[cellIndex] = await cells.Nth(cellIndex).InnerTextAsync();
             var renewalHref = cellCount > 6 ? await GetFirstHrefAsync(cells.Nth(6)) : null;
-            var titleHref = cellCount > 3 ? await GetFirstHrefAsync(cells.Nth(3)) : null;
-            loans.Add(NozayLoanRowParser.Parse(values, renewalHref, titleHref,
+            loans.Add(NozayLoanRowParser.Parse(values, renewalHref,
                 account.Borrower, account.BorrowerAliases));
         }
         return new NozayLoansPage(loans);

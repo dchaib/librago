@@ -15,6 +15,12 @@ public sealed partial class LibragoDatabase
         DateTimeOffset attemptedAt,
         CancellationToken cancellationToken)
     {
+        if (loans.Any(l => string.IsNullOrWhiteSpace(l.ExternalId) ||
+                string.IsNullOrWhiteSpace(l.Title) || string.IsNullOrWhiteSpace(l.Borrower)) ||
+            loans.Select(l => l.ExternalId).Distinct(StringComparer.Ordinal).Count() != loans.Count)
+            throw new LibraryConnectorException(LibraryConnectorFailureKind.InvalidData,
+                "The loan snapshot contains missing fields or duplicate identities.");
+
         await using var connection = await OpenConnectionAsync(cancellationToken);
         await using var transaction = (SqliteTransaction)await connection.BeginTransactionAsync(cancellationToken);
 

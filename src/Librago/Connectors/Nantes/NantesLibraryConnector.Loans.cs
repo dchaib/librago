@@ -11,6 +11,7 @@ public sealed partial class NantesLibraryConnector
         NantesSession session, LibraryAccountOptions account, CancellationToken cancellationToken)
     {
         var loans = new List<LoanSnapshot>();
+        var ids = new HashSet<string>(StringComparer.Ordinal);
         for (var pageNumber = 1; ; pageNumber++)
         {
             var query = $"?type=loans&pageNo={pageNumber}&pageSize={PageSize}&locale=fr";
@@ -19,7 +20,13 @@ public sealed partial class NantesLibraryConnector
             await RequireSuccessAsync(response, "Nantes loans request", cancellationToken);
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
             var page = NantesLoanParser.Parse(json, account.Borrower);
-            loans.AddRange(page.Loans);
+            foreach (var loan in page.Loans)
+            {
+                if (!ids.Add(loan.ExternalId))
+                    throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
+                        "The Nantes loans response contained duplicate identities.");
+                loans.Add(loan);
+            }
             if (loans.Count >= page.Total || page.Loans.Count == 0)
             {
                 if (loans.Count != page.Total)

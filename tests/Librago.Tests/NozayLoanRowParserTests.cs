@@ -23,7 +23,6 @@ public sealed class NozayLoanRowParserTests
         var loan = NozayLoanRowParser.Parse(
             cells,
             "/abonne/prolongerPret/id_profil/1/id_pret/synthetic-42",
-            "/recherche/viewnotice/id/987",
             string.Empty);
 
         Assert.Equal("nozay-loan:synthetic-42", loan.ExternalId);
@@ -43,7 +42,7 @@ public sealed class NozayLoanRowParserTests
         string[] cells = ["Lecteur B", "Livre", "", "Titre", "Auteur", "Exemple", "inconnue", ""];
 
         Assert.Throws<LibraryConnectorException>(
-            () => NozayLoanRowParser.Parse(cells, null, null, string.Empty));
+            () => NozayLoanRowParser.Parse(cells, "/id_pret/synthetic", string.Empty));
     }
 
     [Fact]
@@ -53,8 +52,7 @@ public sealed class NozayLoanRowParserTests
 
         var loan = NozayLoanRowParser.Parse(
             cells,
-            null,
-            null,
+            "/id_pret/synthetic",
             string.Empty,
             new Dictionary<string, string>
             {
@@ -65,21 +63,19 @@ public sealed class NozayLoanRowParserTests
     }
 
     [Fact]
-    public void ParsePreservesUnmappedBorrowerAndFallbackIdWhenAliasChanges()
+    public void ParsePreservesIdentityWhenAliasChanges()
     {
         string[] cells = ["Lecteur Inconnu", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
 
-        var unmapped = NozayLoanRowParser.Parse(cells, null, null, string.Empty);
+        var unmapped = NozayLoanRowParser.Parse(cells, "/id_pret/synthetic", string.Empty);
         var firstAlias = NozayLoanRowParser.Parse(
             cells,
-            null,
-            null,
+            "/id_pret/synthetic",
             string.Empty,
             new Dictionary<string, string> { ["Lecteur Inconnu"] = "Libellé un" });
         var secondAlias = NozayLoanRowParser.Parse(
             cells,
-            null,
-            null,
+            "/id_pret/synthetic",
             string.Empty,
             new Dictionary<string, string> { ["Lecteur Inconnu"] = "Libellé deux" });
 
@@ -88,48 +84,26 @@ public sealed class NozayLoanRowParserTests
         Assert.NotEqual(firstAlias.Borrower, secondAlias.Borrower);
     }
 
-    [Fact]
-    public void ParseDoesNotUseTheNoticeIdAsALoanId()
+    [Theory]
+    [InlineData(null)]
+    [InlineData("")]
+    [InlineData("/notice/id/synthetic")]
+    [InlineData("/id_pret/")]
+    [InlineData("/id_pret/   ")]
+    public void ParseRejectsMissingLoanIdentity(string? href)
     {
-        string[] cells = ["Lecteur A", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
-
-        var first = NozayLoanRowParser.Parse(cells, null, "/notice/id/same-notice", string.Empty);
-        var second = NozayLoanRowParser.Parse(
-            ["Lecteur B", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""],
-            null,
-            "/notice/id/same-notice",
-            string.Empty);
-
-        Assert.StartsWith("generated:", first.ExternalId);
-        Assert.NotEqual(first.ExternalId, second.ExternalId);
+        string[] cells = ["Lecteur A", "Livre", "", "Titre", "Auteur", "Centre", "18/09/2026", ""];
+        var exception = Assert.Throws<LibraryConnectorException>(() =>
+            NozayLoanRowParser.Parse(cells, href, "Lecteur A"));
+        Assert.Equal(LibraryConnectorFailureKind.InvalidData, exception.FailureKind);
     }
 
     [Fact]
-    public void AssignFallbackOccurrencesPreservesIdenticalLoans()
+    public void IdentitySurvivesRenewal()
     {
-        string[] cells = ["Lecteur A", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
-        var loan = NozayLoanRowParser.Parse(cells, null, null, string.Empty);
-
-        var loans = NozayLoanRowParser.AssignFallbackOccurrences([loan, loan]);
-
-        Assert.Equal(2, loans.Count);
-        Assert.NotEqual(loans[0].ExternalId, loans[1].ExternalId);
-        Assert.All(loans, item => Assert.StartsWith("generated:", item.ExternalId));
-    }
-
-    [Fact]
-    public void AssignFallbackOccurrencesRejectsDuplicateLoanIds()
-    {
-        string[] cells = ["Lecteur A", "Livre", "", "Titre", "Auteur", "Exemple", "18/09/2026", ""];
-        var loan = NozayLoanRowParser.Parse(
-            cells,
-            "/abonne/prolongerPret/id_profil/1/id_pret/same-loan",
-            null,
-            string.Empty);
-
-        var exception = Assert.Throws<LibraryConnectorException>(
-            () => NozayLoanRowParser.AssignFallbackOccurrences([loan, loan]));
-
-        Assert.Equal(LibraryConnectorFailureKind.UnexpectedResponse, exception.FailureKind);
+        string[] cells = ["Lecteur A", "Livre", "", "Titre", "Auteur", "Centre", "18/09/2026", ""];
+        var first = NozayLoanRowParser.Parse(cells, "/id_pret/synthetic", "Lecteur A");
+        cells[6] = "25/09/2026";
+        Assert.Equal(first.ExternalId, NozayLoanRowParser.Parse(cells, "/id_pret/synthetic", "Lecteur A").ExternalId);
     }
 }

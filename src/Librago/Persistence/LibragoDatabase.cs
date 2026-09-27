@@ -8,11 +8,13 @@ namespace Librago.Persistence;
 
 public sealed partial class LibragoDatabase
 {
-    private const int CurrentSchemaVersion = 4;
+    private const int CurrentSchemaVersion = 5;
     private readonly string _connectionString;
+    private readonly TimeZoneInfo _timeZone;
 
     public LibragoDatabase(IOptions<LibragoOptions> options, IWebHostEnvironment environment)
     {
+        _timeZone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.TimeZone);
         var configuredPath = options.Value.DatabasePath;
         var databasePath = Path.IsPathRooted(configuredPath)
             ? configuredPath
@@ -66,7 +68,14 @@ public sealed partial class LibragoDatabase
         {
             await ApplyVersionFourAsync(connection, cancellationToken);
         }
+        if (version < 5)
+        {
+            await ApplyVersionFiveAsync(connection, cancellationToken);
+        }
     }
+
+    private DateOnly ObservationDate(DateTimeOffset timestamp) =>
+        DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timestamp, _timeZone).DateTime);
 
     public async Task<bool> CanConnectAsync(CancellationToken cancellationToken)
     {

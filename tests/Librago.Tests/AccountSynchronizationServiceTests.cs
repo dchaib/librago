@@ -57,8 +57,8 @@ public sealed class AccountSynchronizationServiceTests
 
             var loans = await database.GetLoansAsync(CancellationToken.None);
             var state = Assert.Single(await database.GetLoanNetworkStatesAsync(CancellationToken.None));
-            Assert.Contains(loans, loan => loan.AccountId == "account-a" && loan.Title == "Updated");
-            Assert.Contains(loans, loan => loan.AccountId == "account-b" && loan.Title == "Initial");
+            Assert.Contains(loans, loan => loan.AccountId == "account-a" && loan.Item.Title == "Updated");
+            Assert.Contains(loans, loan => loan.AccountId == "account-b" && loan.Item.Title == "Initial");
             Assert.Equal(SynchronizationResult.Partial, state.Result);
             Assert.Equal(
                 new DateTimeOffset(2026, 9, 13, 8, 0, 0, TimeSpan.Zero),
@@ -183,6 +183,7 @@ public sealed class AccountSynchronizationServiceTests
             title,
             "Auteur synthétique",
             "Livre",
+            null,
             "Bibliothèque exemple",
             new DateOnly(2026, 9, 1),
             new DateOnly(2026, 9, 20));

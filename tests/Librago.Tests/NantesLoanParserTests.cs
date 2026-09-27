@@ -67,7 +67,8 @@ public sealed class NantesLoanParserTests
         Assert.Equal("Titre synthétique", loan.Title);
         Assert.Equal("Auteur synthétique (1970-....)", loan.Author);
         Assert.Equal("Document synthétique", loan.MaterialType);
-        Assert.Equal("Médiathèque synthétique", loan.Branch);
+        Assert.Equal("Médiathèque synthétique", loan.Library);
+        Assert.Equal("SYN", loan.LibraryId);
         Assert.Equal(new DateOnly(2026, 8, 31), loan.BorrowedOn);
         Assert.Equal(new DateOnly(2026, 9, 29), loan.DueOn);
     }

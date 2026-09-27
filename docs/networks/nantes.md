@@ -47,7 +47,8 @@ The response contains `items` and `total`; each item's fields are under `data`.
 | `loanDate` | Borrowing date | Optional, `dd/MM/yyyy` when present |
 | `author` | Author | Optional |
 | `categoryLabel` | Material type | Optional |
-| `branch.desc` | Library branch | Optional |
+| `branch.desc` | Library | Optional |
+| `branch.branchCode` | Library identity | Optional; scoped to the network, consistent with reservation pickup-library identities |
 | `documentNumber` | External loan identity | Preferred; see identity rules |
 
 Trim text; blank optional values become null. A supplied date must parse successfully. ISBN, series, and other source metadata are not needed for the current loan snapshot except as noted below.

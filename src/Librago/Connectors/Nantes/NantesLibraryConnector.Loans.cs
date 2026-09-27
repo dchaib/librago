@@ -21,19 +21,21 @@ public sealed partial class NantesLibraryConnector
             var json = await response.Content.ReadAsStringAsync(cancellationToken);
             var page = NantesLoanParser.Parse(json, account.Borrower);
             foreach (var loan in page.Loans)
-            {
                 if (!ids.Add(loan.ExternalId))
                     throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
                         "The Nantes loans response contained duplicate identities.");
-                loans.Add(loan);
-            }
-            if (loans.Count >= page.Total || page.Loans.Count == 0)
+            var retrievedCount = loans.Count + page.Loans.Count;
+            if ((retrievedCount >= page.Total || page.Loans.Count == 0) && retrievedCount != page.Total)
+                throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
+                    "The Nantes loans response ended before all reported loans were returned.");
+            var titles = await NantesCatalogueTitles.ResolveAsync(session.Client, session.Token, session.SiteKey,
+                json, "documentNumber", "vol", page.Loans.Select(l => l.ExternalId).ToHashSet(StringComparer.Ordinal),
+                session.Logger, cancellationToken);
+            foreach (var loan in page.Loans)
             {
-                if (loans.Count != page.Total)
-                    throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
-                        "The Nantes loans response ended before all reported loans were returned.");
-                return loans;
+                loans.Add(titles.TryGetValue(loan.ExternalId, out var title) ? loan with { Title = title } : loan);
             }
+            if (loans.Count == page.Total) return loans;
         }
     }
 }

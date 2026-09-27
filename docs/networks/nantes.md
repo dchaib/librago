@@ -11,6 +11,7 @@ Implementation entry points:
 - [NantesLoanParserTests](../../tests/Librago.Tests/NantesLoanParserTests.cs): loan parser checks.
 - [NantesReservationParser](../../src/Librago/Connectors/Nantes/NantesReservationParser.cs): complete reservation snapshot validation and mapping.
 - [ReservationParserTests](../../tests/Librago.Tests/ReservationParserTests.cs): synthetic reservation parser checks.
+- [NantesCatalogueTitles](../../src/Librago/Connectors/Nantes/NantesCatalogueTitles.cs): shared optional title enrichment for loans and reservations.
 
 ## Access and session
 
@@ -27,6 +28,16 @@ Calculate the signature from the exact query string, including its initial `?`: 
 
 The borrower display name comes from the configured account's `Borrower`. Keep source identifiers scoped to that account's local `AccountId`. A single account session retrieves both loans and reservations; each query receives its own signature while reusing the session token and cookies.
 
+## Catalogue titles
+
+After validating an account page, enrich the included loans or reservations with catalogue titles. Match entries to their snapshots using `documentNumber` for loans and `omnidexId` for reservations. These identities are separate from catalogue references: distinct loans can share a notice and must keep their own title suffixes.
+
+Read the first usable notice reference from `data.seqNo`, `data.seq_no`, or `data.bacNo`, in that order. Deduplicate references within each page and POST batches of at most 100 to `/in/rest/api/resolveBySeqNo`, with an `application/x-www-form-urlencoded` body containing `locale=fr` and comma-separated original reference values in `ids`. Reuse the session with a request-local `X-InMedia-Authorization: Bearer {token} {ckSite}` header, without a signature, preserving account-page authorization. No request is needed without references.
+
+Match `resultSet[].id[0].value` to `p::usmarcdef_` plus the reference: pad `seqNo` and `seq_no` on the left to ten characters, but do not pad `bacNo`. Duplicate result IDs are ambiguous. Use only a nonblank string in `title[0].value`, preserving punctuation and trimming surrounding whitespace. Append ` - {issueCaption}` when `hasIssueCaption` is true; otherwise append ` - {vol}` for loans or ` - {volume}` for reservations when `hasVolume` is true. Missing/null flags mean false. Invalid required flags or a missing/invalid selected suffix retain the raw title. Replace only the snapshot title; terminal reservations are not enriched.
+
+Missing references, missing notices, unusable titles, and ambiguous matches retain the validated `data.title`. Each batch has a ten-second timeout. HTTP/network failures, timeouts, and unusable JSON retain the batch's raw titles and emit one generic warning (event 1202), without response bodies, titles, identifiers, or session data. Caller cancellation propagates. Partial usable responses can enrich matched entries. Account-page validation and completeness checks remain required. There are no retries, persistent caches, or configuration options; titles update at the next successful automatic synchronization.
+
 ## Loans
 
 ### Retrieval
@@ -42,7 +53,7 @@ The response contains `items` and `total`; each item's fields are under `data`.
 | Source | Librago value | Handling |
 | --- | --- | --- |
 | Account configuration: `Borrower` | Borrower | Required, nonblank |
-| `title` | Title | Required, nonblank |
+| `title` | Fallback title | Required, nonblank; catalogue title preferred as described above |
 | `returnDate` | Due date | Required, `dd/MM/yyyy` |
 | `loanDate` | Borrowing date | Optional, `dd/MM/yyyy` when present |
 | `author` | Author | Optional |
@@ -55,7 +66,7 @@ Trim text; blank optional values become null. A supplied date must parse success
 
 ### Identity and validation
 
-Use account-scoped `documentNumber` as the required external loan ID, restoring the previously used source field. Accept strings or numbers and normalize to a trimmed string. Manual synchronization has shown that distinct loans in one account can share `omnidexId`, so it must not identify loans. Reject missing or invalid document numbers and duplicate IDs across the complete paginated collection. Do not fall back to `omnidexId` or a generated identity. Existing data remains until a successful refresh; a changed identity resets its first-observation estimate without heuristic matching.
+Use account-scoped `documentNumber` as the required external loan ID. Accept strings or numbers and normalize to a trimmed string. Manual synchronization has shown that distinct loans in one account can share `omnidexId`, so it must not identify loans. Reject missing or invalid document numbers and duplicate IDs across the complete paginated collection. Do not fall back to `omnidexId` or a generated identity. Existing data remains until a successful refresh; a changed identity resets its first-observation estimate without heuristic matching.
 
 Require `items` to be an array and `total` to be a nonnegative integer, even for an empty result. The valid empty loan response is `{ "items": [], "total": 0 }`. Each item must have `data`, title, and a valid due date; optional metadata can be absent.
 
@@ -76,7 +87,7 @@ Reservation fields are also under `items[].data`.
 | Source | Librago value | Handling |
 | --- | --- | --- |
 | Account configuration: `Borrower` | Borrower | Use the same display name as loans |
-| `title` | Title | Required, nonblank |
+| `title` | Fallback title | Required, nonblank; catalogue title preferred as described above |
 | `author` | Author | Optional |
 | `zmatDisplay` | Material type | Optional display text |
 | `branch.branchCode`, `branch.desc` | Pickup-library identity and name | Keep identity separate from display text |

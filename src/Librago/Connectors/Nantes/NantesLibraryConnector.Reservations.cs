@@ -16,9 +16,13 @@ public sealed partial class NantesLibraryConnector
         SetAuthorization(session, query);
         using var response = await session.Client.GetAsync($"/in/rest/api/accountPage{query}", cancellationToken);
         await RequireSuccessAsync(response, "Nantes reservations request", cancellationToken);
-        return NantesReservationParser.Parse(await response.Content.ReadAsStringAsync(cancellationToken), account.Borrower,
+        var json = await response.Content.ReadAsStringAsync(cancellationToken);
+        var reservations = NantesReservationParser.Parse(json, account.Borrower,
             code => LogUnknownStatus(logger,
                 code is { Length: <= 80 } && Regex.IsMatch(code, @"^ReservationCard\.RESV_[A-Z_]+$")
                     ? code : "Unclassified", null));
+        var titles = await NantesCatalogueTitles.ResolveAsync(session.Client, session.Token, session.SiteKey,
+            json, "omnidexId", "volume", reservations.Select(r => r.ExternalId).ToHashSet(StringComparer.Ordinal), logger, cancellationToken);
+        return reservations.Select(r => titles.TryGetValue(r.ExternalId, out var title) ? r with { Title = title } : r).ToArray();
     }
 }

@@ -113,7 +113,10 @@ public sealed partial class NantesLibraryConnector
         return signature.ToString(CultureInfo.InvariantCulture);
     }
 
-    private sealed record NantesSession(HttpClient Client, string SiteKey, string Token);
+    private sealed record NantesSession(HttpClient Client, string SiteKey, string Token)
+    {
+        public ILogger Logger { get; init; } = Microsoft.Extensions.Logging.Abstractions.NullLogger.Instance;
+    }
 
     private sealed class AuthenticationResponse
     {

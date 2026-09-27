@@ -18,7 +18,7 @@
             @if (item.PickupLibrary is not null) { <div><dt>À retirer à</dt><dd>@item.PickupLibrary</dd></div> }
             @if (item.QueuePosition is { } rank) { <div><dt>Rang</dt><dd>@rank</dd></div> }
             <div>
-                <dt>Réservée le</dt>
+                <dt>Réservé le</dt>
                 <dd>@LoanPresentation.FormatDate(reservation.ReservedOn)@if (item.ReservedOn is null) { <a href="#estimated-dates" aria-label="Date estimée d’après la première observation par Librago">*</a> }</dd>
             </div>
             @if (reservation.AvailableOn is { } availableOn)

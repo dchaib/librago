@@ -216,7 +216,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         {
             await connection.OpenAsync(TestContext.Current.CancellationToken);
             await using var command = connection.CreateCommand();
-            command.CommandText = "DROP TABLE reservations; DROP TABLE reservation_network_sync; PRAGMA user_version = 1;";
+            command.CommandText = "ALTER TABLE loan_account_sync RENAME TO account_sync; ALTER TABLE loan_network_sync RENAME TO network_sync; DROP TABLE reservations; DROP TABLE reservation_network_sync; PRAGMA user_version = 1;";
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
         await database.InitializeAsync(CancellationToken.None);

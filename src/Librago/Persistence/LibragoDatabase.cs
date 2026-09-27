@@ -8,7 +8,7 @@ namespace Librago.Persistence;
 
 public sealed partial class LibragoDatabase
 {
-    private const int CurrentSchemaVersion = 2;
+    private const int CurrentSchemaVersion = 3;
     private readonly string _connectionString;
 
     public LibragoDatabase(IOptions<LibragoOptions> options, IWebHostEnvironment environment)
@@ -57,6 +57,10 @@ public sealed partial class LibragoDatabase
         if (version < 2)
         {
             await ApplyVersionTwoAsync(connection, cancellationToken);
+        }
+        if (version < 3)
+        {
+            await ApplyVersionThreeAsync(connection, cancellationToken);
         }
     }
 

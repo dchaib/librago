@@ -43,7 +43,7 @@ public sealed partial class LibragoDatabase
             state.Transaction = transaction;
             state.CommandText =
                 """
-                INSERT INTO account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
+                INSERT INTO loan_account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
                 VALUES ($accountId, $networkKey, $attemptedAt, $attemptedAt, 'Success')
                 ON CONFLICT(account_id) DO UPDATE SET
                     network_key = excluded.network_key,

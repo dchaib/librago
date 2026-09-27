@@ -17,7 +17,7 @@ public sealed partial class LibragoDatabase
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            INSERT INTO account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
+            INSERT INTO loan_account_sync (account_id, network_key, last_attempt_at, last_success_at, result)
             VALUES ($accountId, $networkKey, $attemptedAt, NULL, 'Failed')
             ON CONFLICT(account_id) DO UPDATE SET
                 network_key = excluded.network_key,
@@ -43,7 +43,7 @@ public sealed partial class LibragoDatabase
         await using var command = connection.CreateCommand();
         command.CommandText =
             """
-            INSERT INTO network_sync (
+            INSERT INTO loan_network_sync (
                 network_key,
                 network_name,
                 last_attempt_at,
@@ -62,11 +62,11 @@ public sealed partial class LibragoDatabase
                 last_attempt_at = excluded.last_attempt_at,
                 last_complete_success_at = CASE
                     WHEN excluded.result = 'Success' THEN excluded.last_attempt_at
-                    ELSE network_sync.last_complete_success_at
+                    ELSE loan_network_sync.last_complete_success_at
                 END,
                 last_complete_success_account_ids = CASE
                     WHEN excluded.result = 'Success' THEN excluded.last_complete_success_account_ids
-                    ELSE network_sync.last_complete_success_account_ids
+                    ELSE loan_network_sync.last_complete_success_account_ids
                 END,
                 result = excluded.result;
             """;
@@ -94,7 +94,7 @@ public sealed partial class LibragoDatabase
                 last_complete_success_at,
                 last_complete_success_account_ids,
                 result
-            FROM network_sync
+            FROM loan_network_sync
             ORDER BY network_name;
             """;
 

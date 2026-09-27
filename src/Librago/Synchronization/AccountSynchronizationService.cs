@@ -59,7 +59,7 @@ public sealed partial class AccountSynchronizationService(
 
         var accountIds = accounts.Select(account => account.Account.AccountId).ToArray();
         var network = accounts[0].Connector.Network;
-        await database.SetNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
+        await database.SetLoanNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
             GetResult(successfulLoans, accounts.Length), accountIds, cancellationToken);
         await database.SetReservationNetworkStateAsync(network.Key, network.DisplayName, attemptedAt,
             GetResult(successfulReservations, accounts.Length), accountIds, cancellationToken);
@@ -91,7 +91,7 @@ public sealed partial class AccountSynchronizationService(
             LogFailure(logger, "loans", configured.Connector.Network.Key, configured.Account.AccountId, failure);
             try
             {
-                await database.MarkAccountFailedAsync(configured.Account, configured.Connector.Network,
+                await database.MarkLoanAccountFailedAsync(configured.Account, configured.Connector.Network,
                     attemptedAt, cancellationToken);
             }
             catch (OperationCanceledException) when (cancellationToken.IsCancellationRequested)

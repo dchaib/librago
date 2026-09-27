@@ -129,7 +129,7 @@ public sealed class LoanFiltersIntegrationTests : IAsyncLifetime
             loans,
             refreshedAt,
             CancellationToken.None);
-        await database.SetNetworkStateAsync(
+        await database.SetLoanNetworkStateAsync(
             network.Key,
             network.DisplayName,
             refreshedAt,

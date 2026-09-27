@@ -41,7 +41,7 @@ public sealed partial class SynchronizationWorker(
                 group.Key,
                 group.Select(account => account.AccountId).ToArray()))
             .ToArray();
-        var states = await database.GetNetworkStatesAsync(cancellationToken);
+        var states = await database.GetLoanNetworkStatesAsync(cancellationToken);
         var reservationStates = await database.GetReservationNetworkStatesAsync(cancellationToken);
 
         var loanDelay = SynchronizationSchedule.GetInitialDelay(

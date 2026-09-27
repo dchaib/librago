@@ -58,7 +58,7 @@ public sealed class IndexModel(
         var allLoans = (await database.GetLoansAsync(cancellationToken))
             .Where(loan => configuredAccountIds.Contains(loan.AccountId))
             .ToArray();
-        var storedStates = await database.GetNetworkStatesAsync(cancellationToken);
+        var storedStates = await database.GetLoanNetworkStatesAsync(cancellationToken);
         var configuredNetworks = options.Value.Accounts
             .Select(account => connectorResolver.Resolve(account.Network).Network)
             .DistinctBy(network => network.Key, StringComparer.Ordinal)

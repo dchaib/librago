@@ -56,7 +56,7 @@ public sealed class AccountSynchronizationServiceTests
             await service.SynchronizeAllAsync(CancellationToken.None);
 
             var loans = await database.GetLoansAsync(CancellationToken.None);
-            var state = Assert.Single(await database.GetNetworkStatesAsync(CancellationToken.None));
+            var state = Assert.Single(await database.GetLoanNetworkStatesAsync(CancellationToken.None));
             Assert.Contains(loans, loan => loan.AccountId == "account-a" && loan.Title == "Updated");
             Assert.Contains(loans, loan => loan.AccountId == "account-b" && loan.Title == "Initial");
             Assert.Equal(SynchronizationResult.Partial, state.Result);

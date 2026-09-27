@@ -114,7 +114,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         var state = (await Database.GetReservationNetworkStatesAsync(CancellationToken.None)).Single(s => s.NetworkKey == "nantes");
         Assert.Equal(SynchronizationResult.Failed, state.Result);
         Assert.Equal(clock.Now.AddHours(-1), state.LastCompleteSuccessAt);
-        Assert.All(await Database.GetNetworkStatesAsync(CancellationToken.None), s => Assert.Equal(clock.Now, s.LastCompleteSuccessAt));
+        Assert.All(await Database.GetLoanNetworkStatesAsync(CancellationToken.None), s => Assert.Equal(clock.Now, s.LastCompleteSuccessAt));
         nantes.FailReservations = false;
         nantes.FailLoans = true;
         nantes.Title = "Recovered";

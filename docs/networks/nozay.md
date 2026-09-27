@@ -22,7 +22,7 @@ Use Playwright Chromium with `Headless = false`, the browser sandbox enabled, an
 2. If the title is `Making sure you're not a bot!`, wait for the portal's Anubis challenge to finish before authenticating.
 3. Fill `input[name='username']` and `input[name='password']` from configured credentials, submit with Enter, and wait for the resulting document.
 4. Open the authenticated account page, currently `/abonne/fiche/id_profil/1`, to obtain counts before reading lists.
-5. Keep the same browser context for the account summary and list requests. Reject an authenticated-page read if the login input remains visible.
+5. Keep the same browser context for the account summary and both list requests. Loans and reservations use one authentication and one browser session per account synchronization. Reject an authenticated-page read if the login input remains visible.
 
 When a parent account covers the family, configure that parent account only. Use the row's borrower name, falling back to the configured borrower if blank. Apply `BorrowerAliases` with case-insensitive matching after whitespace normalization; preserve unmatched names. Apply this to both loans and reservations. Generate fallback identities from source names before aliasing so display-name changes do not change identity.
 

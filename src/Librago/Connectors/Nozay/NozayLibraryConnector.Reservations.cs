@@ -2,6 +2,7 @@ using Librago.Configuration;
 using Librago.Reservations;
 using Microsoft.Playwright;
 using System.Text.RegularExpressions;
+
 namespace Librago.Connectors.Nozay;
 
 public sealed partial class NozayLibraryConnector
@@ -17,6 +18,19 @@ public sealed partial class NozayLibraryConnector
             throw new LibraryConnectorException(LibraryConnectorFailureKind.UnexpectedResponse,
                 "The Nozay account page did not contain a valid reservation list link.");
         return url.AbsoluteUri;
+    }
+
+    private async Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
+        NozaySession session, LibraryAccountOptions account, CancellationToken cancellationToken)
+    {
+        var page = session.Page;
+        await NavigateAsync(page, AccountUrl, cancellationToken);
+        var expectedCount = await ReadReservationCountAsync(page, cancellationToken);
+        var links = page.Locator(".abonneFiche.reservations a[href*='/abonne/reservations/id_profil/']");
+        var link = await links.CountAsync() == 0 ? null : await links.First.GetAttributeAsync("href");
+        await NavigateAsync(page, ValidateReservationUrl(link), cancellationToken);
+        return await ReadReservationsAsync(page, account, expectedCount, cancellationToken,
+            () => LogUnknownStatus(logger, null));
     }
 
     internal static async Task<int> ReadReservationCountAsync(IPage page, CancellationToken cancellationToken)
@@ -72,53 +86,4 @@ public sealed partial class NozayLibraryConnector
                 "The Nozay reservation list contains duplicate identities.");
         return result;
     }
-    public async Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
-        LibraryAccountOptions account,
-        CancellationToken cancellationToken)
-    {
-        var step = "launching the browser";
-        using var playwright = await Playwright.CreateAsync();
-
-        try
-        {
-            RequireChromiumExecutable(playwright.Chromium.ExecutablePath, logger);
-            await using var browser = await playwright.Chromium.LaunchAsync(
-                new BrowserTypeLaunchOptions
-                {
-                    Headless = false,
-                    ChromiumSandbox = true
-                });
-            step = "creating the browser context";
-            await using var context = await browser.NewContextAsync(
-                new BrowserNewContextOptions { Locale = "fr-FR" });
-            context.SetDefaultTimeout(30_000);
-            var page = await context.NewPageAsync();
-
-            step = "opening the portal";
-            await NavigateAsync(page, HomeUrl, cancellationToken);
-            step = "waiting for the portal challenge";
-            await PassAnubisChallengeAsync(page, cancellationToken);
-            step = "authenticating";
-            await AuthenticateAsync(page, account, cancellationToken);
-            step = "reading the account reservation count";
-            await NavigateAsync(page, AccountUrl, cancellationToken);
-            var expectedReservationCount = await ReadReservationCountAsync(page, cancellationToken);
-            step = "opening the reservations page";
-            var links = page.Locator(".abonneFiche.reservations a[href*='/abonne/reservations/id_profil/']");
-            var link = await links.CountAsync() == 0 ? null : await links.First.GetAttributeAsync("href");
-            var reservationUrl = ValidateReservationUrl(link);
-            await NavigateAsync(page, reservationUrl, cancellationToken);
-            step = "reading the reservations";
-            return await ReadReservationsAsync(page, account, expectedReservationCount, cancellationToken,
-                () => LogUnknownStatus(logger, null));
-        }
-        catch (PlaywrightException)
-        {
-            LogBrowserFailure(logger, step, null);
-            throw new LibraryConnectorException(
-                LibraryConnectorFailureKind.Upstream,
-                $"The Nozay portal failed while {step}.");
-        }
-    }
-
 }

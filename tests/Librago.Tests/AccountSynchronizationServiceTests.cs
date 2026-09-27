@@ -12,7 +12,7 @@ using Microsoft.Extensions.Options;
 
 namespace Librago.Tests;
 
-public sealed class LoanSynchronizationServiceTests
+public sealed class AccountSynchronizationServiceTests
 {
     [Fact]
     public async Task PartialRefreshPreservesTheFailedAccountsLastKnownLoans()
@@ -126,8 +126,8 @@ public sealed class LoanSynchronizationServiceTests
             });
             var database = new LibragoDatabase(options, new TestWebHostEnvironment(temporaryDirectory));
             await database.InitializeAsync(CancellationToken.None);
-            var logger = new CapturingLogger<LoanSynchronizationService>();
-            var service = new LoanSynchronizationService(
+            var logger = new CapturingLogger<AccountSynchronizationService>();
+            var service = new AccountSynchronizationService(
                 options,
                 new LibraryConnectorResolver([
                     new FakeConnector(_ => throw new LibraryConnectorException(
@@ -140,10 +140,13 @@ public sealed class LoanSynchronizationServiceTests
 
             await service.SynchronizeAllAsync(CancellationToken.None);
 
-            var message = Assert.Single(logger.Messages);
-            Assert.DoesNotContain("SYNTHETIC_AUDIT_PASSWORD", message);
-            Assert.Contains("Authentication", message);
-            Assert.Contains(account.AccountId, message);
+            Assert.Equal(2, logger.Messages.Count);
+            Assert.All(logger.Messages, message =>
+            {
+                Assert.DoesNotContain("SYNTHETIC_AUDIT_PASSWORD", message);
+                Assert.Contains("Authentication", message);
+                Assert.Contains(account.AccountId, message);
+            });
         }
         finally
         {
@@ -151,7 +154,7 @@ public sealed class LoanSynchronizationServiceTests
         }
     }
 
-    private static LoanSynchronizationService CreateService(
+    private static AccountSynchronizationService CreateService(
         IOptions<LibragoOptions> options,
         ILibraryConnector connector,
         LibragoDatabase database,
@@ -161,7 +164,7 @@ public sealed class LoanSynchronizationServiceTests
             new LibraryConnectorResolver([connector]),
             database,
             timeProvider,
-            NullLogger<LoanSynchronizationService>.Instance);
+            NullLogger<AccountSynchronizationService>.Instance);
 
     private static LibraryAccountOptions Account(string id) =>
         new()
@@ -194,16 +197,21 @@ public sealed class LoanSynchronizationServiceTests
 
         public Func<LibraryAccountOptions, IReadOnlyList<LoanSnapshot>> Handler { get; set; } = handler;
 
-        public Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(
-            LibraryAccountOptions account, CancellationToken cancellationToken) =>
-            Task.FromResult<IReadOnlyList<ReservationSnapshot>>([]);
-
-        public Task<IReadOnlyList<LoanSnapshot>> GetLoansAsync(
+        public Task<AccountSnapshot> GetAccountSnapshotAsync(
             LibraryAccountOptions account,
             CancellationToken cancellationToken)
         {
             cancellationToken.ThrowIfCancellationRequested();
-            return Task.FromResult(Handler(account));
+            try
+            {
+                return Task.FromResult(new AccountSnapshot(
+                    ConnectorResult<IReadOnlyList<LoanSnapshot>>.Create(Handler(account), null),
+                    ConnectorResult<IReadOnlyList<ReservationSnapshot>>.Create([], null)));
+            }
+            catch (LibraryConnectorException exception)
+            {
+                return Task.FromResult(AccountSnapshot.Failed(exception.FailureKind));
+            }
         }
     }
 

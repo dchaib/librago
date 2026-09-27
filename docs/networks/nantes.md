@@ -25,7 +25,7 @@ Use an HTTP client with a cookie container and redirects disabled. Send `Accept:
 
 Calculate the signature from the exact query string, including its initial `?`: normalize to Unicode Form C, start at `305419896`, and add each UTF-16 character value multiplied by its one-based position. Reuse the connector's request-signature method when adding reservations.
 
-The borrower display name comes from the configured account's `Borrower`. Keep source identifiers scoped to that account's local `AccountId`.
+The borrower display name comes from the configured account's `Borrower`. Keep source identifiers scoped to that account's local `AccountId`. A single account session retrieves both loans and reservations; each query receives its own signature while reusing the session token and cookies.
 
 ## Loans
 

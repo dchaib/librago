@@ -100,16 +100,14 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         var nozay = new FakeConnector(Resolver.Resolve("Nozay").Network);
         var resolver = new LibraryConnectorResolver([nantes, nozay]);
         var clock = new Clock(new DateTimeOffset(2026, 9, 26, 22, 30, 0, TimeSpan.Zero));
-        var reservations = new ReservationSynchronizationService(options, resolver, Database, clock,
-            NullLogger<ReservationSynchronizationService>.Instance);
-        var loans = new LoanSynchronizationService(options, resolver, Database, clock,
-            NullLogger<LoanSynchronizationService>.Instance);
-        await Task.WhenAll(reservations.SynchronizeAllAsync(CancellationToken.None), loans.SynchronizeAllAsync(CancellationToken.None));
+        var synchronization = new AccountSynchronizationService(options, resolver, Database, clock,
+            NullLogger<AccountSynchronizationService>.Instance);
+        await synchronization.SynchronizeAllAsync(CancellationToken.None);
         Assert.All(await Database.GetReservationsAsync(CancellationToken.None), r => Assert.Equal(Observation.AddDays(1), r.ReservedOn));
         clock.Now = clock.Now.AddHours(1);
         nantes.FailReservations = true;
         nozay.Title = "Updated";
-        await Task.WhenAll(reservations.SynchronizeAllAsync(CancellationToken.None), loans.SynchronizeAllAsync(CancellationToken.None));
+        await synchronization.SynchronizeAllAsync(CancellationToken.None);
         var stored = await Database.GetReservationsAsync(CancellationToken.None);
         Assert.Contains(stored, r => r.NetworkKey == "nantes" && r.Item.Title == "Initial");
         Assert.Contains(stored, r => r.NetworkKey == "nozay" && r.Item.Title == "Updated");
@@ -120,7 +118,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         nantes.FailReservations = false;
         nantes.FailLoans = true;
         nantes.Title = "Recovered";
-        await Task.WhenAll(reservations.SynchronizeAllAsync(CancellationToken.None), loans.SynchronizeAllAsync(CancellationToken.None));
+        await synchronization.SynchronizeAllAsync(CancellationToken.None);
         Assert.Contains(await Database.GetReservationsAsync(CancellationToken.None), r => r.Item.Title == "Recovered");
     }
 
@@ -136,8 +134,8 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         });
         var connector = new FakeConnector(Resolver.Resolve("Nantes").Network);
         var clock = new Clock(DateTimeOffset.UtcNow);
-        var service = new ReservationSynchronizationService(options, new LibraryConnectorResolver([connector]), Database, clock,
-            NullLogger<ReservationSynchronizationService>.Instance);
+        var service = new AccountSynchronizationService(options, new LibraryConnectorResolver([connector]), Database, clock,
+            NullLogger<AccountSynchronizationService>.Instance);
         await service.SynchronizeAllAsync(CancellationToken.None);
         connector.FailedAccount = "second-account";
         connector.Title = "Updated";
@@ -236,12 +234,16 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         public bool FailReservations { get; set; }
         public bool FailLoans { get; set; }
         public string? FailedAccount { get; set; }
-        public Task<IReadOnlyList<ReservationSnapshot>> GetReservationsAsync(LibraryAccountOptions account, CancellationToken cancellationToken) =>
-            FailReservations || account.AccountId == FailedAccount ? throw new LibraryConnectorException(
-                LibraryConnectorFailureKind.Upstream, "Synthetic failure") : Task.FromResult<IReadOnlyList<ReservationSnapshot>>([Item("1", Title)]);
-        public Task<IReadOnlyList<LoanSnapshot>> GetLoansAsync(LibraryAccountOptions account, CancellationToken cancellationToken) =>
-            FailLoans ? throw new LibraryConnectorException(LibraryConnectorFailureKind.Upstream, "Synthetic failure") :
-                Task.FromResult<IReadOnlyList<LoanSnapshot>>([]);
+        public Task<AccountSnapshot> GetAccountSnapshotAsync(LibraryAccountOptions account, CancellationToken cancellationToken)
+        {
+            var failReservations = FailReservations || account.AccountId == FailedAccount;
+            var failLoans = FailLoans;
+            return Task.FromResult(new AccountSnapshot(
+                ConnectorResult<IReadOnlyList<LoanSnapshot>>.Create(failLoans ? default : [],
+                    failLoans ? LibraryConnectorFailureKind.Upstream : null),
+                ConnectorResult<IReadOnlyList<ReservationSnapshot>>.Create(failReservations ? default : [Item("1", Title)],
+                    failReservations ? LibraryConnectorFailureKind.Upstream : null)));
+        }
     }
     private readonly string _temporaryDirectory = Path.Combine(Path.GetTempPath(), "librago-tests", Guid.NewGuid().ToString("N"));
     private WebApplicationFactory<Program>? _factory;

@@ -58,11 +58,8 @@ public sealed partial class SynchronizationWorker(
     private async Task RunSynchronizationAsync(CancellationToken cancellationToken)
     {
         await using var scope = scopeFactory.CreateAsyncScope();
-        var loans = scope.ServiceProvider.GetRequiredService<LoanSynchronizationService>();
-        var reservations = scope.ServiceProvider.GetRequiredService<ReservationSynchronizationService>();
-        // Keep portal sessions for the same account from authenticating concurrently.
-        await TrySynchronizeAsync(() => loans.SynchronizeAllAsync(cancellationToken), cancellationToken);
-        await TrySynchronizeAsync(() => reservations.SynchronizeAllAsync(cancellationToken), cancellationToken);
+        var synchronization = scope.ServiceProvider.GetRequiredService<AccountSynchronizationService>();
+        await TrySynchronizeAsync(() => synchronization.SynchronizeAllAsync(cancellationToken), cancellationToken);
     }
 
     private async Task TrySynchronizeAsync(Func<Task> synchronize, CancellationToken cancellationToken)

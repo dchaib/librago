@@ -87,13 +87,38 @@ public sealed class ReservationParserTests
     {
         var item = NozayReservationRowParser.Parse(
             ["  Lecteur   exemple ", "Livre", "", "Titre exemple", "Auteur", "Centre", label, "1", ""],
-            "/abonne/reservations/id_profil/2/id_delete/123_456", "Fallback",
+            "/abonne/reservations/id_profil/2/id_delete/123_456", "Fallback", new DateOnly(2026, 9, 28),
             new Dictionary<string, string> { ["lecteur exemple"] = "Alias exemple" });
         Assert.Equal("nozay-reservation:123_456", item.ExternalId);
         Assert.Equal("Alias exemple", item.Borrower);
         Assert.Equal(expected, item.Status);
         Assert.Null(item.PickupDeadline);
     }
+
+    [Theory]
+    [InlineData("Disponible jusqu'au 13 octobre", 2026, 9, 28, 2026, 10, 13)]
+    [InlineData("Disponible jusqu’au 13 octobre", 2026, 10, 14, 2026, 10, 13)]
+    [InlineData("Disponible jusqu'au 2 janvier", 2026, 12, 28, 2027, 1, 2)]
+    public void NozayAvailableStatusSuppliesPickupDeadline(string label, int year, int month, int day,
+        int deadlineYear, int deadlineMonth, int deadlineDay)
+    {
+        var item = NozayReservationRowParser.Parse(
+            ["Lecteur exemple", "Livre", "", "Titre exemple", "Auteur", "Centre", label, "1", ""],
+            "/abonne/reservations/id_profil/2/id_delete/123_456", "Fallback",
+            new DateOnly(year, month, day));
+        Assert.Equal(ReservationStatus.Available, item.Status);
+        Assert.Equal(label, item.StatusLabel);
+        Assert.Equal(new DateOnly(deadlineYear, deadlineMonth, deadlineDay), item.PickupDeadline);
+    }
+
+    [Theory]
+    [InlineData("Disponible jusqu'au 35 octobre")]
+    [InlineData("Disponible jusqu'au 13 inconnu")]
+    public void NozayRejectsInvalidPickupDeadline(string label) =>
+        Assert.Throws<LibraryConnectorException>(() => NozayReservationRowParser.Parse(
+            ["Lecteur exemple", "Livre", "", "Titre exemple", "Auteur", "Centre", label, "1", ""],
+            "/abonne/reservations/id_profil/2/id_delete/123_456", "Fallback",
+            new DateOnly(2026, 9, 28)));
 
     [Theory]
     [InlineData("Vous avez 2 réservations en cours", 2)]
@@ -107,7 +132,8 @@ public sealed class ReservationParserTests
     public void NozayRejectsMissingIdentityAndForeignNavigation()
     {
         Assert.Throws<LibraryConnectorException>(() => NozayReservationRowParser.Parse(
-            ["Lecteur", "", "", "Titre", "", "", "", "", ""], "/notice/id/123", ""));
+            ["Lecteur", "", "", "Titre", "", "", "", "", ""], "/notice/id/123", "",
+            new DateOnly(2026, 9, 28)));
         Assert.Throws<LibraryConnectorException>(() => NozayLibraryConnector.ValidateReservationUrl(
             "https://example.org/abonne/reservations/id_profil/1"));
         Assert.EndsWith("/abonne/reservations/id_profil/2",

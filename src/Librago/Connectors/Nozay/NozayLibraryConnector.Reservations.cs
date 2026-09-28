@@ -29,8 +29,10 @@ public sealed partial class NozayLibraryConnector
         var links = page.Locator(".abonneFiche.reservations a[href*='/abonne/reservations/id_profil/']");
         var link = await links.CountAsync() == 0 ? null : await links.First.GetAttributeAsync("href");
         await NavigateAsync(page, ValidateReservationUrl(link), cancellationToken);
-        return await ReadReservationsAsync(page, account, expectedCount, cancellationToken,
-            () => LogUnknownStatus(logger, null));
+        var zone = TimeZoneInfo.FindSystemTimeZoneById(options.Value.TimeZone);
+        var observedOn = DateOnly.FromDateTime(TimeZoneInfo.ConvertTime(timeProvider.GetUtcNow(), zone).DateTime);
+        return await ReadReservationsAsync(page, account, expectedCount, observedOn,
+            () => LogUnknownStatus(logger, null), cancellationToken);
     }
 
     internal static async Task<int> ReadReservationCountAsync(IPage page, CancellationToken cancellationToken)
@@ -56,8 +58,8 @@ public sealed partial class NozayLibraryConnector
     }
 
     internal static async Task<IReadOnlyList<ReservationSnapshot>> ReadReservationsAsync(
-        IPage page, LibraryAccountOptions account, int expectedCount, CancellationToken cancellationToken,
-        Action? unknownStatus = null)
+        IPage page, LibraryAccountOptions account, int expectedCount, DateOnly observedOn,
+        Action? unknownStatus, CancellationToken cancellationToken)
     {
         if (await page.Locator("input[name='username']").IsVisibleAsync())
             throw new LibraryConnectorException(LibraryConnectorFailureKind.Authentication,
@@ -78,7 +80,7 @@ public sealed partial class NozayLibraryConnector
             var cells = rows.Nth(i).Locator("td");
             var values = await cells.AllTextContentsAsync();
             var href = values.Count > 8 ? await GetFirstHrefAsync(cells.Nth(8)) : null;
-            result.Add(NozayReservationRowParser.Parse(values.ToArray(), href, account.Borrower,
+            result.Add(NozayReservationRowParser.Parse(values.ToArray(), href, account.Borrower, observedOn,
                 account.BorrowerAliases, unknownStatus));
         }
         if (result.Select(r => r.ExternalId).Distinct(StringComparer.Ordinal).Count() != result.Count)

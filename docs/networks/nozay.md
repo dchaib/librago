@@ -86,23 +86,24 @@ Column indices are zero-based; the current reservation table has nine cells per 
 | 3 — Titre and link | Title; catalog notice reference | Title required; notice ID is not a reservation ID |
 | 4 — Auteur | Author | Optional |
 | 5 — Bibliothèque | Pickup-library name | Scope filter identity to the network |
-| 6 — État | Source status label | See status mapping; can be blank |
+| 6 — État | Source status label and pickup deadline | `Disponible jusqu'au 13 octobre` supplies a day and month; can be blank |
 | 7 — Rang | Queue position | Numeric text, optional |
 | 8 — Suppr. link | External reservation identity | Read the full `id_delete` value; do not follow the deletion link |
 | Reservation date | Absent | Use the generic first-observation estimate |
 | Availability date | Absent | Estimate only once seen as available |
-| Pickup deadline | Extraction still unknown | Do not invent a value; requires an available-state example |
+| Pickup deadline | Day and month in the available-state label | Resolve the missing year against the synchronization date in the configured time zone |
 
-Normalize cell whitespace as for loans. The available-state content and date formatting still need confirmation before implementing deadline extraction.
+Normalize cell whitespace as for loans. For `Disponible jusqu'au <day> <French month>`, accept straight or curly apostrophes and resolve the year to the closest valid occurrence around the synchronization date. This keeps an already passed pickup date in the past rather than moving it to the next year. Reject an invalid day or month so a malformed available-state deadline cannot silently replace known data.
 
-The implementation leaves pickup deadlines absent until that source shape is confirmed. First-observation estimates are supplied by persistence, not by the connector. Deletion links are read only for identity and are never followed. Only the portal's same-origin reservation-list route is accepted for navigation.
+First-observation estimates are supplied by persistence, not by the connector. Deletion links are read only for identity and are never followed. Only the portal's same-origin reservation-list route is accepted for navigation.
 
 ### Status mapping
 
 | Source label | Product group | Confidence |
 | --- | --- | --- |
 | Blank | Unavailable; fallback label `Pas encore disponible` | Working interpretation, pending additional states |
-| `Disponible` | Available | Expected label, not yet confirmed |
+| `Disponible jusqu'au <day> <month>` | Available | Confirmed with a single available-state example; supplies the pickup deadline |
+| `Disponible` | Available without a deadline | Expected label, not yet confirmed |
 | Other nonblank text | Unknown until mapped | Preserve the network wording |
 
 Do not classify every nonblank label as available. Intermediate and suspended states remain unspecified. Log an unrecognized status with sanitized diagnostics so its mapping can be added.
@@ -126,7 +127,7 @@ Let synchronization preserve the previous state on failure. Keep browser session
 ## Integration questions
 
 - Obtain reservation examples with multiple records, multiple borrowers, and different statuses.
-- Confirm available and intermediate status labels and pickup-deadline extraction.
+- Confirm other available and intermediate status labels and any other pickup-deadline formats.
 - Confirm reservation count/list coverage for family accounts and whether pagination is needed.
 - Confirm reservation-identifier uniqueness and stability across status changes.
 - Confirm how terminal reservations are represented so canceled or completed records are excluded.

@@ -1,9 +1,13 @@
 using Librago.Configuration;
 using Microsoft.Playwright;
+using Microsoft.Extensions.Options;
 
 namespace Librago.Connectors.Nozay;
 
-public sealed partial class NozayLibraryConnector(ILogger<NozayLibraryConnector> logger) : ILibraryConnector
+public sealed partial class NozayLibraryConnector(
+    ILogger<NozayLibraryConnector> logger,
+    IOptions<LibragoOptions> options,
+    TimeProvider timeProvider) : ILibraryConnector
 {
     private static readonly Action<ILogger, string, Exception?> LogBrowserFailure = LoggerMessage.Define<string>(
         LogLevel.Warning, new EventId(1204), "The Nozay browser operation failed while {Step}.");

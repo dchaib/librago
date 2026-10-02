@@ -86,14 +86,14 @@ Column indices are zero-based; the current reservation table has nine cells per 
 | 3 — Titre and link | Title; catalog notice reference | Title required; notice ID is not a reservation ID |
 | 4 — Auteur | Author | Optional |
 | 5 — Bibliothèque | Pickup-library name | Scope filter identity to the network |
-| 6 — État | Source status label and pickup deadline | `Disponible jusqu'au 13 octobre` supplies a day and month; can be blank |
+| 6 — État | Source status label and pickup deadline | `Disponible jusqu'au 13 octobre` supplies a day and month; an explicit year is also accepted, as in `Disponible jusqu'au 13 octobre 2026`; can be blank |
 | 7 — Rang | Queue position | Numeric text, optional |
 | 8 — Suppr. link | External reservation identity | Read the full `id_delete` value; do not follow the deletion link |
 | Reservation date | Absent | Use the generic first-observation estimate |
 | Availability date | Absent | Estimate only once seen as available |
-| Pickup deadline | Day and month in the available-state label | Resolve the missing year against the synchronization date in the configured time zone |
+| Pickup deadline | Day and month, with an optional year, in the available-state label | Use an explicit year directly; otherwise resolve it against the synchronization date in the configured time zone |
 
-Normalize cell whitespace as for loans. For `Disponible jusqu'au <day> <French month>`, accept straight or curly apostrophes and resolve the year to the closest valid occurrence around the synchronization date. This keeps an already passed pickup date in the past rather than moving it to the next year. Reject an invalid day or month so a malformed available-state deadline cannot silently replace known data.
+Normalize cell whitespace as for loans. For `Disponible jusqu'au <day> <French month> [<year>]`, accept straight or curly apostrophes. When the label includes a year, use it directly; otherwise resolve the year to the closest valid occurrence around the synchronization date. This keeps an already passed pickup date in the past rather than moving it to the next year. Reject an invalid day, month, or explicit year so a malformed available-state deadline cannot silently replace known data.
 
 First-observation estimates are supplied by persistence, not by the connector. Deletion links are read only for identity and are never followed. Only the portal's same-origin reservation-list route is accepted for navigation.
 

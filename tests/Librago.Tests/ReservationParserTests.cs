@@ -97,6 +97,7 @@ public sealed class ReservationParserTests
 
     [Theory]
     [InlineData("Disponible jusqu'au 13 octobre", 2026, 9, 28, 2026, 10, 13)]
+    [InlineData("Disponible jusqu'au 13 octobre 2026", 2026, 9, 28, 2026, 10, 13)]
     [InlineData("Disponible jusqu’au 13 octobre", 2026, 10, 14, 2026, 10, 13)]
     [InlineData("Disponible jusqu'au 2 janvier", 2026, 12, 28, 2027, 1, 2)]
     public void NozayAvailableStatusSuppliesPickupDeadline(string label, int year, int month, int day,

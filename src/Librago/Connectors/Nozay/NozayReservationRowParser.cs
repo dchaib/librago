@@ -40,10 +40,15 @@ internal static class NozayReservationRowParser
     {
         if (label is null || !label.StartsWith("Disponible jusqu'", StringComparison.OrdinalIgnoreCase) &&
             !label.StartsWith("Disponible jusqu’", StringComparison.OrdinalIgnoreCase)) return null;
-        var match = Regex.Match(label, @"^Disponible jusqu['’]au (?<day>\d{1,2}) (?<month>\p{L}+)$",
+        var match = Regex.Match(label, @"^Disponible jusqu['’]au (?<day>\d{1,2}) (?<month>\p{L}+)(?: (?<year>\d{4}))?$",
             RegexOptions.IgnoreCase | RegexOptions.CultureInvariant);
         if (!match.Success) throw Invalid();
         var dayAndMonth = $"{match.Groups["day"].Value} {match.Groups["month"].Value}";
+        if (match.Groups["year"].Success)
+            return DateOnly.TryParseExact($"{dayAndMonth} {match.Groups["year"].Value}", "d MMMM yyyy",
+                CultureInfo.GetCultureInfo("fr-FR"), DateTimeStyles.None, out var explicitDate)
+                ? explicitDate : throw Invalid();
+
         var candidates = Enumerable.Range(observedOn.Year - 1, 3)
             .Where(year => year is >= 1 and <= 9999)
             .Select(year => DateOnly.TryParseExact($"{dayAndMonth} {year}", "d MMMM yyyy",

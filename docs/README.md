@@ -63,6 +63,16 @@ Only unresolved product questions.
 
 Once answered, remove the question and move the resulting decision into the appropriate product document when relevant.
 
+### `design/`
+
+The design system documents Librago's shared visual principles, foundations and tokens, and reusable UI component guidance.
+
+- `design/principles.md` describes the durable visual and interaction principles;
+- `design/foundations.md` defines visual tokens, themes, and their values;
+- `design/components.md` describes shared components, variants, and interaction guidance.
+
+Feature-specific behavior and domain compositions belong in the relevant product specification. Link to the design system for shared visual rules instead of duplicating them.
+
 ### `networks/<network>.md`
 
 Current reference for a library network's connector.
@@ -124,6 +134,7 @@ It may contain:
 | What should be built next? | `product/roadmap.md` |
 | How should a specific feature behave? | `product/features/<feature>.md` |
 | What product question is unresolved? | `product/open-questions.md` |
+| What shared visual language and component guidance should the interface follow? | `design/` |
 | Which data and constraints does a library network expose? | `networks/<network>.md` |
 | What integration question is unresolved? | The relevant `networks/<network>.md` |
 | Why did we choose an architecture or technology? | `adr/` |

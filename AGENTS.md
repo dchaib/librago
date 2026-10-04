@@ -25,6 +25,7 @@ Read [`docs/README.md`](docs/README.md) before adding or restructuring documenta
 
 - product behavior belongs in `docs/product/`;
 - unresolved product questions belong in `docs/product/open-questions.md`;
+- shared visual principles, foundations, and UI component guidance belong in `docs/design/`;
 - structural technical decisions belong in `docs/adr/`;
 - the root `README.md` is public-facing and should not be used as an agent instruction file.
 

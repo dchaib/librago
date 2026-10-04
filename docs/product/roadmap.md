@@ -24,9 +24,9 @@ Read-only consolidated list of current reservations, with status, pickup informa
 
 Detailed behavior is described in [`features/reservations.md`](features/reservations.md).
 
-## 0.3 — Notifications
+## 0.3 — Unified application interface
 
-Approaching due dates, available reservations, and pickup-deadline reminders.
+A cohesive interface built around Librago's design system, with a home dashboard, shared navigation, and redesigned loans and reservations lists. This version establishes the visual foundations, reusable components, and UI stack for an accessible experience on mobile and desktop, in light and dark modes.
 
 ## 0.4 — Library opening hours
 
@@ -56,6 +56,7 @@ Identify likely next volumes and suggest reserving them.
 
 Intentionally deferred but tracked:
 
+- notifications for approaching due dates, available reservations, and pickup deadlines;
 - application-level authentication and OIDC;
 - manual synchronization controls;
 - synchronization history;

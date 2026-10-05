@@ -28,6 +28,8 @@ Detailed behavior is described in [`features/reservations.md`](features/reservat
 
 A cohesive interface built around Librago's design system, with a home dashboard, shared navigation, and redesigned loans and reservations lists. This version establishes the visual foundations, reusable components, and UI stack for an accessible experience on mobile and desktop, in light and dark modes.
 
+The home dashboard is described in [`features/dashboard.md`](features/dashboard.md).
+
 ## 0.4 — Library opening hours
 
 Regular schedules plus temporary or exceptional changes.

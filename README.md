@@ -10,11 +10,10 @@ Librago is intended to help with:
 
 - consolidated loan tracking;
 - due-date awareness;
-- reservation tracking;
+- reservation tracking and placement;
 - library opening hours;
 - renewals;
 - federated catalog search;
-- reservations;
 - preparing a library visit;
 - series and next-volume assistance.
 
@@ -22,7 +21,7 @@ The project is designed to support multiple library networks through network-spe
 
 ## Project status
 
-The project is under active development. See [`docs/product/roadmap.md`](docs/product/roadmap.md) for more information.
+Librago provides automatically synchronized loans and read-only reservations. See the [product roadmap](docs/product/roadmap.md) for planned increments and the [architecture overview and ADRs](docs/architecture/overview.md) for technical decisions.
 
 See [`docs/README.md`](docs/README.md) for an overview of the project documentation.
 

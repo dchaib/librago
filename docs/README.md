@@ -100,6 +100,22 @@ An ADR should generally contain:
 
 ADRs should explain **why** a decision was made.
 
+### `architecture/`
+
+Living technical references describe **how** Librago's accepted target architecture works.
+
+- [Overview](architecture/overview.md): application shape, interactions, data flow, and trust boundaries.
+- [Application](architecture/application.md): application responsibilities, synchronization/read flows, connector boundaries, and persistence guarantees.
+- [Web](architecture/web.md): frontend toolchains, hosting, routing, and design-system integration.
+- [Authentication](architecture/authentication.md): identity admission, application sessions, antiforgery, and Data Protection.
+- [Security](architecture/security.md): enduring browser, runtime, and network security requirements.
+
+Each topic has a primary reference; other documents summarize and link to it. Provider-specific connector details belong in `networks/`. ADRs explain the structural choices and their rationale; migration progress belongs in the product roadmap.
+
+### `deployment/`
+
+Operational deployment references. The [validation checklist](deployment/validation.md) tracks checks of the selected identity provider, reverse proxy, persistent keys, browser hardening, and egress controls in the target environment. Architecture references define the enduring requirements; this checklist records their operational verification.
+
 ## Other project files
 
 ### Root `README.md`
@@ -138,5 +154,7 @@ It may contain:
 | Which data and constraints does a library network expose? | `networks/<network>.md` |
 | What integration question is unresolved? | The relevant `networks/<network>.md` |
 | Why did we choose an architecture or technology? | `adr/` |
+| How is Librago architecturally designed, and what deployment requirements apply? | `architecture/` |
+| Which deployment controls still need operational validation? | `deployment/validation.md` |
 | How should an agent work in the repo? | `AGENTS.md` |
 | What should a new visitor know first? | root `README.md` |

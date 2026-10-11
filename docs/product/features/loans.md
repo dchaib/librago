@@ -176,6 +176,8 @@ At the bottom of the list page, show one line per network with the last complete
 
 ## Known data coverage
 
+Known persistence limitation: item records and network synchronization state do not fully persist successful empty versus missing snapshots at account/collection level. That gap must be addressed before counts and empty states can reliably follow the rules below; schema design is separate work.
+
 For each configured account and collection, distinguish a complete successful snapshot from the absence of any usable snapshot for that account and network. A successful empty snapshot is known data; the presence or absence of item records alone cannot establish whether an account has synchronized successfully. Preserve this distinction across later failed attempts and application restarts.
 
 For the selected network scope:
@@ -206,9 +208,7 @@ A verified empty state requires complete, reliable data for the selected scope. 
 
 ## Authentication
 
-Application-level authentication is outside the scope of this specification.
-
-An upstream reverse proxy may provide temporary protection.
+The cross-cutting [OIDC and explicit admission model](../../architecture/authentication.md) grants each admitted user shared access to the household's configured library accounts. Borrower filters do not impose access restrictions.
 
 ## Acceptance criteria
 

@@ -4,6 +4,8 @@
 
 Accepted
 
+Note: [ADR-0004](0004-react-frontend.md) supersedes only the Razor Pages frontend choice below; the other decisions remain applicable.
+
 ## Context
 
 Version 0.1 must periodically synchronize loans from several library accounts, preserve the last known state, and expose a small responsive web interface. Librago is self-hosted and its first implementation should remain simple to operate and change.

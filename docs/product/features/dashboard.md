@@ -92,7 +92,7 @@ A reservation counts as **available** whenever its last known status is `Availab
 
 Do not infer a pickup deadline when none is provided.
 
-An available reservation is considered **to pick up soon** when its pickup deadline severity is `Close` or more urgent:
+An available reservation's **pickup deadline requires attention** when its severity is `Close` or more urgent:
 
 | Remaining time | Severity | Included |
 | --- | --- | --- |
@@ -179,7 +179,7 @@ Examples:
 | Loans to return soon | Loans filtered by that network and `Close` or more urgent |
 | Total reservations for a network | Reservations filtered by that network |
 | Available reservations | Reservations filtered by that network and `Available` |
-| Reservations to pick up soon | Reservations filtered by that network, `Available`, and `Close` or more urgent |
+| Available reservations with close or expired pickup deadlines | Reservations filtered by that network, `Available`, and `Close` or more urgent |
 | Global overdue loans | Loans across all networks filtered by `Overdue` |
 | Global very-close loans | Loans across all networks filtered by `Very Close` |
 | Global urgent reservations | Reservations across all networks filtered by `Available` and the union of `Very Close` and `Expired` |

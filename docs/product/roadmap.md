@@ -4,6 +4,8 @@ This roadmap is intentionally lightweight.
 
 Only features close to implementation should be specified in detail.
 
+Versions 0.1 and 0.2 are released; version 0.3 and later increments remain planned.
+
 ## 0.1 — Consolidated loans
 
 - automatically retrieve current loans from configured accounts;
@@ -24,11 +26,17 @@ Read-only consolidated list of current reservations, with status, pickup informa
 
 Detailed behavior is described in [`features/reservations.md`](features/reservations.md).
 
-## 0.3 — Unified application interface
+## 0.3 — Dashboard and web interface redesign
 
 A cohesive interface built around Librago's design system, with a home dashboard, shared navigation, and redesigned loans and reservations lists. This version establishes the visual foundations, reusable components, and UI stack for an accessible experience on mobile and desktop, in light and dark modes.
 
 The home dashboard is described in [`features/dashboard.md`](features/dashboard.md).
+
+The accepted [React/API architecture](../architecture/overview.md), including server-side OIDC, application sessions, and explicit household admission, belongs to this migration. Its implementation covers:
+
+- frontend/API foundations and authentication integration;
+- technical implementation of the design system;
+- real [deployment validation](../deployment/validation.md) of authentication, proxy trust, key persistence, browser hardening, and effective egress controls.
 
 ## 0.4 — Library opening hours
 
@@ -59,12 +67,13 @@ Identify likely next volumes and suggest reserving them.
 Intentionally deferred but tracked:
 
 - notifications for approaching due dates, available reservations, and pickup deadlines;
-- application-level authentication and OIDC;
 - manual synchronization controls;
 - synchronization history;
 - reservation cancellation;
 - configuration management;
-- multi-user access;
+- more granular multi-user authorization if a concrete need arises; the accepted initial model explicitly admits identities to shared household access;
 - multi-language support;
 - privacy and secret management for deployment;
 - contribution and connector extension model.
+
+Manual synchronization requires a shared bounded concurrency/execution policy across the worker and other adapters first. Future non-browser authentication (potentially user-scoped PATs), CLI, and MCP remain deferred without endpoint or token design commitments.

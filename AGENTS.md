@@ -27,19 +27,25 @@ Read [`docs/README.md`](docs/README.md) before adding or restructuring documenta
 - unresolved product questions belong in `docs/product/open-questions.md`;
 - shared visual principles, foundations, and UI component guidance belong in `docs/design/`;
 - structural technical decisions belong in `docs/adr/`;
+- living technical architecture and deployment requirements belong in `docs/architecture/`;
 - the root `README.md` is public-facing and should not be used as an agent instruction file.
 
-## Current first slice
+## Working with the architecture
 
-The first slice is the consolidated loans list.
+- Follow the actual repository structure and implemented behavior when changing code; use the [README workflows](README.md#development) for the current checkout.
+- Refer to [the architecture overview](docs/architecture/overview.md) and linked ADRs for accepted technical decisions. Review the corresponding decision explicitly before introducing a contradictory change.
+- Keep `main` functional and releasable through small vertical slices. Track migration progress in the [product roadmap](docs/product/roadmap.md).
+- Follow the existing design documentation for visual and interaction rules, and the [security reference](docs/architecture/security.md) for deployment requirements.
 
-Important constraints:
-- automatic synchronization is required;
-- manual refresh is not part of version 0.1;
-- application-level authentication is not part of version 0.1;
-- failed synchronization preserves last known state;
-- a network is fully up to date only when all configured accounts for that network synchronize successfully;
-- exact loan metadata and UI details should be refined after technical exploration.
+Preserve these product constraints:
+
+- automatic synchronization is required; manual refresh remains deferred;
+- failed or incomplete synchronization preserves last known state;
+- a network collection is fully current only when all its configured accounts synchronize that collection successfully;
+- loan and reservation confidence remain independent;
+- API responses and displayed summaries must preserve durable account/collection coverage; missing rows do not prove a verified empty snapshot;
+- shared bounded synchronization concurrency must precede a manual synchronization API;
+- admitted application users share household accounts; borrower names are presentation/domain information, not security identities.
 
 ## Domain language
 

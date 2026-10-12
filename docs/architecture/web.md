@@ -60,6 +60,6 @@ Librago design documentation
         -> Librago application components
 ```
 
-[Principles](../design/principles.md), [foundations](../design/foundations.md), and [components](../design/components.md) remain the visual and interaction source of truth. The themes support light/dark modes. Base UI supplies interaction/accessibility primitives; shadcn supplies editable implementations. Library defaults do not replace Librago's identity.
+[Principles](../design/principles.md) and [visual foundations](../design/foundations.md) define Librago's visual direction. Use the default conventions and accessible interaction primitives of shadcn/ui, Base UI and Tailwind CSS 4 wherever practical. Adapt tokens or components only for demonstrated screen or product needs; component APIs and implementations are defined in the frontend, not in separate design specifications. Feature documentation owns domain-specific behaviors and responsive compositions.
 
 Technical token/theme mappings and component recipes translate these design roles into the frontend. The design-system references describe their visual and interaction semantics.

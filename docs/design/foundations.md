@@ -1,158 +1,64 @@
-# Librago Design Foundations
+# Librago Visual Foundations
 
-## Scope
+## Purpose
 
-This document defines the current visual foundations of Librago.
+This document records the current visual identity choices for Librago. It complements the durable guidance in [principles.md](principles.md).
 
-It records the concrete design tokens and visual values used by the design system.
+The palettes and typefaces below are design references, not a prescribed CSS token schema, component API, or list of components to build. Names such as `color-brand` describe visual roles; implementation may map them onto the existing conventions of the chosen UI tools rather than exposing matching variables one for one.
 
-Unlike `principles.md`, which describes durable design principles, this document contains choices that may evolve as the application is implemented and tested.
+Other details (control dimensions, spacing, radius, shadows, motion and component variants) should initially follow the UI toolkit's conventions. Adjust them only when an actual screen demonstrates a visual, usability or accessibility need. Do not build a separate component system to reproduce hypothetical design specifications.
 
-The token names used here are semantic design roles. Their technical representation is implementation-specific.
-
----
+The [brand asset guide](../../assets/brand/README.md) defines the logo artwork and its variants. Logo colors are independent from interface theme colors, and the outlined wordmark is independent from the interface typefaces.
 
 ## Typography
 
-### Font families
-
-| Role | Current value | Fallback stack |
+| Role | Current choice | Fallback stack |
 | --- | --- | --- |
-| `font-family-heading` | Playfair Display | Georgia, "Times New Roman", serif |
-| `font-family-interface` | Inter | ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif |
+| Heading typeface | Playfair Display | Georgia, "Times New Roman", serif |
+| Interface typeface | Inter | ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif |
 
-The current themes share the same typography.
+Use the interface typeface for ordinary UI, including controls and dense information. Use the heading typeface selectively to give page and major section headings character, without compromising scanability.
 
-Theme-specific typography may be introduced later without changing these semantic typography roles.
+The two themes currently share the same typefaces. Specific weights, type sizes, line heights and responsive changes can follow the UI toolkit defaults until tested in actual layouts.
 
-### Font weights
-
-| Token | Weight | Typical use |
-| --- | ---: | --- |
-| `font-weight-regular` | 400 | body text |
-| `font-weight-medium` | 500 | UI emphasis |
-| `font-weight-semibold` | 600 | headings, buttons, labels |
-| `font-weight-bold` | 700 | strong status or metadata emphasis |
-
-Avoid introducing arbitrary intermediate weights.
-
-### Type scale
-
-| Token | Size | Line height | Typical use |
-| --- | ---: | ---: | --- |
-| `text-xs` | 0.75rem | 1.4 | compact metadata |
-| `text-sm` | 0.875rem | 1.4 | secondary UI text |
-| `text-base` | 1rem | 1.5 | body text and controls |
-| `text-lg` | 1.125rem | 1.4 | prominent UI text |
-| `title-sm` | 1.25rem | 1.25 | card or section title |
-| `title-md` | 1.5rem | 1.2 | section heading |
-| `title-lg` | 2rem | 1.15 | page title |
-| `title-xl` | 2.5rem | 1.1 | exceptional hero title |
-
-Responsive adjustments may be introduced where required by real page layouts.
-
-### Wrapping and truncation
-
-Text should wrap naturally by default.
-
-Do not truncate meaningful content merely to preserve a fixed component height.
-
-Truncation is appropriate only when:
-
-- the layout has a genuine single-line constraint;
-- the full value remains available through another appropriate interaction or context;
-- truncation does not hide information required to make a decision.
-
-Compact controls such as buttons, tabs, and status pills normally remain single-line.
-
----
+Meaningful text should wrap naturally. Truncate only when the space constraint is real and the full information remains accessible.
 
 ## Themes
 
-The current Librago themes are:
+Librago has two visual themes, each in light and dark mode:
 
-- **Ocean**
-- **Natural**
+- **Ocean:** deep blue and petrol; calm, refined, slightly warm. Its dark mode remains visibly blue rather than neutral black.
+- **Natural:** petrol green, sage and warm sand; organic, mature, slightly autumnal. Its dark mode remains visibly green rather than neutral black.
 
-Each theme supports:
+The four combinations share the same layout, component behavior and semantic state meanings. Theme changes should not require separate page implementations.
 
-- light mode;
-- dark mode.
+The **reference palettes** below preserve the original visual direction of each theme. They help guide complementary color choices, but do not prescribe extra design tokens or override the current semantic colors for light and dark modes.
 
-The themes currently share:
+### Palette roles
 
-- typography;
-- spacing;
-- density;
-- radius;
-- component structure;
-- interaction patterns;
-- semantic state model.
+The color roles describe how values are meant to be used, irrespective of CSS variable or utility names.
 
-Theme-specific visual tokens may evolve independently while remaining compatible with the shared design system.
+| Role | Meaning |
+| --- | --- |
+| `color-background` | Main page background |
+| `color-surface` | Standard content surface |
+| `color-surface-raised` | Elevated surface, when emphasis is warranted |
+| `color-text-primary` | Main text |
+| `color-text-secondary` | Supporting text and metadata |
+| `color-border` | Subtle structural separation |
+| `color-control-border` | Visible boundary for interactive fields where needed |
+| `color-brand` | Dominant theme-specific action color |
+| `color-brand-hover` | Stronger brand treatment on hover |
+| `color-on-brand` | Text and icons placed on a filled brand surface |
+| `color-interactive` | Interactive text and icons on ordinary surfaces |
+| `color-accent` | Restrained secondary visual accent, not automatically a text color |
+| `color-focus-ring` | Visible keyboard focus indicator |
 
----
+`color-brand`, `color-interactive` and `color-accent` serve distinct visual purposes. In particular, `color-accent` should not be used for body text or meaningful icons unless sufficient contrast against the intended background has been verified.
 
-## Core color roles
+### Ocean
 
-The structural color roles are:
-
-```text
-color-background
-color-surface
-color-surface-raised
-
-color-text-primary
-color-text-secondary
-
-color-border
-color-control-border
-
-color-brand
-color-brand-hover
-color-on-brand
-color-interactive
-color-accent
-
-color-focus-ring
-```
-
-### Meaning
-
-- `color-background` is the main page background.
-- `color-surface` is the standard content surface.
-- `color-surface-raised` is used for genuinely elevated or emphasized surfaces.
-- `color-text-primary` is the default foreground.
-- `color-text-secondary` is used for supporting information and metadata.
-- `color-border` provides subtle structural separation.
-- `color-control-border` identifies the boundary of interactive controls such as fields and selects.
-- `color-brand` is the dominant theme-specific interaction color.
-- `color-brand-hover` is its hover / emphasized state.
-- `color-on-brand` is the foreground used on a filled brand surface.
-- `color-interactive` is used for interactive foregrounds displayed directly on page or surface backgrounds, such as low-emphasis textual actions.
-- `color-accent` provides restrained secondary emphasis.
-- `color-focus-ring` is the standard focus indicator color.
-
-`color-interactive` is distinct from `color-brand`, which may be optimized for filled surfaces.
-
-`color-control-border` is intentionally stronger than the structural `color-border`.
-
----
-
-## Ocean
-
-Ocean is based on deep blue and petrol tones.
-
-It should feel:
-
-- deep;
-- calm;
-- refined;
-- slightly warm rather than technical or cold.
-
-Its dark mode is intentionally blue rather than neutral black.
-
-### Ocean Light
+#### Light mode
 
 | Role | Value | Intent |
 | --- | --- | --- |
@@ -170,7 +76,7 @@ Its dark mode is intentionally blue rather than neutral black.
 | `color-accent` | `#157687` | secondary petrol accent |
 | `color-focus-ring` | `#0A4660` | focus indication |
 
-### Ocean Dark
+#### Dark mode
 
 | Role | Value | Intent |
 | --- | --- | --- |
@@ -188,35 +94,24 @@ Its dark mode is intentionally blue rather than neutral black.
 | `color-accent` | `#64B3B8` | secondary petrol / teal accent |
 | `color-focus-ring` | `#61B1CA` | focus indication |
 
-### Supporting palette
+#### Reference palette
 
-Ocean may also use restrained supporting tones such as:
+The original Ocean palette combines deep blues with warm neutrals and restrained accents. Its supporting tones prevent the theme from feeling monochromatic.
 
-- warm sand;
-- copper;
-- muted coral.
+| Color | Reference | Contribution |
+| --- | --- | --- |
+| Night blue | `#0A2E45` | Core deep blue |
+| Deep petrol | `#156E7A` | Core blue-green |
+| Warm ivory | `#F4EBD7` | Warm light neutral |
+| Sand | `#D6C9A8` | Supporting neutral |
+| Copper | `#C97F4F` | Warm complementary accent |
+| Muted coral | `#E16F5B` | Restrained contrasting accent |
 
-These tones are not core interaction or semantic-state roles.
+These reference shades guide the artistic direction rather than defining mandatory component colors. Use complementary tones selectively, without competing with essential content or semantic status colors; check contrast in their actual context.
 
-They may be introduced for secondary visual purposes when a concrete use case requires them.
+### Natural
 
----
-
-## Natural
-
-Natural is based on deep petrol green, sage, light sand, and restrained earth tones.
-
-It should feel:
-
-- warm;
-- organic;
-- mature;
-- slightly autumnal;
-- distinctive without becoming rustic.
-
-Its dark mode remains visibly green / petrol rather than neutral black.
-
-### Natural Light
+#### Light mode
 
 | Role | Value | Intent |
 | --- | --- | --- |
@@ -234,7 +129,7 @@ Its dark mode remains visibly green / petrol rather than neutral black.
 | `color-accent` | `#8BA58F` | secondary sage accent |
 | `color-focus-ring` | `#326B4B` | focus indication |
 
-### Natural Dark
+#### Dark mode
 
 | Role | Value | Intent |
 | --- | --- | --- |
@@ -252,48 +147,24 @@ Its dark mode remains visibly green / petrol rather than neutral black.
 | `color-accent` | `#A5BA99` | lighter sage accent |
 | `color-focus-ring` | `#7BB28C` | focus indication |
 
-### Supporting palette
+#### Reference palette
 
-Natural may also use:
+The original Natural palette combines petrol green, soft foliage tones and warm, slightly autumnal accents. Those complementary colors are important to its character, beyond the green functional surfaces.
 
-- sage;
-- light sand;
-- terracotta;
-- ochre;
-- soft brown.
+| Color | Reference | Contribution |
+| --- | --- | --- |
+| Petrol green | `#2F6F5A` | Core green |
+| Sage | `#A7B89A` | Soft supporting green |
+| Light sand | `#F6F1E7` | Warm light neutral |
+| Terracotta | `#C96F4F` | Warm earthy accent |
+| Ochre | `#D9A658` | Golden complementary accent |
+| Soft brown | `#8B6F56` | Muted earthy accent |
 
-These tones are not replacements for semantic-state colors.
+These reference shades guide the artistic direction rather than defining mandatory component colors. Use complementary tones selectively, without competing with essential content or semantic status colors; check contrast in their actual context.
 
-They may be introduced for secondary visual purposes when a concrete use case requires them.
+## Semantic status colors
 
----
-
-## Brand and accent
-
-Each theme has one dominant brand color.
-
-`color-brand` carries the strongest theme-specific interactive emphasis.
-
-`color-accent` remains visually subordinate and should be used selectively.
-
-Brand, accent, and semantic-state colors should not compete for equal attention within the same visual area.
-
----
-
-## Semantic state colors
-
-Semantic state colors communicate application state independently from the selected theme.
-
-The semantic model is:
-
-- success;
-- info;
-- warning;
-- danger.
-
-Their meaning remains stable across Ocean and Natural.
-
-Semantic states are represented by foreground / background pairs rather than by a single ambiguous color token.
+The following four meanings are shared across the themes: success, information, warning and danger. These colors are for **application state**, not decoration or the visual styling of destructive buttons.
 
 ### Light mode
 
@@ -303,22 +174,6 @@ Semantic states are represented by foreground / background pairs rather than by 
 | `info` | `#DDECF7` | `#27689A` |
 | `warning` | `#F8EAC9` | `#8C5400` |
 | `danger` | `#F7DADA` | `#963737` |
-
-Tokens:
-
-```text
-color-status-success-bg
-color-status-success-fg
-
-color-status-info-bg
-color-status-info-fg
-
-color-status-warning-bg
-color-status-warning-fg
-
-color-status-danger-bg
-color-status-danger-fg
-```
 
 ### Dark mode
 
@@ -331,234 +186,18 @@ color-status-danger-fg
 
 The dark-mode variants intentionally use stronger filled backgrounds than their light-mode equivalents.
 
-The foreground/background pairs are the canonical semantic-state colors for components such as `StatusPill` and `Alert`.
+Use these as foreground/background pairs for compact status treatments. They are not a general-purpose palette for arbitrary text or controls.
 
----
+A status must be understandable without color alone: use an explicit label and, where useful, an icon or another cue. The selected foreground and background values form a pair; do not assume that a status foreground also has adequate contrast directly on ordinary page or card surfaces.
 
-## Destructive action colors
+The appearance of **destructive actions** and **inline validation errors** is intentionally not prescribed here. Use accessible styles from the selected UI toolkit, validate them against Librago's surfaces, and introduce a Librago-specific color only if a real use case cannot be covered appropriately.
 
-Destructive actions require a stronger treatment than a passive danger status.
+## Application guidance
 
-### Light mode
+- **Contrast:** normal text should achieve at least 4.5:1 on its actual background. Important non-text indicators, such as a boundary needed to identify an input, should achieve at least 3:1 against adjacent colors. Check real screen states, not only the base palette.
+- **Density and shape:** aim for a medium-to-compact interface, moderate rounding and restrained elevation. Use the existing component defaults first rather than prescribing a separate size, spacing, radius or shadow scale.
+- **Touch and keyboard:** keep controls easy to activate on small screens, with visible focus and keyboard-accessible interactions. Do not rely on hover alone.
+- **Icons:** Lucide is the current icon direction: outline, moderately rounded, with a restrained stroke. Start with the sizes provided by the UI toolkit.
+- **Motion:** keep transitions short and functional, and respect reduced-motion preferences. No application-specific duration scale is required yet.
 
-```text
-color-danger-action          #963737
-color-danger-action-hover    #7F2E2E
-color-on-danger-action       #FFFDF8
-```
-
-### Dark mode
-
-```text
-color-danger-action          #A54550
-color-danger-action-hover    #B84D59
-color-on-danger-action       #FFFDF8
-```
-
-These roles are intended for destructive interactive controls, not for general error messages or status display.
-
----
-
-## Contrast
-
-Normal-size text should target a minimum contrast ratio of 4.5:1 against its intended background.
-
-The documented foreground/background pairs should be treated as combinations rather than interchangeable palette values.
-
-In particular:
-
-- `color-on-brand` must be used on filled brand surfaces;
-- semantic status foregrounds must be used with their corresponding backgrounds;
-- secondary text values must remain readable on both page and content surfaces;
-- `color-interactive` must maintain at least 4.5:1 contrast against every surface on which it is intended to appear;
-- `color-control-border` must maintain at least 3:1 contrast against adjacent colors when the border is required to identify an interactive control.
-
-Contrast should be rechecked whenever one member of a documented pair changes.
-
----
-
-## Spacing
-
-Librago uses a 4 px spacing scale.
-
-```text
-space-1    4 px
-space-2    8 px
-space-3   12 px
-space-4   16 px
-space-5   20 px
-space-6   24 px
-space-8   32 px
-space-10  40 px
-space-12  48 px
-```
-
-Typical intent:
-
-| Range | Typical use |
-| --- | --- |
-| 4–8 px | icon / label relationships |
-| 8–12 px | tightly related content |
-| 12–16 px | compact component padding |
-| 16–20 px | standard card or panel padding |
-| 24–32 px | section separation |
-| 32–48 px | major page separation |
-
-Prefer this scale over arbitrary spacing values.
-
----
-
-## Radius
-
-Librago uses moderate rounding.
-
-```text
-radius-xs     4 px
-radius-sm     6 px
-radius-md    10 px
-radius-lg    14 px
-radius-xl    18 px
-radius-pill  999 px
-```
-
-Typical intent:
-
-| Token | Typical use |
-| --- | --- |
-| `radius-xs` / `radius-sm` | compact UI elements |
-| `radius-md` | standard controls |
-| `radius-lg` | cards |
-| `radius-xl` | dialogs and major panels |
-| `radius-pill` | pills and compact badges |
-
----
-
-## Borders
-
-```text
-border-width-default    1 px
-border-width-emphasis   2 px
-```
-
-Borders should remain visually subordinate to content.
-
-`color-border` is used for structural separation such as cards, sections, and table separators.
-
-`color-control-border` is used where a visible boundary is needed to identify an interactive control.
-
----
-
-## Shadows
-
-```text
-shadow-none   none
-shadow-sm     0 1px 2px rgb(0 0 0 / 8%)
-shadow-md     0 4px 12px rgb(0 0 0 / 14%)
-shadow-lg     0 12px 32px rgb(0 0 0 / 22%)
-```
-
-Typical intent:
-
-| Token | Typical use |
-| --- | --- |
-| `shadow-none` | standard surfaces |
-| `shadow-sm` | subtly raised surface |
-| `shadow-md` | dropdown, popover, floating menu |
-| `shadow-lg` | dialog or modal |
-
-The preferred hierarchy remains:
-
-1. surface contrast;
-2. border;
-3. spacing;
-4. shadow.
-
----
-
-## Density and target size
-
-Target visual density is **medium to compact**.
-
-Baseline visible control sizes:
-
-```text
-control-height-sm    36 px
-control-height-md    44 px
-```
-
-`control-height-md` is the default for normal interactive controls.
-
-`control-height-sm` is intended for compact contexts where its effective interactive target remains appropriate.
-
-On touch-oriented layouts, interactive targets should normally provide an effective target of approximately 44 px or larger even when the visible control is smaller.
-
-Table rows typically use a minimum height of 44–48 px.
-
----
-
-## Iconography
-
-Current icon family:
-
-```text
-icon-family = Lucide
-```
-
-Current style:
-
-- outline;
-- medium stroke;
-- slightly rounded geometry.
-
-Sizes:
-
-```text
-icon-sm    16 px
-icon-md    20 px
-icon-lg    24 px
-```
-
-The icon family may change later while preserving these semantic size roles.
-
----
-
-## Focus
-
-```text
-focus-ring-width     2 px
-focus-ring-offset    2 px
-```
-
-The ring uses `color-focus-ring` from the active theme.
-
-Focus indication must remain visible against both the page background and common component surfaces.
-
----
-
-## Motion
-
-Timing:
-
-```text
-motion-fast       120 ms
-motion-normal     180 ms
-motion-slow       240 ms
-```
-
-Easing:
-
-```text
-motion-easing-standard    cubic-bezier(0.2, 0, 0, 1)
-```
-
-Typical intent:
-
-| Token | Typical use |
-| --- | --- |
-| `motion-fast` | hover and small state changes |
-| `motion-normal` | menus and compact transitions |
-| `motion-slow` | larger overlays and transitions |
-
-Motion should remain short and functional.
-
-Reduced-motion preferences should remove or substantially reduce non-essential movement rather than introducing a separate visual language.
+Component choice, variants, internal padding, responsive compositions and interaction implementation are decided as real screens are built, using existing UI primitives wherever practical. Product-specific states and behaviors remain defined by the relevant [feature specifications](../product/).

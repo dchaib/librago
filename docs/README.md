@@ -65,11 +65,10 @@ Once answered, remove the question and move the resulting decision into the appr
 
 ### `design/`
 
-The design system documents Librago's shared visual principles, foundations and tokens, and reusable UI component guidance.
+The design system documents Librago's shared visual direction and foundations.
 
 - `design/principles.md` describes the durable visual and interaction principles;
-- `design/foundations.md` defines visual tokens, themes, and their values;
-- `design/components.md` describes shared components, variants, and interaction guidance.
+- `design/foundations.md` defines visual tokens, themes, and their values.
 
 Feature-specific behavior and domain compositions belong in the relevant product specification. Link to the design system for shared visual rules instead of duplicating them.
 

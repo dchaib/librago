@@ -13,7 +13,11 @@ npm ci
 npm run dev
 ```
 
-Open the loopback URL printed by Vite. The preview provides two routes and a button counter to check rendering, navigation, and interaction.
+Open the loopback URL printed by Vite. The preview provides Ocean and Natural theme controls, each with light and dark modes, plus two routes, a button counter, an input, and labeled status examples. Selection is local React state and resets on reload; Ocean Light is only the preview default.
+
+## Visual identity
+
+`src/index.css` maps the four [visual foundation palettes](../docs/design/foundations.md) onto shadcn semantic variables, using `data-theme` and `.dark` on the document root. The functional token values are implementation choices for the preview and remain provisional pending visual review. Status colors are separate semantic examples and are not part of the approved theme palettes.
 
 ## Checks and build
 
@@ -29,4 +33,4 @@ Dependencies use exact versions and a committed lockfile, maintained by Renovate
 
 ## Integration boundary
 
-Frontend assets are not included in the deployed application. Backend integration, authentication, and Librago themes remain deferred. See the [web architecture](../docs/architecture/web.md) for the target integration.
+Frontend assets are not included in the deployed application. Backend integration, authentication, and real application screens remain deferred. See the [web architecture](../docs/architecture/web.md) for the target integration.

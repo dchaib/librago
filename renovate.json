@@ -6,6 +6,11 @@
   ],
   "packageRules": [
     {
+      "matchPackageNames": ["node", "npm", "@types/node"],
+      "matchUpdateTypes": ["major"],
+      "dependencyDashboardApproval": true
+    },
+    {
       "matchPackageNames": [
         "mcr.microsoft.com/dotnet/sdk",
         "mcr.microsoft.com/dotnet/runtime-deps"

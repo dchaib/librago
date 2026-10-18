@@ -7,15 +7,17 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
-    "lint": "oxlint",
+    "lint": "oxlint src tests vite.config.ts",
+    "test": "node --test tests/*.test.ts",
     "preview": "vite preview"
   },
   "dependencies": {
     "@base-ui/react": "1.9.0",
     "@fontsource-variable/inter": "5.3.0",
-    "@fontsource-variable/playfair-display": "5.3.0",
+    "@fontsource-variable/source-serif-4": "5.3.0",
     "class-variance-authority": "0.7.1",
     "cn": "0.4.0",
+    "lucide-react": "1.59.0",
     "react": "19.3.0",
     "react-dom": "19.3.0",
     "react-router": "8.4.0"

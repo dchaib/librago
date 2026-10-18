@@ -1,0 +1,155 @@
+/* Loans-only composition. The preview shell deliberately stays unchanged. */
+:root:is(.dark, [data-theme="natural"]) .loans-page {
+  background: radial-gradient(ellipse at 88% 0%, color-mix(in srgb, var(--reading-accent) 5%, transparent), transparent 46%);
+}
+
+.loans-heading {
+  position: relative;
+  display: flex;
+  align-items: center;
+  min-height: 156px;
+  padding: 14px 16px 18px;
+}
+
+.loans-heading-copy {
+  position: relative;
+  z-index: 1;
+  max-width: calc(100% - 260px);
+}
+
+.reading-illustration {
+  position: absolute;
+  right: 6px;
+  bottom: -8px;
+  width: 270px;
+  height: 160px;
+  pointer-events: none;
+}
+
+:root:not(.dark) .reading-moon,
+:root[data-theme="natural"] .reading-moon {
+  display: none;
+}
+
+.loans-filters,
+.loans-sync {
+  background: linear-gradient(115deg, color-mix(in srgb, var(--card) 72%, var(--background)), var(--background));
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--foreground) 3%, transparent);
+}
+
+.loan-choice {
+  background-color: var(--card);
+  box-shadow: inset 0 1px 3px color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.loan-choice-indicator {
+  display: none;
+}
+
+/* Desktop filters share one selection treatment; dialog selects stay native. */
+.loans-filters :is(.loan-choice-wrapper, button.loan-choice) {
+  position: relative;
+}
+
+.loans-filters .loan-choice {
+  appearance: none;
+  padding-right: 40px;
+}
+
+.loans-filters .loan-choice-indicator {
+  display: block;
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+
+.loans-filters .loan-choice:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+
+.loan-filter-action {
+  box-shadow: inset 0 1px 0 color-mix(in srgb, var(--primary-foreground) 15%, transparent), 0 2px 5px color-mix(in srgb, var(--background) 60%, transparent);
+}
+
+:is(.loans-page, .loan-filter-popup, .loan-filter-dialog) button:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 3px;
+}
+
+.loans-table {
+  border-collapse: separate;
+  border-spacing: 0 7px;
+  margin-top: -7px;
+}
+
+.loans-table thead th {
+  padding-top: 0;
+  padding-bottom: 3px;
+}
+
+.loans-table tbody :is(th, td) {
+  /* Soften Loans surfaces locally without changing shared card components. */
+  background-color: color-mix(in srgb, var(--card) 65%, var(--background));
+  background-image: linear-gradient(color-mix(in srgb, var(--foreground) 1%, transparent), transparent);
+  border-block: 1px solid var(--border);
+}
+
+.loans-table tbody th {
+  border-left: 1px solid var(--border);
+  border-radius: 12px 0 0 12px;
+}
+
+.loans-table tbody td:last-child {
+  border-right: 1px solid var(--border);
+  border-radius: 0 12px 12px 0;
+}
+
+.loan-mobile-row {
+  background-color: color-mix(in srgb, var(--card) 65%, var(--background));
+  background-image: linear-gradient(115deg, color-mix(in srgb, var(--foreground) 1%, transparent), transparent);
+}
+
+.loan-cover {
+  width: 54px;
+  height: 81px;
+  /* An inset outline frames light and dark artwork without shrinking the image. */
+  outline: 1px solid color-mix(in srgb, var(--foreground) 22%, transparent);
+  outline-offset: -1px;
+  box-shadow: 0 2px 4px color-mix(in srgb, var(--foreground) 12%, transparent);
+}
+
+.loan-mobile-row {
+  grid-template-columns: 54px minmax(0, 1fr) fit-content(42%);
+}
+
+.loan-deadline {
+  min-height: 32px;
+  padding: 6px 10px;
+  font-size: 12px;
+  line-height: 18px;
+}
+
+@media (min-width: 480px) {
+  .loan-deadline { padding-inline: 12px; font-size: 13px; line-height: 20px; }
+}
+
+@media (min-width: 1024px) {
+  .loans-table .loan-deadline { padding: 7px 12px; font-size: 14px; }
+}
+
+@media (max-width: 1023px) and (min-width: 768px) {
+  .loans-heading-copy { max-width: calc(100% - 210px); }
+  .reading-illustration { width: 220px; }
+  .loans-table .loan-deadline { font-size: 12px; gap: 6px; padding-inline: 8px; }
+}
+
+@media (max-width: 767px) {
+  .loans-heading { min-height: 145px; padding: 12px 0 8px; align-items: start; }
+  .loans-heading-copy { max-width: 100%; }
+  .loans-heading-copy h2 { padding-top: 6px; }
+  .loans-heading-copy p { max-width: 270px; padding-right: 10px; }
+  .reading-illustration { width: 106px; height: 65px; top: 0; right: -4px; bottom: auto; opacity: .8; }
+}

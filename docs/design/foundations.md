@@ -14,10 +14,10 @@ The [brand asset guide](../../assets/brand/README.md) defines the logo artwork a
 
 | Role | Current choice | Fallback stack |
 | --- | --- | --- |
-| Heading typeface | Playfair Display | Georgia, "Times New Roman", serif |
+| Heading/editorial typeface | Source Serif 4 | Georgia, "Times New Roman", serif |
 | Interface typeface | Inter | ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif |
 
-Use the interface typeface for ordinary UI, including controls and dense information. Use the heading typeface selectively to give page and major section headings character, without compromising scanability.
+Use the interface typeface for ordinary UI, including controls and dense information. Use the heading/editorial typeface selectively for page and major section headings and item titles, without compromising scanability. Both variable fonts are self-hosted.
 
 The two themes currently share the same typefaces. Specific weights, type sizes, line heights and responsive changes can follow the UI toolkit defaults until tested in actual layouts.
 
@@ -58,16 +58,20 @@ These palettes establish the visual direction. They are not complete functional 
 
 ### Current functional themes
 
-The four combinations below describe the current implementation in [`web/src/index.css`](../../web/src/index.css). These functional colors are provisional implementation choices; they may evolve with real screens while preserving the approved artistic direction. The themes share the same application structure and semantic state meanings. In the surface column, values are the card and popover colors, respectively.
+The four combinations below describe the current implementation in [`web/src/index.css`](../../web/src/index.css), validated on the Loans page. The themes share the same application structure and semantic state meanings. In the surface column, values are the card and popover colors, respectively.
 
 | Theme | Page background / text | Content surfaces (card / popover) | Primary / primary foreground | Secondary surface | Muted text |
 | --- | --- | --- | --- | --- | --- |
-| Ocean Light | `#F4EBD7` / `#0A2E45` | `#FFFCF3` / `#FFF9EB` | `#0A2E45` / `#F4EBD7` | `#D6C9A8` | `#475660` |
-| Ocean Dark | `#0A2E45` / `#F4EBD7` | `#153E51` / `#1B4C60` | `#68B1B9` / `#061D28` | `#21495A` | `#D6DCDA` |
-| Natural Light | `#F6F1E7` / `#263A30` | `#FFFCF5` / `#FFF9ED` | `#234F40` / `#F6F1E7` | `#A7B89A` | `#49584F` |
-| Natural Dark | `#123C2D` / `#F6F1E7` | `#194735` / `#20503D` | `#A7B89A` / `#102B22` | `#285645` | `#E5ECE6` |
+| Ocean Light | `#F9FAFA` / `#082B44` | `#FFFEFC` / `#FFFFFF` | `#064464` / `#FFFFFF` | `#E0EFF7` | `#395A6D` |
+| Ocean Dark | `#00192B` / `#F4F8FF` | `#05253C` / `#0A3049` | `#A8DAFD` / `#03273F` | `#103F60` | `#BCD6E9` |
+| Natural Light | `#FAF7F0` / `#172E23` | `#FFFDF9` / `#FFFDF8` | `#385740` / `#FFFFFF` | `#F2E9D4` | `#4B5C50` |
+| Natural Dark | `#071E16` / `#FAF8EE` | `#112D23` / `#1A382C` | `#345F4D` / `#FFFFFF` | `#50451D` | `#C6D8CC` |
 
 The frontend follows shadcn's semantic styling conventions. Theme colors are adjusted for readable, accessible interactions, with semantic theme variables preferred over generated-component changes. Targeted component changes remain appropriate when a real requirement justifies them.
+
+For filled high-emphasis actions, `primary` is the background and `primary-foreground` is its contrasting foreground. Treat them as a pair. Contrast against button text does not guarantee that `primary` itself contrasts sufficiently with every page or card background, so do not assume `text-primary` is suitable for standalone text links.
+
+Prefer underlined `foreground` text for links unless a specific treatment has been verified on its actual backgrounds. No separate interactive-text token is defined; reconsider this convention if future application requirements justify one. Existing shadcn button variants remain the shared defaults.
 
 ## Semantic status colors
 
@@ -79,8 +83,8 @@ Success, information, warning and danger are shared meanings across themes. The 
 | --- | --- | --- |
 | `success` | `#DDF2E4` | `#26714B` |
 | `info` | `#DDECF7` | `#27689A` |
-| `warning` | `#F8EAC9` | `#8C5400` |
-| `danger` | `#F7DADA` | `#963737` |
+| `warning` | `#FFF1D2` | `#885000` |
+| `danger` | `#FFE5DF` | `#AE2424` |
 
 ### Dark mode
 
@@ -88,10 +92,10 @@ Success, information, warning and danger are shared meanings across themes. The 
 | --- | --- | --- |
 | `success` | `#256446` | `#E7F8ED` |
 | `info` | `#285F88` | `#E9F5FD` |
-| `warning` | `#806019` | `#FFF2C2` |
-| `danger` | `#853944` | `#FFE9E9` |
+| `warning` | `#554213` | `#FFE5A4` |
+| `danger` | `#501D2B` | `#FFE6E8` |
 
-The dark-mode variants intentionally use stronger filled backgrounds than their light-mode equivalents.
+The dark-mode variants use darker filled backgrounds with light foregrounds.
 
 Use these as foreground/background pairs for compact status treatments. They are not a general-purpose palette for arbitrary text or controls.
 

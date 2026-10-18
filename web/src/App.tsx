@@ -3,6 +3,7 @@ import { Link, NavLink, Route, Routes } from 'react-router'
 import { Button, buttonVariants } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
+import { LoansPage } from '@/loans/LoansPage'
 
 function App() {
   const [count, setCount] = useState(0)
@@ -15,7 +16,7 @@ function App() {
   }, [theme, mode])
 
   return (
-    <main className="mx-auto max-w-3xl space-y-6 px-4 py-8 sm:px-6">
+    <main className="mx-auto max-w-5xl space-y-6 px-3 py-6 sm:px-6">
       <header className="space-y-2">
         <p className="text-sm text-muted-foreground">Aperçu de l’interface · développement</p>
         <h1 className="font-heading text-3xl font-semibold">Librago</h1>
@@ -42,11 +43,13 @@ function App() {
       </div>
 
       <nav aria-label="Navigation de l’aperçu" className="flex gap-4 text-sm">
-        <NavLink className="rounded-sm text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 aria-[current=page]:font-semibold" to="/">Accueil</NavLink>
-        <NavLink className="rounded-sm text-primary underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 aria-[current=page]:font-semibold" to="/verification">Vérification</NavLink>
+        <NavLink className="rounded-sm text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 aria-[current=page]:font-semibold" to="/">Accueil</NavLink>
+        <NavLink className="rounded-sm text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 aria-[current=page]:font-semibold" to="/verification">Vérification</NavLink>
+        <NavLink className="rounded-sm text-foreground underline underline-offset-4 focus-visible:outline-2 focus-visible:outline-offset-4 aria-[current=page]:font-semibold" to="/loans">Mes prêts</NavLink>
       </nav>
 
       <Routes>
+        <Route path="/loans" element={<LoansPage />} />
         <Route path="/" element={
           <Card>
             <CardHeader>
@@ -64,7 +67,7 @@ function App() {
                 <Button variant="secondary" onClick={() => setCount(0)}>Réinitialiser</Button>
                 <Button disabled>Indisponible</Button>
               </div>
-              <Link className={buttonVariants({ variant: 'link' })} to="/verification">Voir la vérification</Link>
+              <Link className={buttonVariants({ variant: 'link', className: 'text-foreground' })} to="/verification">Voir la vérification</Link>
               <section aria-labelledby="status-title" className="space-y-2">
                 <h3 id="status-title" className="text-sm font-medium">Exemples de statuts</h3>
                 <ul className="grid gap-2 text-sm sm:grid-cols-2">

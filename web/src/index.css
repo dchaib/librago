@@ -9,18 +9,18 @@
 }
 
 @font-face {
-  font-family: "Playfair Display Variable";
+  font-family: "Source Serif 4 Variable";
   font-style: normal;
-  font-weight: 400 900;
+  font-weight: 200 900;
   font-display: swap;
-  src: url("@fontsource-variable/playfair-display/files/playfair-display-latin-wght-normal.woff2") format("woff2");
+  src: url("@fontsource-variable/source-serif-4/files/source-serif-4-latin-standard-normal.woff2") format("woff2");
 }
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
   --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: "Playfair Display Variable", Georgia, "Times New Roman", serif;
+  --font-heading: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
   --color-background: var(--background);
   --color-foreground: var(--foreground);
   --color-card: var(--card);
@@ -39,6 +39,7 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
+  --color-reading-accent: var(--reading-accent);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-info: var(--info);
@@ -47,6 +48,8 @@
   --color-warning-foreground: var(--warning-foreground);
   --color-danger: var(--danger);
   --color-danger-foreground: var(--danger-foreground);
+  --color-deadline-neutral: var(--deadline-neutral);
+  --color-deadline-neutral-foreground: var(--deadline-neutral-foreground);
   --color-chart-1: var(--chart-1);
   --color-chart-2: var(--chart-2);
   --color-chart-3: var(--chart-3);
@@ -69,27 +72,31 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Ocean Light is the preview default. Theme values derive from the approved
-   references; the separate status colors remain provisional examples. */
+/* Reference-fidelity experiment: optical surface roles rather than a literal
+   palette mapping. Ocean Light remains the preview default. */
 :root {
   color-scheme: light;
-  --background: #F4EBD7;
-  --foreground: #0A2E45;
-  --card: #FFFCF3;
+  --background: #F9FAFA;
+  --foreground: #082B44;
+  --card: #FFFEFC;
   --card-foreground: var(--foreground);
-  --popover: #FFF9EB;
+  --popover: #FFFFFF;
   --popover-foreground: var(--foreground);
-  --primary: #0A2E45;
-  --primary-foreground: #F4EBD7;
-  --secondary: #D6C9A8;
-  --secondary-foreground: #0A2E45;
-  --muted: #EAE1D0;
-  --muted-foreground: #475660;
+  --primary: #064464;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E0EFF7;
+  --secondary-foreground: #103F5D;
+  --muted: #E6EEF1;
+  --muted-foreground: #395A6D;
   --accent: var(--muted);
-  --accent-foreground: #0A2E45;
-  --border: #D6C9A8;
-  --input: #827A69;
-  --ring: #082A40;
+  --accent-foreground: var(--foreground);
+  --border: #CCDDE5;
+  --input: #78909E;
+  --ring: #0074AE;
+  /* Decorative illustration inks remain independent of status colors. */
+  --illustration-leaf: #61919C;
+  --illustration-paper: #D4E5E5;
+  --reading-accent: #347A99;
   --destructive: oklch(0.577 0.245 27.325);
 
   /* Application statuses remain independent of the destructive action token. */
@@ -97,10 +104,12 @@
   --success-foreground: #26714B;
   --info: #DDECF7;
   --info-foreground: #27689A;
-  --warning: #F8EAC9;
-  --warning-foreground: #8C5400;
-  --danger: #F7DADA;
-  --danger-foreground: #963737;
+  --warning: #FFF1D2;
+  --warning-foreground: #885000;
+  --danger: #FFE5DF;
+  --danger-foreground: #AE2424;
+  --deadline-neutral: #E0EFF7;
+  --deadline-neutral-foreground: #103F5D;
 
   --radius: 0.625rem;
   --chart-1: oklch(0.87 0 0);
@@ -119,56 +128,67 @@
 }
 
 :root[data-theme="natural"] {
-  --background: #F6F1E7;
-  --foreground: #263A30;
-  --card: #FFFCF5;
+  --background: #FAF7F0;
+  --foreground: #172E23;
+  --card: #FFFDF9;
   --card-foreground: var(--foreground);
-  --popover: #FFF9ED;
+  --popover: #FFFDF8;
   --popover-foreground: var(--foreground);
-  /* Darkened from the approved deep green so shadcn's /80 hover remains legible. */
-  --primary: #234F40;
-  --primary-foreground: #F6F1E7;
-  --secondary: #A7B89A;
-  --secondary-foreground: #263A30;
-  --muted: #E8EADF;
-  --muted-foreground: #49584F;
+  /* Filled forest-green controls. */
+  --primary: #385740;
+  --primary-foreground: #FFFFFF;
+  --secondary: #F2E9D4;
+  --secondary-foreground: #5D491C;
+  --muted: #ECEEE4;
+  --muted-foreground: #4B5C50;
   --accent: var(--muted);
-  --accent-foreground: #263A30;
-  --border: #D6DCCE;
-  --input: #788777;
-  --ring: #111D16;
+  --accent-foreground: var(--foreground);
+  --border: #E5DDCF;
+  --input: #7F8978;
+  --ring: #426B48;
+  --illustration-leaf: #708353;
+  --illustration-paper: #F2DFB6;
+  --reading-accent: #C47348;
+  --deadline-neutral: #E5EDDF;
+  --deadline-neutral-foreground: #38523C;
 }
 
 :root.dark {
   color-scheme: dark;
-  --background: #0A2E45;
-  --foreground: #F4EBD7;
-  --card: #153E51;
+  /* Near-black navy canvas with more saturated blue content surfaces. */
+  --background: #00192B;
+  --foreground: #F4F8FF;
+  --card: #05253C;
   --card-foreground: var(--foreground);
-  --popover: #1B4C60;
+  --popover: #0A3049;
   --popover-foreground: var(--foreground);
-  /* A lightened petrol shade keeps both button text and interactive links clear. */
-  --primary: #68B1B9;
-  --primary-foreground: #061D28;
-  --secondary: #21495A;
-  --secondary-foreground: #F4EBD7;
-  --muted: #1B4758;
-  --muted-foreground: #D6DCDA;
+  /* Luminous blue action against the deep navy canvas. */
+  --primary: #A8DAFD;
+  --primary-foreground: #03273F;
+  --secondary: #103F60;
+  --secondary-foreground: #E2F3FF;
+  --muted: #0C3049;
+  --muted-foreground: #BCD6E9;
   --accent: var(--muted);
-  --accent-foreground: #F4EBD7;
-  --border: #315664;
-  --input: #A3B3B3;
-  --ring: #F4EBD7;
+  --accent-foreground: var(--foreground);
+  --border: #16415B;
+  --input: #537D96;
+  --ring: #A8DAFD;
+  --illustration-leaf: #28617A;
+  --illustration-paper: #ABCFE4;
+  --reading-accent: #2C7AA7;
   --destructive: oklch(0.704 0.191 22.216);
 
   --success: #256446;
   --success-foreground: #E7F8ED;
   --info: #285F88;
   --info-foreground: #E9F5FD;
-  --warning: #806019;
-  --warning-foreground: #FFF2C2;
-  --danger: #853944;
-  --danger-foreground: #FFE9E9;
+  --warning: #554213;
+  --warning-foreground: #FFE5A4;
+  --danger: #501D2B;
+  --danger-foreground: #FFE6E8;
+  --deadline-neutral: #103F60;
+  --deadline-neutral-foreground: #E2F3FF;
 
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
@@ -181,24 +201,30 @@
 }
 
 :root[data-theme="natural"].dark {
-  --background: #123C2D;
-  --foreground: #F6F1E7;
-  --card: #194735;
+  /* The same canvas/surface distinction in pine green. */
+  --background: #071E16;
+  --foreground: #FAF8EE;
+  --card: #112D23;
   --card-foreground: var(--foreground);
-  --popover: #20503D;
+  --popover: #1A382C;
   --popover-foreground: var(--foreground);
-  --primary: #A7B89A;
-  --primary-foreground: #102B22;
-  --secondary: #285645;
-  --secondary-foreground: #F6F1E7;
-  --muted: #20503D;
-  --muted-foreground: #E5ECE6;
+  --primary: #345F4D;
+  --primary-foreground: #FFFFFF;
+  --secondary: #50451D;
+  --secondary-foreground: #FFF1B6;
+  --muted: #1B392C;
+  --muted-foreground: #C6D8CC;
   --accent: var(--muted);
-  --accent-foreground: #F6F1E7;
-  --border: #365E4B;
-  /* Slightly lighter than the palette sage for contrast with shadcn's /30 input fill. */
-  --input: #B7C6AB;
-  --ring: #F6F1E7;
+  --accent-foreground: var(--foreground);
+  --border: #284638;
+  /* Control boundaries remain visible against the dark green surfaces. */
+  --input: #718D7D;
+  --ring: #C0D6A9;
+  --illustration-leaf: #9B9C58;
+  --illustration-paper: #DCCA9D;
+  --reading-accent: #CF7849;
+  --deadline-neutral: #294738;
+  --deadline-neutral-foreground: #DCEBD3;
 }
 
 @layer base {
@@ -211,4 +237,10 @@
   html {
     @apply font-sans;
   }
+}
+
+/* The full variable face includes weight and optical-size axes. Let the browser
+   choose opsz from the rendered size; no fixed optical-size override. */
+.font-heading {
+  font-optical-sizing: auto;
 }

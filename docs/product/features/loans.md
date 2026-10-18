@@ -10,10 +10,6 @@ Provide a single, family-wide list of current loans across all configured librar
 
 ## Information hierarchy
 
-Exact item metadata is intentionally not fully specified.
-
-Metadata choices should be driven by data that can be reliably retrieved from external library portals, then refined through UI/UX iterations.
-
 Each loan must identify:
 
 - borrowed item;
@@ -25,21 +21,22 @@ Current visual priority:
 
 Primary:
 
-- borrowed item;
+- item title;
 - relative time until due date;
-- library network.
+- library network;
+- book cover, when available.
 
 Secondary:
 
+- author, when available;
 - borrower;
-- absolute due date;
-- borrowing date.
+- absolute due date.
 
-Additional metadata such as author, volume number, cover image, or material type should be evaluated once source data is known.
+The borrowing date is not part of the default list presentation. Its acquisition, estimation, and potential presentation are specified in [Borrowing date](#borrowing-date). Additional metadata such as volume number or material type should be evaluated once source data is known.
 
 ## Optional information and completeness
 
-Author, material type, library, and borrowing date are optional. A missing optional value must not prevent an otherwise valid loan from appearing.
+Cover, author, material type, library, and borrowing date are optional. A missing optional value must not prevent an otherwise valid loan from appearing. Show a suitable visual fallback when a cover is missing or fails to load. Cover availability does not change the underlying loan data or filtering behavior.
 
 `Library` is the library reported for the loan. Current source data does not establish that it is necessarily the borrowing or return location. Reservations use `PickupLibrary` for their explicit pickup location.
 
@@ -49,7 +46,7 @@ Distinguish a successful empty list from a failed or incomplete refresh. An inco
 
 ## Borrowing date
 
-Display the network-provided borrowing date when available. Otherwise, estimate it from the first observation of the loan in the configured application time zone. Mark estimates with an asterisk linking to an explanation that they can be later than the actual borrowing date.
+When displaying a borrowing date, use the network-provided date when available. Otherwise, estimate it from the first observation of the loan in the configured application time zone. Mark estimates with an asterisk linking to an explanation that they can be later than the actual borrowing date.
 
 Require a nonempty source identity for each loan, unique within its account. Reject an entire account loan snapshot when an identity is missing or duplicated; preserve the previous state and allow reservations to update independently. Existing stored identities are retained until a successful refresh replaces them. Switching to a different source identity resets its first observation without heuristic matching.
 
@@ -69,6 +66,14 @@ Available fields, account scope, and connector constraints are described separat
 
 Loans are sorted by due date ascending, including in filtered results.
 
+## Responsive presentation
+
+On mobile, use a compact vertical list with the cover on the left. Group the title, optional author, network, and borrower together. Keep the relative deadline and absolute due date grouped and right-aligned, prioritizing quick deadline scanning and book identification.
+
+On desktop, use a semantic table with distinct document, network, borrower, and return-deadline columns. Group the cover, title, and optional author in the document column. Keep deadline information right-aligned for scanning.
+
+Both layouts preserve the same information hierarchy and chronological order. Preserve full titles and allow long titles to wrap rather than systematically truncating them. Information must remain understandable when optional metadata is absent.
+
 ## Filters
 
 Three combinable filter dimensions are required:
@@ -80,6 +85,12 @@ Three combinable filter dimensions are required:
 With no active filters, show all current loans from all configured accounts. Different filter dimensions combine with AND. Multiple selected severities combine with OR.
 
 Filter option lists are independent of the active filters and based on the full current list and configured networks. Deadline options remain available even when no current loan matches them. Clearly show active filters and allow each filter, or all filters, to be cleared. Clearing all filters restores the family-wide list.
+
+On desktop, display three independent selection controls labelled `Réseau`, `Emprunteur`, and `Échéance`. Apply changes immediately. Present `Échéance` as a selection control rather than an action button, allowing multiple exact severity levels to be selected.
+
+On mobile, a visible `Filtres` action opens a dedicated dialog. Users can adjust several dimensions before explicitly confirming their selections. Opening the dialog starts from the applied filters; canceling or dismissing it discards pending changes. Provide a way to reset all pending filters, with the same confirmation requirement.
+
+Show the resulting loan count and, when filters are active, the unfiltered total for context. Qualify counts according to [Known data coverage](#known-data-coverage) and [Initial state, failures, and empty results](#initial-state-failures-and-empty-results).
 
 Initial filter state is defined in [Navigation and initial filters](#navigation-and-initial-filters).
 
@@ -97,11 +108,11 @@ Support:
 
 Selecting `Close`, `Very Close`, and `Overdue` together returns the union of those levels. Selecting only `Close` or only `Very Close` excludes overdue loans. An exact `Overdue` filter includes only loans whose due date has passed. Filters use exact deadline severity levels rather than business attention levels or their visual treatment.
 
-The active selection must make each selected deadline level understandable. Overdue loans must remain explicitly identifiable as late, including within a combined result.
+The active selection must make each selected deadline level understandable, including to assistive technologies. Overdue loans must remain explicitly identifiable as late, including within a combined result.
 
 ## Deadline representation
 
-Use two lines, consistent with the reservations list: a short relative delay as the primary urgency signal, followed by the action and absolute deadline, `Retour au plus tard le 29 septembre 2026`.
+Use two lines: a compact relative deadline label as the primary urgency signal, accompanied by a time or warning icon, with the absolute due date beneath it in a compact format. Do not repeat the full `Retour au plus tard le ...` phrase visibly for every item; retain that context for assistive technologies.
 
 French UI examples:
 
@@ -134,7 +145,7 @@ Urgency must not be communicated by color alone.
 
 The loans page is reachable through application navigation and is usable on a phone.
 
-The page can be opened with explicit initial filters. These replace any previously used list filters; unspecified dimensions have no restriction. Opening the page without explicit filters shows the full family-wide list. There is no filter persistence between pages.
+Applied filters are represented in the page URL, allowing direct navigation to a particular filtered Loans view. Opening a URL with explicit filters applies them as initial filters. These replace any previously used list filters; unspecified dimensions have no restriction. Opening the page without explicit filters shows the full family-wide list. There is no implicit filter persistence between pages; reopening a filtered URL explicitly reapplies its filters.
 
 Explicit initial filters behave like filters selected on the page: they remain visible, can be adjusted or cleared, and preserve the default sort and data-confidence indications. Multiple initial deadline levels appear as selected levels in the same `Échéance` filter.
 
@@ -216,13 +227,16 @@ The loans list is functionally complete when:
 
 - current loans from all configured accounts are visible in one list after successful synchronization;
 - each loan identifies at least the item, library network, borrower, and due date;
-- relative deadline information is displayed;
+- optional covers and authors follow the information hierarchy, with a fallback for missing or failed covers and no exclusion of otherwise valid loans;
+- compact relative deadlines, accompanying icons, and absolute due dates are displayed;
 - loans are sorted by due date ascending, including in filtered results;
 - network, borrower, and deadline severity filters work alone and in combination;
 - exact severity filters and combinations use the shared calendar-day rules;
-- multiple selected deadline levels return their union, while exact `Close` and exact `Very Close` exclude `Overdue`;
-- opening with explicit filters selects the requested subset, replaces previous filters, and leaves unspecified dimensions unrestricted;
+- multiple selected deadline levels return their union, while exact `Close` and exact `Very Close` exclude `Overdue`; no selected level means no deadline restriction;
+- desktop filter changes apply immediately; mobile changes, including resets, apply only on confirmation and are discarded on cancellation or dismissal;
+- opening a filtered URL selects the requested subset, replaces previous filters, and leaves unspecified dimensions unrestricted; opening without explicit filters shows the full family-wide list;
 - active filters are visible and can be adjusted or cleared;
+- the resulting count is shown with the unfiltered total when filters are active, preserving data-coverage qualifications;
 - overdue loans are clearly distinguishable and require critical attention, while `Very Close` loans require urgent attention without prescribing a visual treatment;
 - approaching deadlines have an urgency indication independent of color;
 - failures preserve and display the last known state when available;
@@ -231,4 +245,5 @@ The loans list is functionally complete when:
 - the last complete successful loan refresh time, or its absence, is shown for each network;
 - partial counts, unavailable data, verified zero loans, and no matching loans are distinguishable;
 - successful empty account snapshots remain distinguishable from missing snapshots across failures and restarts, independently of the latest attempt result;
+- mobile lists and desktop tables preserve full wrapping titles, the information hierarchy, and chronological order, with consistently aligned deadlines;
 - the interface is usable on a phone.

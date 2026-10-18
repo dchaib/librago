@@ -137,8 +137,8 @@
   /* Filled forest-green controls. */
   --primary: #385740;
   --primary-foreground: #FFFFFF;
-  --secondary: #F2E9D4;
-  --secondary-foreground: #5D491C;
+  --secondary: #E5EDDF;
+  --secondary-foreground: #38523C;
   --muted: #ECEEE4;
   --muted-foreground: #4B5C50;
   --accent: var(--muted);
@@ -210,8 +210,8 @@
   --popover-foreground: var(--foreground);
   --primary: #345F4D;
   --primary-foreground: #FFFFFF;
-  --secondary: #50451D;
-  --secondary-foreground: #FFF1B6;
+  --secondary: #294C40;
+  --secondary-foreground: #E4F0E7;
   --muted: #1B392C;
   --muted-foreground: #C6D8CC;
   --accent: var(--muted);

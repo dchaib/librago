@@ -1,4 +1,4 @@
-/* Loans-only composition. The preview shell deliberately stays unchanged. */
+/* Loans-only composition. Shared application layout lives in AppShell. */
 :root:is(.dark, [data-theme="natural"]) .loans-page {
   background: radial-gradient(ellipse at 88% 0%, color-mix(in srgb, var(--reading-accent) 5%, transparent), transparent 46%);
 }
@@ -42,12 +42,7 @@
   box-shadow: inset 0 1px 3px color-mix(in srgb, var(--foreground) 4%, transparent);
 }
 
-.loan-choice-indicator {
-  display: none;
-}
-
-/* Desktop filters share one selection treatment; dialog selects stay native. */
-.loans-filters :is(.loan-choice-wrapper, button.loan-choice) {
+.loans-filters button.loan-choice {
   position: relative;
 }
 
@@ -149,7 +144,7 @@
 @media (max-width: 767px) {
   .loans-heading { min-height: 145px; padding: 12px 0 8px; align-items: start; }
   .loans-heading-copy { max-width: 100%; }
-  .loans-heading-copy h2 { padding-top: 6px; }
+  .loans-heading-copy h1 { padding-top: 6px; }
   .loans-heading-copy p { max-width: 270px; padding-right: 10px; }
   .reading-illustration { width: 106px; height: 65px; top: 0; right: -4px; bottom: auto; opacity: .8; }
 }

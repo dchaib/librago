@@ -64,8 +64,8 @@ The four combinations below describe the current implementation in [`web/src/ind
 | --- | --- | --- | --- | --- | --- |
 | Ocean Light | `#F9FAFA` / `#082B44` | `#FFFEFC` / `#FFFFFF` | `#064464` / `#FFFFFF` | `#E0EFF7` | `#395A6D` |
 | Ocean Dark | `#00192B` / `#F4F8FF` | `#05253C` / `#0A3049` | `#A8DAFD` / `#03273F` | `#103F60` | `#BCD6E9` |
-| Natural Light | `#FAF7F0` / `#172E23` | `#FFFDF9` / `#FFFDF8` | `#385740` / `#FFFFFF` | `#F2E9D4` | `#4B5C50` |
-| Natural Dark | `#071E16` / `#FAF8EE` | `#112D23` / `#1A382C` | `#345F4D` / `#FFFFFF` | `#50451D` | `#C6D8CC` |
+| Natural Light | `#FAF7F0` / `#172E23` | `#FFFDF9` / `#FFFDF8` | `#385740` / `#FFFFFF` | `#E5EDDF` | `#4B5C50` |
+| Natural Dark | `#071E16` / `#FAF8EE` | `#112D23` / `#1A382C` | `#345F4D` / `#FFFFFF` | `#294C40` | `#C6D8CC` |
 
 The frontend follows shadcn's semantic styling conventions. Theme colors are adjusted for readable, accessible interactions, with semantic theme variables preferred over generated-component changes. Targeted component changes remain appropriate when a real requirement justifies them.
 

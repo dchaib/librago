@@ -13,7 +13,15 @@ npm ci
 npm run dev
 ```
 
-Open the loopback URL printed by Vite. The preview provides Ocean and Natural theme controls, each with light and dark modes, component examples, and a loans page at `/loans`. Theme selection is local React state and resets on reload; Ocean Light is only the preview default.
+Open the loopback URL printed by Vite. The shared application shell provides navigation to Accueil (`/`), Prêts (`/loans`), and Réservations (`/reservations`). Home and reservations are minimal placeholders; `/verification` remains available as the original routing check. The header provides Ocean and Natural theme selection and a light/dark toggle. Appearance selection is local React state, survives route navigation, and resets on reload; Ocean Light is only the preview default.
+
+## Application shell
+
+`src/components/AppShell.tsx` provides the shared header, main content container, and navigation around the React Router outlet. Desktop navigation appears in the header from the `md` breakpoint (768 px); smaller screens use a fixed bottom bar with icons and visible labels. The header scrolls with the document. Mobile content reserves space for the bar and bottom safe-area inset; the viewport enables safe-area support. A keyboard skip link targets the main content.
+
+`AppearanceControls` reuses the existing document-root `data-theme` and `.dark` state contract and semantic tokens. The theme selector and loans filters (including the mobile dialog) use the shadcn/Base UI Select; the mode toggle uses the existing Button. Both appearance controls have 44 px touch targets. Active navigation and secondary actions share the `secondary` color pair, preserving Ocean's appearance and using green selection colors in Natural.
+
+The official horizontal logos are copied unchanged from `assets/brand/svg/` into `public/brand/`, with the approved `on-dark` asset used in dark mode. Their wordmarks are outlined Fraunces artwork and do not depend on the interface fonts. The loans page retains its own heading, illustration, filters, and responsive list/table composition.
 
 ## Loans preview
 

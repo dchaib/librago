@@ -3,6 +3,7 @@ import { useSearchParams } from 'react-router'
 import { Dialog } from '@base-ui/react/dialog'
 import { Popover } from '@base-ui/react/popover'
 import { Button } from '@/components/ui/button'
+import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { applicationTimeZone, emptyFilters, filterParams, formatDueDate, parseFilters, relativeDeadline, remainingDays, selectLoans, severities, severityFor, severityLabels, type Filters, type Loan, type Option } from './loans'
 import { borrowers, mockLoans, mockSynchronizations, networks } from './mock-loans'
@@ -17,16 +18,19 @@ function FilterIcon() {
 
 function Choice({ label, all, options, value, onChange }: { label: string; all: string; options: Option[]; value: string; onChange: (value: string) => void }) {
   const id = useId()
-  return <div className="min-w-0 space-y-2">
-    <label htmlFor={id} className="block text-sm font-medium">{label}</label>
-    <div className="loan-choice-wrapper">
-      <select id={id} className="loan-choice h-11 w-full rounded-lg border border-input bg-background px-3 text-sm focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" value={value} onChange={(event) => onChange(event.target.value)}>
-        <option value="">{all}</option>
-        {options.map((option) => <option key={option.id} value={option.id}>{option.name}</option>)}
-      </select>
-      <ChevronDownIcon aria-hidden="true" className="loan-choice-indicator size-4" />
+  const allValue = '__all__'
+  const items = [{ label: all, value: allValue }, ...options.map((option) => ({ label: option.name, value: option.id }))]
+  return <Select items={items} value={value || allValue} onValueChange={(nextValue) => onChange(nextValue === allValue ? '' : typeof nextValue === 'string' ? nextValue : '')}>
+    <div className="min-w-0 space-y-2">
+      <label htmlFor={id} className="block text-sm font-medium">{label}</label>
+      <SelectTrigger id={id} className="w-full bg-card data-[size=default]:h-11"><SelectValue /></SelectTrigger>
     </div>
-  </div>
+    <SelectContent alignItemWithTrigger={false}>
+      <SelectGroup>
+        {items.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+      </SelectGroup>
+    </SelectContent>
+  </Select>
 }
 
 function SeverityChoices({ filters, onChange }: { filters: Filters; onChange: (filters: Filters) => void }) {
@@ -81,7 +85,7 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
   return <section aria-labelledby="loans-heading" className="loans-page space-y-4 sm:space-y-5">
     <header className="loans-heading">
       <div className="loans-heading-copy">
-        <h2 id="loans-heading" className="font-heading text-[2.5rem] leading-[1.1] font-bold tracking-tight sm:text-[3.5rem]">Mes prêts</h2>
+        <h1 id="loans-heading" className="font-heading text-[2.5rem] leading-[1.1] font-bold tracking-tight sm:text-[3.5rem]">Mes prêts</h1>
         <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">Les prochains retours de toute la famille, au même endroit.</p>
       </div>
       <ReadingIllustration />

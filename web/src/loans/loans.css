@@ -1,34 +1,50 @@
 /* Loans-only composition. Shared application layout lives in AppShell. */
-:root:is(.dark, [data-theme="natural"]) .loans-page {
-  background: radial-gradient(ellipse at 88% 0%, color-mix(in srgb, var(--reading-accent) 5%, transparent), transparent 46%);
-}
-
 .loans-heading {
-  position: relative;
-  display: flex;
+  display: grid;
+  /* Give enlarged heading text priority over the decorative artwork. */
+  grid-template-columns: minmax(min-content, 1fr) minmax(0, .7fr);
   align-items: center;
-  min-height: 156px;
-  padding: 14px 16px 18px;
+  gap: .75rem;
+  padding-block: .25rem;
 }
 
 .loans-heading-copy {
-  position: relative;
-  z-index: 1;
-  max-width: calc(100% - 260px);
+  min-width: 0;
 }
 
 .reading-illustration {
-  position: absolute;
-  right: 6px;
-  bottom: -8px;
-  width: 270px;
-  height: 160px;
+  --loans-illustration: url('/illustrations/loans-header-ocean-light.webp');
+  justify-self: end;
+  width: 100%;
+  max-width: 8rem;
+  aspect-ratio: 16 / 9;
+  background-image: var(--loans-illustration);
+  background-position: center;
+  background-size: contain;
+  background-repeat: no-repeat;
   pointer-events: none;
 }
 
-:root:not(.dark) .reading-moon,
-:root[data-theme="natural"] .reading-moon {
-  display: none;
+:root:not([data-theme="natural"]).dark .reading-illustration {
+  --loans-illustration: url('/illustrations/loans-header-ocean-dark.webp');
+}
+
+:root[data-theme="natural"]:not(.dark) .reading-illustration {
+  --loans-illustration: url('/illustrations/loans-header-natural-light.webp');
+}
+
+:root[data-theme="natural"].dark .reading-illustration {
+  --loans-illustration: url('/illustrations/loans-header-natural-dark.webp');
+}
+
+@media (min-width: 640px) {
+  .loans-heading {
+    gap: 1.5rem;
+    padding-block: 0;
+    margin-block-end: .75rem;
+  }
+
+  .reading-illustration { max-width: 18rem; }
 }
 
 .loans-filters,
@@ -136,15 +152,5 @@
 }
 
 @media (max-width: 1023px) and (min-width: 768px) {
-  .loans-heading-copy { max-width: calc(100% - 210px); }
-  .reading-illustration { width: 220px; }
   .loans-table .loan-deadline { font-size: 12px; gap: 6px; padding-inline: 8px; }
-}
-
-@media (max-width: 767px) {
-  .loans-heading { min-height: 145px; padding: 12px 0 8px; align-items: start; }
-  .loans-heading-copy { max-width: 100%; }
-  .loans-heading-copy h1 { padding-top: 6px; }
-  .loans-heading-copy p { max-width: 270px; padding-right: 10px; }
-  .reading-illustration { width: 106px; height: 65px; top: 0; right: -4px; bottom: auto; opacity: .8; }
 }

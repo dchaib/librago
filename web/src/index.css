@@ -39,7 +39,6 @@
   --color-border: var(--border);
   --color-input: var(--input);
   --color-ring: var(--ring);
-  --color-reading-accent: var(--reading-accent);
   --color-success: var(--success);
   --color-success-foreground: var(--success-foreground);
   --color-info: var(--info);
@@ -93,10 +92,6 @@
   --border: #CCDDE5;
   --input: #78909E;
   --ring: #0074AE;
-  /* Decorative illustration inks remain independent of status colors. */
-  --illustration-leaf: #61919C;
-  --illustration-paper: #D4E5E5;
-  --reading-accent: #347A99;
   --destructive: oklch(0.577 0.245 27.325);
 
   /* Application statuses remain independent of the destructive action token. */
@@ -146,9 +141,6 @@
   --border: #E5DDCF;
   --input: #7F8978;
   --ring: #426B48;
-  --illustration-leaf: #708353;
-  --illustration-paper: #F2DFB6;
-  --reading-accent: #C47348;
   --deadline-neutral: #E5EDDF;
   --deadline-neutral-foreground: #38523C;
 }
@@ -174,9 +166,6 @@
   --border: #16415B;
   --input: #537D96;
   --ring: #A8DAFD;
-  --illustration-leaf: #28617A;
-  --illustration-paper: #ABCFE4;
-  --reading-accent: #2C7AA7;
   --destructive: oklch(0.704 0.191 22.216);
 
   --success: #256446;
@@ -220,9 +209,6 @@
   /* Control boundaries remain visible against the dark green surfaces. */
   --input: #718D7D;
   --ring: #C0D6A9;
-  --illustration-leaf: #9B9C58;
-  --illustration-paper: #DCCA9D;
-  --reading-accent: #CF7849;
   --deadline-neutral: #294738;
   --deadline-neutral-foreground: #DCEBD3;
 }

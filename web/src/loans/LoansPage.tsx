@@ -9,7 +9,6 @@ import { applicationTimeZone, emptyFilters, filterParams, formatDueDate, parseFi
 import { borrowers, mockLoans, mockSynchronizations, networks } from './mock-loans'
 import { useCalendarDate } from './use-calendar-date'
 import { ChevronDownIcon, ClockIcon, LandmarkIcon as LibraryIcon, TriangleAlertIcon, UserRoundIcon as BorrowerIcon } from 'lucide-react'
-import { ReadingIllustration } from './ReadingIllustration'
 import './loans.css'
 
 function FilterIcon() {
@@ -85,10 +84,9 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
   return <section aria-labelledby="loans-heading" className="loans-page space-y-4 sm:space-y-5">
     <header className="loans-heading">
       <div className="loans-heading-copy">
-        <h1 id="loans-heading" className="font-heading text-[2.5rem] leading-[1.1] font-bold tracking-tight sm:text-[3.5rem]">Mes prêts</h1>
-        <p className="mt-3 text-sm leading-relaxed text-muted-foreground sm:text-base">Les prochains retours de toute la famille, au même endroit.</p>
+        <h1 id="loans-heading" className="font-heading text-[2.5rem] leading-[1.1] font-bold tracking-tight sm:text-[3.5rem]">Prêts en cours</h1>
       </div>
-      <ReadingIllustration />
+      <div className="reading-illustration" aria-hidden="true" />
     </header>
 
     <div className="loans-filters hidden grid-cols-3 items-end gap-4 rounded-xl border p-4 md:grid">

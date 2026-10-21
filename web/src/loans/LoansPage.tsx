@@ -1,19 +1,17 @@
 import { useId, useState } from 'react'
 import { useSearchParams } from 'react-router'
-import { Dialog } from '@base-ui/react/dialog'
-import { Popover } from '@base-ui/react/popover'
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
+import { Checkbox } from '@/components/ui/checkbox'
+import { Badge } from '@/components/ui/badge'
+import { Table, TableBody, TableCaption, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
 import { Button } from '@/components/ui/button'
 import { Select, SelectContent, SelectGroup, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { cn } from '@/lib/utils'
 import { applicationTimeZone, emptyFilters, filterParams, formatDueDate, parseFilters, relativeDeadline, remainingDays, selectLoans, severities, severityFor, severityLabels, type Filters, type Loan, type Option } from './loans'
 import { borrowers, mockLoans, mockSynchronizations, networks } from './mock-loans'
 import { useCalendarDate } from './use-calendar-date'
-import { ChevronDownIcon, ClockIcon, LandmarkIcon as LibraryIcon, TriangleAlertIcon, UserRoundIcon as BorrowerIcon } from 'lucide-react'
+import { ClockIcon, ListFilterIcon, LandmarkIcon as LibraryIcon, TriangleAlertIcon, UserRoundIcon as BorrowerIcon, XIcon } from 'lucide-react'
 import './loans.css'
-
-function FilterIcon() {
-  return <svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6"><path d="M4 4h16l-6 8v7l-4-2v-5Z" strokeLinejoin="round" /></svg>
-}
 
 function Choice({ label, all, options, value, onChange }: { label: string; all: string; options: Option[]; value: string; onChange: (value: string) => void }) {
   const id = useId()
@@ -36,7 +34,7 @@ function SeverityChoices({ filters, onChange }: { filters: Filters; onChange: (f
   return <fieldset className="space-y-1">
     <legend className="mb-2 text-sm font-medium">Échéance</legend>
     {severities.map((severity) => <label key={severity} className="flex min-h-11 cursor-pointer items-center gap-3 rounded-md px-2 text-sm hover:bg-muted">
-      <input type="checkbox" className="size-4 accent-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring" checked={filters.severities.includes(severity)} onChange={(event) => onChange({ ...filters, severities: event.target.checked ? [...filters.severities, severity] : filters.severities.filter((value) => value !== severity) })} />
+      <Checkbox checked={filters.severities.includes(severity)} onCheckedChange={(checked) => onChange({ ...filters, severities: checked ? [...filters.severities, severity] : filters.severities.filter((value) => value !== severity) })} />
       {severityLabels[severity]}
     </label>)}
     <p className="pt-2 text-xs text-muted-foreground">Sans sélection, toutes les échéances sont incluses.</p>
@@ -55,17 +53,18 @@ function Deadline({ dueDate, today }: { dueDate: string; today: string }) {
   const days = remainingDays(dueDate, today)
   const severity = severityFor(days)
   return <div className="text-right">
-    <span className={cn('loan-deadline inline-flex max-w-full items-center justify-end gap-1.5 rounded-full font-semibold',
+    <Badge className={cn('loan-deadline h-auto max-w-full justify-end whitespace-normal font-semibold',
       severity === 'overdue' ? 'bg-danger text-danger-foreground' :
       severity === 'very-close' || severity === 'close' ? 'bg-warning text-warning-foreground' : 'bg-deadline-neutral text-deadline-neutral-foreground')}>
-      {severity === 'overdue' ? <TriangleAlertIcon className="size-4 shrink-0" /> : <ClockIcon className="size-4 shrink-0" />}
+      {severity === 'overdue' ? <TriangleAlertIcon className="shrink-0" /> : <ClockIcon className="shrink-0" />}
       <span>{relativeDeadline(days)}</span>
-    </span>
+    </Badge>
     <time dateTime={dueDate} className="mt-1 block text-[11px] leading-4 text-muted-foreground md:text-xs"><span className="sr-only">Retour au plus tard le </span>{formatDueDate(dueDate)}</time>
   </div>
 }
 
 export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
+  const severityId = useId()
   const today = useCalendarDate()
   const [params, setParams] = useSearchParams()
   const filters = parseFilters(params, networks, borrowers)
@@ -92,40 +91,47 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
     <div className="loans-filters hidden grid-cols-3 items-end gap-4 rounded-xl border p-4 md:grid">
       <Choice label="Réseau" all="Tous les réseaux" options={networks} value={filters.network} onChange={(network) => apply({ ...filters, network })} />
       <Choice label="Emprunteur" all="Toute la famille" options={borrowers} value={filters.borrower} onChange={(borrower) => apply({ ...filters, borrower })} />
-      <Popover.Root>
-        <div className="space-y-2"><p className="text-sm font-medium">Échéance</p>
-          <Popover.Trigger className="loan-choice flex h-11 w-full items-center rounded-lg border border-input px-3 text-left text-sm" aria-label={`Filtrer par échéance : ${severitySummary}${filters.severities.length ? `, ${filters.severities.map((severity) => severityLabels[severity]).join(', ')}` : ''}`}><span>{severitySummary}</span><ChevronDownIcon aria-hidden="true" className="loan-choice-indicator size-4" /></Popover.Trigger>
+      <Select multiple items={severities.map((severity) => ({ value: severity, label: severityLabels[severity] }))} value={filters.severities} onValueChange={(selected) => apply({ ...filters, severities: selected })}>
+        <div className="min-w-0 space-y-2">
+          <label htmlFor={severityId} className="block text-sm font-medium">Échéance</label>
+          <SelectTrigger id={severityId} className="w-full bg-card data-[size=default]:h-11" aria-label={`Filtrer par échéance : ${severitySummary}${filters.severities.length ? `, ${filters.severities.map((severity) => severityLabels[severity]).join(', ')}` : ''}`}><SelectValue className="text-foreground">{severitySummary}</SelectValue></SelectTrigger>
         </div>
-        <Popover.Portal><Popover.Positioner sideOffset={8} className="z-20"><Popover.Popup className="loan-filter-popup w-72 rounded-xl border bg-popover p-4 text-popover-foreground shadow-lg"><SeverityChoices filters={filters} onChange={apply} /></Popover.Popup></Popover.Positioner></Popover.Portal>
-      </Popover.Root>
+        <SelectContent alignItemWithTrigger={false}>
+          <SelectGroup>
+            {severities.map((severity) => <SelectItem key={severity} value={severity}>{severityLabels[severity]}</SelectItem>)}
+          </SelectGroup>
+          <p className="px-2.5 py-2 text-xs text-muted-foreground">Sans sélection, toutes les échéances sont incluses.</p>
+        </SelectContent>
+      </Select>
     </div>
 
     <div className="flex items-center justify-between gap-3">
       <p role="status" className="flex items-baseline gap-1.5 text-sm"><span className="font-heading text-2xl font-medium tabular-nums">{visibleLoans.length}</span> prêt{visibleLoans.length !== 1 ? 's' : ''}{badges.length > 0 && <span className="text-muted-foreground">sur {loans.length}</span>}</p>
       <p className="hidden text-xs text-muted-foreground md:block">Par date de retour croissante</p>
-      <Dialog.Root open={open} onOpenChange={(nextOpen) => { if (nextOpen) setPending(filters); setOpen(nextOpen) }}>
-        <Dialog.Trigger render={<Button className="loan-filter-action h-11 md:hidden" />}><FilterIcon />Filtres{badges.length > 0 ? ` (${badges.length})` : ''}</Dialog.Trigger>
-        <Dialog.Portal>
-          <Dialog.Backdrop className="fixed inset-0 z-30 bg-foreground/40" />
-          <Dialog.Popup className="loan-filter-dialog fixed inset-x-0 bottom-0 z-40 max-h-[90dvh] overflow-y-auto rounded-t-2xl border bg-popover p-5 text-popover-foreground shadow-lg sm:inset-x-auto sm:bottom-auto sm:top-1/2 sm:left-1/2 sm:w-96 sm:-translate-x-1/2 sm:-translate-y-1/2 sm:rounded-xl">
-            <Dialog.Title className="font-heading text-2xl">Filtrer les prêts</Dialog.Title>
-            <Dialog.Description className="mt-2 text-sm text-muted-foreground">Choisissez les prêts à afficher, puis validez.</Dialog.Description>
-            <div className="my-5 space-y-4">
+      <Dialog open={open} onOpenChange={(nextOpen) => { if (nextOpen) setPending(filters); setOpen(nextOpen) }}>
+        <DialogTrigger render={<Button className="h-11 md:hidden" />}><ListFilterIcon />Filtres{badges.length > 0 ? ` (${badges.length})` : ''}</DialogTrigger>
+        <DialogContent className="top-auto bottom-0 max-w-full translate-y-0 overflow-hidden rounded-b-none p-0 sm:top-1/2 sm:bottom-auto sm:-translate-y-1/2 sm:rounded-xl">
+          <div className="grid max-h-[90dvh] gap-4 overflow-y-auto p-4">
+            <DialogHeader>
+              <DialogTitle>Filtrer les prêts</DialogTitle>
+              <DialogDescription>Choisissez les prêts à afficher, puis validez.</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
               <Choice label="Réseau" all="Tous les réseaux" options={networks} value={pending.network} onChange={(network) => setPending({ ...pending, network })} />
               <Choice label="Emprunteur" all="Toute la famille" options={borrowers} value={pending.borrower} onChange={(borrower) => setPending({ ...pending, borrower })} />
               <SeverityChoices filters={pending} onChange={setPending} />
             </div>
-            <Button variant="ghost" className="mb-3 h-11" onClick={() => setPending(emptyFilters)}>Réinitialiser les filtres</Button>
-            <div className="flex flex-wrap gap-2">
-              <Dialog.Close render={<Button variant="outline" className="h-11" />}>Annuler</Dialog.Close>
+            <Button variant="ghost" className="h-11" onClick={() => setPending(emptyFilters)}>Réinitialiser les filtres</Button>
+            <DialogFooter>
+              <DialogClose render={<Button variant="outline" className="h-11" />}>Annuler</DialogClose>
               <Button className="h-11 grow" onClick={() => { apply(pending); setOpen(false) }}>Afficher les prêts</Button>
-            </div>
-          </Dialog.Popup>
-        </Dialog.Portal>
-      </Dialog.Root>
+            </DialogFooter>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
     {badges.length > 0 && <div aria-label="Filtres actifs" className="flex flex-wrap items-center gap-2">
-      {badges.map((badge) => <Button key={badge.label} variant="outline" className="h-auto min-h-9 max-w-full gap-2 whitespace-normal py-1 text-left text-xs" aria-label={`Retirer le filtre ${badge.label}`} onClick={badge.remove}>{badge.label}<span aria-hidden="true">×</span></Button>)}
+      {badges.map((badge) => <Button key={badge.label} variant="outline" className="h-auto min-h-9 max-w-full gap-2 whitespace-normal py-1 text-left text-xs" aria-label={`Retirer le filtre ${badge.label}`} onClick={badge.remove}>{badge.label}<XIcon aria-hidden="true" /></Button>)}
       <Button variant="link" className="h-9 text-xs text-foreground" onClick={() => apply(emptyFilters)}>Tout effacer</Button>
     </div>}
 
@@ -149,19 +155,19 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
         </li>)}
       </ul>
       <div className="hidden md:block">
-        <table className="loans-table w-full table-fixed text-left text-sm text-card-foreground">
-          <caption className="sr-only">Prêts de toute la famille, par date de retour croissante</caption>
-          <thead className="text-[11px] tracking-[0.08em] text-muted-foreground uppercase"><tr>
-            <th scope="col" className="w-[43%] px-4 py-3 font-medium">Document</th>
-            <th scope="col" className="w-[17%] px-3 py-3 font-medium">Réseau</th>
-            <th scope="col" className="w-[14%] px-3 py-3 font-medium">Emprunteur</th>
-            <th scope="col" className="w-[26%] px-4 py-3 text-right font-medium">Échéance de retour</th>
-          </tr></thead>
-          <tbody>{visibleLoans.map((loan) => <tr key={loan.id}>
-            <th scope="row" className="px-4 py-3 font-normal"><div className="flex items-center gap-3"><Cover loan={loan} /><div className="min-w-0 [overflow-wrap:anywhere]"><p className="font-heading text-[17px] leading-6 font-semibold">{loan.title}</p>{loan.author && <p className="mt-1 text-xs text-muted-foreground">{loan.author}</p>}</div></div></th>
-            <td className="px-3 py-3">{networkName(loan.networkId)}</td><td className="px-3 py-3">{borrowerName(loan.borrowerId)}</td><td className="px-4 py-3"><Deadline dueDate={loan.dueDate} today={today} /></td>
-          </tr>)}</tbody>
-        </table>
+        <Table className="loans-table table-fixed text-left text-card-foreground">
+          <TableCaption className="sr-only">Prêts de toute la famille, par date de retour croissante</TableCaption>
+          <TableHeader><TableRow>
+            <TableHead scope="col" className="w-[43%] px-4 py-3 font-medium">Document</TableHead>
+            <TableHead scope="col" className="w-[17%] px-3 py-3 font-medium">Réseau</TableHead>
+            <TableHead scope="col" className="w-[14%] px-3 py-3 font-medium">Emprunteur</TableHead>
+            <TableHead scope="col" className="w-[26%] px-4 py-3 text-right font-medium">Échéance de retour</TableHead>
+          </TableRow></TableHeader>
+          <TableBody>{visibleLoans.map((loan) => <TableRow key={loan.id}>
+            <TableHead scope="row" className="px-4 py-3 font-normal whitespace-normal"><div className="flex items-center gap-3"><Cover loan={loan} /><div className="min-w-0 [overflow-wrap:anywhere]"><p className="font-heading text-[17px] leading-6 font-semibold">{loan.title}</p>{loan.author && <p className="mt-1 text-xs text-muted-foreground">{loan.author}</p>}</div></div></TableHead>
+            <TableCell className="px-3 py-3 whitespace-normal">{networkName(loan.networkId)}</TableCell><TableCell className="px-3 py-3 whitespace-normal">{borrowerName(loan.borrowerId)}</TableCell><TableCell className="px-4 py-3"><Deadline dueDate={loan.dueDate} today={today} /></TableCell>
+          </TableRow>)}</TableBody>
+        </Table>
       </div>
     </>}
 

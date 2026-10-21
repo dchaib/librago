@@ -31,7 +31,7 @@ export function AppearanceControls() {
     <Button
       variant="outline"
       size="icon"
-      className="size-11 focus-visible:outline-2 focus-visible:outline-solid focus-visible:outline-offset-2 focus-visible:outline-ring"
+      className="size-11 border-input"
       aria-label="Mode sombre"
       aria-pressed={mode === 'dark'}
       title={mode === 'dark' ? 'Passer en mode clair' : 'Passer en mode sombre'}

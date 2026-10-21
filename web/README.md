@@ -50,6 +50,26 @@ The build includes TypeScript validation and writes assets to ignored `dist/`. U
 
 Dependencies use exact versions and a committed lockfile, maintained by Renovate. Use `npm ci` to install the locked dependencies.
 
+The pinned shadcn development CLI currently pulls in `braces` 3.0.3 through its glob tooling. npm reports seven high-severity package entries for the same [unpatched braces denial-of-service advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). This tooling is not shipped in the browser bundle; track the upstream fix rather than accepting npm's incompatible downgrade suggestion.
+
+## Adding UI components
+
+Follow the [shadcn foundation contract](../docs/architecture/web.md#shadcn-foundation). From `web/`, use the locally pinned CLI:
+
+```sh
+npx --no-install shadcn add <component>
+```
+
+The CLI reads `components.json`; keep Base Nova, Base UI, Lucide, CSS variables, and the Neutral generator base. Review generated files, dependencies, lockfile, and any global CSS changes before accepting them. Preserve Ocean/Natural tokens and self-hosted fonts. Do not rerun `init` over this application or overwrite matching components for routine additions. Compare with `https://ui.shadcn.com/r/styles/base-nova/<component>.json`, accounting for normal SPA, icon, import, heading-font, and menu transformations.
+
+For foundation changes, build and inspect computed styles and keyboard behavior in all four appearances at desktop and mobile widths, using fictional data with a fixed date/time zone. Check focus/selection, body portals, nested Select/Dialog Escape behavior, animation completion, focus/scroll restoration, reduced motion, and appearance changes while a portal is open. Dialog portals unmount after closing; Base UI can retain hidden Select items for closed-trigger typeahead. Verify that closed content is inactive rather than requiring every Select node to disappear. Confirm the production CSS contains enter/exit keyframes and the toolkit's open/closed/checked variants.
+
+The app root uses `CSPProvider disableStyleElements`; the documented scrollbar class is supplied through shadcn's `no-scrollbar` utility. Validate production assets under the [target CSP](../docs/architecture/security.md#browser-security-baseline), including a default aligned Select as well as the app's `alignItemWithTrigger={false}` composition. The local preview does not prove deployment acceptance; see the [deployment checklist](../docs/deployment/validation.md#browser-security).
+
+### Deferred application work
+
+The foundation retains the loans table skin, gradients/illustrations, mobile list, resized controls/badges, and bottom-attached Dialog composition. Revisit these during the subsequent composition/visual stages. Previously observed issues also remain separate: constrained/enlarged header reflow, focus return when resizing an open mobile dialog past the desktop breakpoint, the generated English close label, narrow long-title layouts, and missing client not-found content. Do not fold these into toolkit installation changes.
+
 ## Integration boundary
 
 Frontend assets are not included in the deployed application. Backend integration, authentication, and live data remain deferred. See the [web architecture](../docs/architecture/web.md) for the target integration.

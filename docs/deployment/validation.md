@@ -26,6 +26,12 @@ Requirements are defined in [authentication](../architecture/authentication.md) 
 - [ ] Verify that a real browser session survives container destruction/recreation with the volume retained.
 - [ ] Verify that sensitive key backups are access-controlled and recoverable with the stable discriminator.
 
+### Browser security
+
+- [ ] Verify the documented CSP response header at the public HTTPS origin with production React assets, without development/HMR allowances.
+- [ ] Check for CSP violations while opening/closing Dialog and Select portals (including aligned Select), in Ocean/Natural and light/dark, with normal and reduced motion.
+- [ ] Verify keyboard selection, nested Escape handling, focus return, background scroll locking/restoration, and scrollbar hiding under that policy. Local frontend probes do not complete these deployment checks.
+
 ### Chromium/runtime
 
 - [ ] Verify that the Chromium sandbox works on the target host for required browser modes.

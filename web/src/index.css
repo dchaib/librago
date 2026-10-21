@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
 
 @font-face {
   font-family: "Inter Variable";
@@ -230,3 +232,10 @@
 .font-heading {
   font-optical-sizing: auto;
 }
+
+/* Base UI's CSPProvider disables injected scrollbar styles. Keep the documented
+   class available through the official shadcn utility for aligned Selects. */
+.base-ui-disable-scrollbar {
+  @apply no-scrollbar;
+}
+

@@ -8,7 +8,7 @@ namespace Librago.Persistence;
 
 public sealed partial class LibragoDatabase
 {
-    private const int CurrentSchemaVersion = 5;
+    private const int CurrentSchemaVersion = 6;
     private readonly string _connectionString;
     private readonly TimeZoneInfo _timeZone;
 
@@ -71,6 +71,10 @@ public sealed partial class LibragoDatabase
         if (version < 5)
         {
             await ApplyVersionFiveAsync(connection, cancellationToken);
+        }
+        if (version < 6)
+        {
+            await ApplyVersionSixAsync(connection, cancellationToken);
         }
     }
 

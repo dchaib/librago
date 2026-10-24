@@ -34,7 +34,7 @@ The worker calls application functionality directly, without internal HTTP reque
 HTTP API -> Application queries / read projections -> SQLite
 ```
 
-Application queries combine persisted records with coverage and freshness metadata to construct read models. Ordinary HTTP reads do not trigger provider retrieval or scraping. Synchronization and queries operate within the same application, with external data retrieval confined to the synchronization path.
+Application queries combine persisted records with coverage and freshness metadata to construct read models. Reads preserve consistency between item data and its coverage metadata. Ordinary HTTP reads do not trigger provider retrieval or scraping. Synchronization and queries operate within the same application, with external data retrieval confined to the synchronization path.
 
 ## Persistence guarantees
 
@@ -42,4 +42,4 @@ SQLite is owned by one application instance; active-active replication is outsid
 
 Loans and reservations have independent retrieval outcomes. Successful replacement is transactional for one account collection, rather than for an entire account or network cycle. A successful empty snapshot replaces the prior collection; failed or incomplete retrieval does not enter that replacement path, and failed persistence rolls back the collection's transaction. Last-known valid data remains available.
 
-Item records and synchronization/coverage metadata represent different concerns. Stored coverage distinguishes verified empty snapshots from missing, incomplete, or unknown data independently of the latest attempt result. Read models use this persisted information according to the [data-coverage specification](../product/features/loans.md#known-data-coverage). The physical coverage schema remains unspecified.
+Item records and synchronization/coverage metadata represent different concerns. Stored coverage distinguishes verified empty snapshots from missing, incomplete, or unknown data independently of the latest attempt result. Successful collection replacement and its coverage are persisted atomically; failures preserve both. Read models use this persisted information according to the [data-coverage specification](../product/features/loans.md#known-data-coverage).

@@ -99,7 +99,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         Assert.DoesNotContain("Nozay Beta", combined);
         Assert.Contains("Lecteur Beta", combined);
         Assert.Contains("Centre — Bibliothèque municipale de Nantes", combined);
-        Assert.Contains("Date estimée d’après la première observation", combined);
+        Assert.Contains("Date estimée à partir du premier relevé", combined);
         Assert.Contains("Retrait au plus tard le", combined);
         foreach (var filter in new[] { "SelectedNetwork=nantes", "SelectedBorrower=Lecteur%20Beta",
                      "SelectedStatus=Suspended", "SelectedPickupLibrary=" + Uri.EscapeDataString(libraryKey) })
@@ -226,7 +226,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         Assert.Equal(clock.Now.AddHours(-1), state.LastCompleteSuccessAt);
         Assert.Contains(await Database.GetReservationsAsync(CancellationToken.None), r => r.Item.Title == "Initial");
         var never = WebUtility.HtmlDecode(await client.GetStringAsync("/Reservations", TestContext.Current.CancellationToken));
-        Assert.Contains("n’ont encore jamais été synchronisées complètement", never);
+        Assert.Contains("n’ont pas encore pu être mises à jour pour tous les comptes", never);
         var filtered = WebUtility.HtmlDecode(await client.GetStringAsync("/Reservations?SelectedStatus=Suspended", TestContext.Current.CancellationToken));
         Assert.Contains("Aucune réservation ne correspond à ces filtres", filtered);
         foreach (var network in new[] { "Nantes", "Nozay" })
@@ -303,6 +303,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
                 ALTER TABLE loan_network_sync RENAME TO network_sync;
                 DROP TABLE reservations;
                 DROP TABLE reservation_network_sync;
+                DROP TABLE loan_account_coverage;
                 ALTER TABLE loans DROP COLUMN first_observed_on;
                 ALTER TABLE loans RENAME COLUMN library TO branch;
                 ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T08:00:00Z';
@@ -357,7 +358,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
                 """;
             await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         }
-        command.CommandText = $"ALTER TABLE loans DROP COLUMN first_observed_on; ALTER TABLE loans RENAME COLUMN library TO branch; ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T08:00:00Z'; PRAGMA user_version = {version};";
+        command.CommandText = $"DROP TABLE loan_account_coverage; ALTER TABLE loans DROP COLUMN first_observed_on; ALTER TABLE loans RENAME COLUMN library TO branch; ALTER TABLE loans ADD COLUMN refreshed_at TEXT NOT NULL DEFAULT '2026-09-26T08:00:00Z'; PRAGMA user_version = {version};";
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
 
         await database.InitializeAsync(CancellationToken.None);
@@ -375,7 +376,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         command.CommandText = "SELECT COUNT(*) FROM sqlite_master WHERE type = 'table' AND name IN ('account_sync', 'loan_account_sync');";
         Assert.Equal(0L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
         command.CommandText = "PRAGMA user_version;";
-        Assert.Equal(5L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
+        Assert.Equal(6L, await command.ExecuteScalarAsync(TestContext.Current.CancellationToken));
     }
 
     [Fact]
@@ -397,6 +398,7 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
             ALTER TABLE loans DROP COLUMN first_observed_on;
             ALTER TABLE loans RENAME COLUMN library TO branch;
             PRAGMA user_version = 4;
+            DROP TABLE loan_account_coverage;
             """;
         await command.ExecuteNonQueryAsync(TestContext.Current.CancellationToken);
         await Database.InitializeAsync(CancellationToken.None);

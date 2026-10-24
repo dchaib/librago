@@ -1,15 +1,8 @@
 import { useState } from "react"
 import { useSearchParams } from "react-router"
-import { BookOpenIcon, ListFilterIcon, XIcon } from "lucide-react"
+import { ListFilterIcon, XIcon } from "lucide-react"
 
 import { Button } from "@/components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card"
 import {
   Dialog,
   DialogContent,
@@ -19,36 +12,67 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog"
-import {
-  Empty,
-  EmptyContent,
-  EmptyDescription,
-  EmptyHeader,
-  EmptyMedia,
-  EmptyTitle,
-} from "@/components/ui/empty"
 import { LoanFilters } from "./loan-filters"
 import { LoanList } from "./loan-list"
 import {
-  applicationTimeZone,
+  LoanCoverageAlert,
+  LoanEmptyState,
+  LoanReadError,
+} from "./loan-data-states"
+import { LoanSynchronizationStatus } from "./loan-synchronization-status"
+import {
   emptyFilters,
   filterParams,
   parseFilters,
   selectLoans,
   severityLabels,
   type Filters,
-  type Loan,
 } from "./loans"
-import {
-  borrowers,
-  mockLoans,
-  mockSynchronizations,
-  networks,
-} from "./mock-loans"
+import { confidence, type LoansResponse } from "./loans-api"
+import { useLoans } from "./use-loans"
 import { useCalendarDate } from "./use-calendar-date"
 
-export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
-  const today = useCalendarDate()
+export function LoansPage() {
+  const { data, error, now, isLoading, retry } = useLoans()
+  if (!data)
+    return (
+      <section aria-labelledby="loans-heading" className="flex flex-col gap-6">
+        <h1 id="loans-heading" className="text-2xl font-semibold">
+          Prêts en cours
+        </h1>
+        {error ? (
+          <LoanReadError initial isLoading={isLoading} retry={retry} />
+        ) : (
+          <p role="status">Chargement des prêts…</p>
+        )}
+      </section>
+    )
+  return (
+    <LoadedLoans
+      data={data}
+      error={error}
+      now={now}
+      isLoading={isLoading}
+      retry={retry}
+    />
+  )
+}
+
+function LoadedLoans({
+  data,
+  error,
+  now,
+  isLoading,
+  retry,
+}: {
+  data: LoansResponse
+  error: boolean
+  now: number
+  isLoading: boolean
+  retry: () => void
+}) {
+  const { loans, networks, borrowers, synchronizations, timeZone } = data
+  const today = useCalendarDate(timeZone)
   const [params, setParams] = useSearchParams()
   const filters = parseFilters(params, networks, borrowers)
   const [open, setOpen] = useState(false)
@@ -56,7 +80,19 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
   const apply = (value: Filters) =>
     setParams(filterParams(value), { replace: true })
   const visibleLoans = selectLoans(loans, filters, today)
+  const selectedStates = synchronizations.filter(
+    (s) => !filters.network || s.networkId === filters.network
+  )
+  const scope = confidence(selectedStates, now, error)
+  const total = confidence(synchronizations, now, error)
   const pendingCount = selectLoans(loans, pending, today).length
+  const pendingScope = confidence(
+    synchronizations.filter(
+      (state) => !pending.network || state.networkId === pending.network
+    ),
+    now,
+    error
+  )
   const hasPendingFilters = Boolean(
     pending.network || pending.borrower || pending.severities.length
   )
@@ -93,15 +129,37 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
         Prêts en cours
       </h1>
 
+      {error && <LoanReadError isLoading={isLoading} retry={retry} />}
+      <LoanCoverageAlert
+        hasConfiguredAccounts={data.hasConfiguredAccounts}
+        scope={scope}
+      />
+
       <div className="hidden md:block">
-        <LoanFilters value={filters} onChange={apply} />
+        <LoanFilters
+          value={filters}
+          onChange={apply}
+          networks={networks}
+          borrowers={borrowers}
+        />
       </div>
 
       <div className="flex items-center justify-between gap-3">
         <p role="status" className="text-sm">
-          {visibleLoans.length} prêt{visibleLoans.length !== 1 ? "s" : ""}
+          {scope.unavailable ? "—" : visibleLoans.length} prêt
+          {visibleLoans.length !== 1 ? "s" : ""}
+          {!scope.unavailable &&
+            !scope.reliable &&
+            (visibleLoans.length === 1 ? " connu" : " connus")}
           {activeFilters.length > 0 && (
-            <span className="text-muted-foreground"> sur {loans.length}</span>
+            <span className="text-muted-foreground">
+              {" "}
+              sur {total.unavailable ? "—" : loans.length}
+              {!total.unavailable &&
+                !total.reliable &&
+                (loans.length === 1 ? " connu" : " connus")}{" "}
+              au total
+            </span>
           )}
         </p>
         <p className="hidden text-sm text-muted-foreground md:block">
@@ -136,11 +194,17 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
                 )}
               </div>
               <DialogDescription className="sr-only">
-                Choisissez les prêts à afficher, puis validez.
+                Choisissez vos filtres, puis appuyez sur Afficher.
               </DialogDescription>
             </DialogHeader>
             <div className="-mx-4 min-h-0 overflow-y-auto px-4">
-              <LoanFilters value={pending} onChange={setPending} mobile />
+              <LoanFilters
+                value={pending}
+                onChange={setPending}
+                mobile
+                networks={networks}
+                borrowers={borrowers}
+              />
             </div>
             <DialogFooter className="shrink-0">
               <Button
@@ -150,8 +214,7 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
                   setOpen(false)
                 }}
               >
-                Afficher{" "}
-                {pendingCount === 1 ? "le prêt" : `les ${pendingCount} prêts`}
+                {filterActionLabel(pendingCount, pendingScope)}
               </Button>
             </DialogFooter>
           </DialogContent>
@@ -177,72 +240,44 @@ export function LoansPage({ loans = mockLoans }: { loans?: Loan[] }) {
             </Button>
           ))}
           <Button variant="link" size="sm" onClick={() => apply(emptyFilters)}>
-            Tout effacer
+            Effacer les filtres
           </Button>
         </div>
       )}
 
       {visibleLoans.length ? (
-        <LoanList loans={visibleLoans} today={today} />
+        <LoanList
+          loans={visibleLoans}
+          today={today}
+          networks={networks}
+          borrowers={borrowers}
+        />
       ) : (
-        <Empty>
-          <EmptyHeader>
-            <EmptyMedia variant="icon">
-              <BookOpenIcon aria-hidden="true" />
-            </EmptyMedia>
-            <EmptyTitle>
-              <h2>
-                {loans.length
-                  ? "Aucun prêt ne correspond aux filtres"
-                  : "Aucun prêt en cours"}
-              </h2>
-            </EmptyTitle>
-            <EmptyDescription>
-              {loans.length
-                ? "Modifiez vos filtres ou retrouvez les prêts de toute la famille."
-                : "Tous les documents ont été rendus. À bientôt pour de nouvelles lectures !"}
-            </EmptyDescription>
-          </EmptyHeader>
-          {activeFilters.length > 0 && (
-            <EmptyContent>
-              <Button variant="outline" onClick={() => apply(emptyFilters)}>
-                Effacer les filtres
-              </Button>
-            </EmptyContent>
-          )}
-        </Empty>
+        <LoanEmptyState
+          hasConfiguredAccounts={data.hasConfiguredAccounts}
+          unavailable={scope.unavailable}
+          reliable={scope.reliable}
+          hasFilters={activeFilters.length > 0}
+          clearFilters={() => apply(emptyFilters)}
+        />
       )}
 
-      <footer>
-        <Card>
-          <CardHeader>
-            <CardTitle>
-              <h2>Dernière synchronisation réussie des prêts</h2>
-            </CardTitle>
-            <CardDescription>
-              Données de démonstration · horaires de Paris
-            </CardDescription>
-          </CardHeader>
-          <CardContent>
-            <dl className="grid gap-4 sm:grid-cols-2">
-              {mockSynchronizations.map((network) => (
-                <div key={network.id}>
-                  <dt className="font-medium">{network.name}</dt>
-                  <dd className="text-muted-foreground">
-                    <time dateTime={network.lastSuccess}>
-                      {new Intl.DateTimeFormat("fr-FR", {
-                        timeZone: applicationTimeZone,
-                        dateStyle: "short",
-                        timeStyle: "short",
-                      }).format(new Date(network.lastSuccess))}
-                    </time>
-                  </dd>
-                </div>
-              ))}
-            </dl>
-          </CardContent>
-        </Card>
-      </footer>
+      <LoanSynchronizationStatus
+        synchronizations={synchronizations}
+        networks={networks}
+        timeZone={timeZone}
+        now={now}
+      />
     </section>
   )
+}
+
+function filterActionLabel(
+  count: number,
+  scope: ReturnType<typeof confidence>
+) {
+  if (scope.unavailable) return "Afficher les prêts connus"
+  const loans = count === 1 ? "le prêt" : `les ${count} prêts`
+  const qualifier = scope.reliable ? "" : count === 1 ? " connu" : " connus"
+  return `Afficher ${loans}${qualifier}`
 }

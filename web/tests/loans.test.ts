@@ -12,11 +12,7 @@ import {
   severityFor,
   type Loan,
 } from "../src/loans/loans.ts"
-import {
-  borrowers,
-  createMockLoans,
-  networks,
-} from "../src/loans/mock-loans.ts"
+import { borrowers, createMockLoans, networks } from "./fixtures/mock-loans.ts"
 
 test("severity boundaries and inclusive due dates", () => {
   const cases = [

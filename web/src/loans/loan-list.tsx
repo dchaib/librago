@@ -23,16 +23,8 @@ import {
   relativeDeadline,
   remainingDays,
   type Loan,
+  type Option,
 } from "./loans"
-import { borrowers, networks } from "./mock-loans"
-
-function networkName(id: string) {
-  return networks.find((network) => network.id === id)?.name ?? id
-}
-
-function borrowerName(id: string) {
-  return borrowers.find((borrower) => borrower.id === id)?.name ?? id
-}
 
 function Cover({ loan }: { loan: Loan }) {
   const [failedSource, setFailedSource] = useState<string>()
@@ -74,7 +66,21 @@ function Deadline({ loan, today }: { loan: Loan; today: string }) {
   )
 }
 
-export function LoanList({ loans, today }: { loans: Loan[]; today: string }) {
+export function LoanList({
+  loans,
+  today,
+  networks,
+  borrowers,
+}: {
+  loans: Loan[]
+  today: string
+  networks: Option[]
+  borrowers: Option[]
+}) {
+  const networkName = (id: string) =>
+    networks.find((n) => n.id === id)?.name ?? id
+  const borrowerName = (id: string) =>
+    borrowers.find((b) => b.id === id)?.name ?? id
   return (
     <>
       <ItemGroup
@@ -128,7 +134,7 @@ export function LoanList({ loans, today }: { loans: Loan[]; today: string }) {
       <div className="hidden md:block">
         <Table className="table-fixed">
           <TableCaption className="sr-only">
-            Prêts de toute la famille, par date de retour croissante
+            Prêts de tous les emprunteurs, par date de retour croissante
           </TableCaption>
           <TableHeader>
             <TableRow>

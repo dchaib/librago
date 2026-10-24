@@ -17,7 +17,6 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { severities, severityLabels, type Filters, type Option } from "./loans"
-import { borrowers, networks } from "./mock-loans"
 
 const allValue = "__all__"
 
@@ -71,10 +70,14 @@ export function LoanFilters({
   value,
   onChange,
   mobile = false,
+  networks,
+  borrowers,
 }: {
   value: Filters
   onChange: (filters: Filters) => void
   mobile?: boolean
+  networks: Option[]
+  borrowers: Option[]
 }) {
   const id = useId()
   const summary = value.severities.length
@@ -99,7 +102,7 @@ export function LoanFilters({
       />
       <Choice
         label="Emprunteur"
-        all="Toute la famille"
+        all="Tous les emprunteurs"
         options={borrowers}
         value={value.borrower}
         onChange={(borrower) => onChange({ ...value, borrower })}

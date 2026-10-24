@@ -8,7 +8,7 @@ function PlaceholderPage({ title }: { title: string }) {
     <div className="flex flex-col gap-2">
       <h1 className="text-2xl font-semibold">{title}</h1>
       <p className="text-sm text-muted-foreground">
-        Cette page sera complétée prochainement.
+        Cette page n’est pas encore disponible.
       </p>
     </div>
   )

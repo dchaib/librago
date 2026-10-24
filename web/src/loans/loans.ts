@@ -19,7 +19,7 @@ export type Option = { id: string; name: string }
 export type Loan = {
   id: string
   title: string
-  author?: string
+  author?: string | null
   cover?: string
   networkId: string
   borrowerId: string

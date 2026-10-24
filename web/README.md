@@ -1,75 +1,67 @@
-# Librago frontend
+# Librago web
 
-Standalone React development preview using TypeScript, Vite, React Router, Tailwind CSS 4, and shadcn components built on Base UI. It runs independently of the current ASP.NET Core/Razor application and does not call the backend yet.
+Librago's React frontend, built with TypeScript, Vite, React Router, Tailwind CSS 4, and shadcn/ui on Base UI. The interface is in French; code and documentation are in English.
+
+The current frontend is a standalone demonstration. The Loans page uses synthetic data; Home and Reservations are placeholders. No backend connection or API proxy is configured in Vite yet. See the [root README](../README.md#development) for the existing .NET application workflows and the [web architecture](../docs/architecture/web.md) for the target hosting model.
 
 ## Development
 
-Use the Node.js version declared in [`.node-version`](.node-version) and its bundled npm.
+Use Node.js 24 or later and npm. Run the following commands from `web/`:
 
-Run from `web/`:
-
-```sh
+```bash
 npm ci
 npm run dev
 ```
 
-Open the loopback URL printed by Vite. The shared application shell provides navigation to Accueil (`/`), Prêts (`/loans`), and Réservations (`/reservations`). Home and reservations are minimal placeholders; `/verification` remains available as the original routing check. The header provides Ocean and Natural theme selection and a light/dark toggle. Appearance selection is local React state, survives route navigation, and resets on reload; Ocean Light is only the preview default.
+Open the URL printed by Vite and navigate to `/loans` to view the demonstration.
 
-## Application shell
+| Command | Purpose |
+| --- | --- |
+| `npm run dev` | Start the development server with hot reload. |
+| `npm run typecheck` | Check TypeScript project types. |
+| `npm run lint` | Run ESLint. |
+| `npm test` | Run the loan domain tests using Node's test runner. |
+| `npm run build` | Check types and build static assets into `dist/`. |
+| `npm run preview` | Serve the built assets locally after a build. |
+| `npm run format` | Format TypeScript and TSX files with Prettier, including Tailwind class ordering. |
 
-`src/components/AppShell.tsx` provides the shared header, main content container, and navigation around the React Router outlet. Desktop navigation appears in the header from the `md` breakpoint (768 px); smaller screens use a fixed bottom bar with icons and visible labels. The header scrolls with the document. Mobile content reserves space for the bar and bottom safe-area inset; the viewport enables safe-area support. A keyboard skip link targets the main content.
+The tests cover date calculations, severity thresholds, sorting, and URL filters. They do not verify browser layout or interactions. Check the Loans page at mobile and desktop widths, in light and dark modes, when changing its presentation.
 
-`AppearanceControls` reuses the existing document-root `data-theme` and `.dark` state contract and semantic tokens. The theme selector and loans filters (including the mobile dialog) use the shadcn/Base UI Select; the mode toggle uses the existing Button. Both appearance controls have 44 px touch targets. Active navigation and secondary actions share the `secondary` color pair, preserving Ocean's appearance and using green selection colors in Natural.
+## Source layout
 
-The official horizontal logos are copied unchanged from `assets/brand/svg/` into `public/brand/`, with the approved `on-dark` asset used in dark mode. Their wordmarks are outlined Fraunces artwork and do not depend on the interface fonts. The loans page retains its own heading, illustration, filters, and responsive list/table composition.
+| Path | Responsibility |
+| --- | --- |
+| `src/main.tsx` | React entry point and Base UI CSP integration. |
+| `src/App.tsx` | Client routes. |
+| `src/components/AppShell.tsx` | Shared navigation and page container. |
+| `src/components/mode-toggle.tsx` | System color preference and the session's light/dark override. |
+| `src/components/ui/` | Editable shadcn/ui primitives. |
+| `src/index.css` | Tailwind imports, shadcn theme variables, fonts, and base styles. |
+| `src/loans/LoansPage.tsx` | Loan page composition, URL filters, and the mobile filter dialog. |
+| `src/loans/loan-filters.tsx` | Desktop and mobile filter controls. |
+| `src/loans/loan-list.tsx` | Mobile loan list, desktop table, covers, and deadlines. |
+| `src/loans/loans.ts` | Pure domain types, date calculations, sorting, and filtering. |
+| `src/loans/use-calendar-date.ts` | Calendar-day updates in the application time zone. |
+| `src/loans/mock-loans.ts` | Synthetic demonstration data. |
+| `tests/loans.test.ts` | Domain tests. |
+| `public/` | Static assets served from the site root. |
 
-## Loans preview
+The `@/` import alias resolves to `src/` in Vite and TypeScript.
 
-`/loans` presents 24 fictional loans, sorted by due date, with a desktop table and a compact mobile list. Network, borrower and exact deadline filters are encoded as `network`, `borrower` and repeated `severity` query parameters. For example: `/loans?network=rivages&severity=overdue&severity=very-close`. Invalid values are ignored. Filter changes replace the current history entry; mobile changes remain pending until confirmed.
+## UI foundation
 
-The demo uses `Europe/Paris` as its application time zone, defined in `src/loans/loans.ts`. Mock deadlines are relative to the calendar date at page load and remain fixed while the page is open; relative labels and filtering update at midnight and on tab reactivation. Reloading generates a fresh demonstration snapshot. The two network synchronization times are also fictional. All snapshots are assumed complete and successful; confidence states remain deferred as specified in the product documentation.
+The current implementation deliberately starts from standard shadcn styling: `base-nova`, Neutral colors, Geist, and the `.dark` convention. There is no custom Librago palette for now. The mode toggle follows the system preference until manually changed; the override lasts across SPA navigation and resets on reload.
 
-To inspect the verified-empty state during development, pass `loans={[]}` to `LoansPage`; a filtered-empty example is `/loans?network=rivages&borrower=camille&severity=close`. Cover SVGs are original demonstration artwork (see `public/covers/README.md`). Missing or failed cover images use the same fallback.
+Use existing primitives and their variants before introducing custom styling. Keep domain compositions in feature folders. Simple HTML with Tailwind layout utilities is appropriate when a toolkit subcomponent adds unnecessary behavior or styling dependencies, as with loan covers and deadlines.
 
-The validated UX uses self-hosted variable Source Serif 4 for item titles and page headings, Inter for controls and metadata, right-aligned relative and absolute deadlines, and neutral removable filter badges. Mobile metadata combines network and borrower with locally included Lucide icons. Compact dates intentionally omit repeated visible “Retour au plus tard le” wording; that context remains available to screen readers.
+### Content Security Policy
 
-## Visual identity
+Keep `CSPProvider disableStyleElements` around the application in `src/main.tsx` and the `.base-ui-disable-scrollbar` rule in `src/index.css`. Together they provide Base UI's scrollbar styles through the external stylesheet instead of injected style elements. See the [security reference](../docs/architecture/security.md#browser-security-baseline) for the deployment policy; Vite development alone does not validate production CSP compatibility.
 
-`src/index.css` defines self-hosted fonts and maps the four [visual foundation palettes](../docs/design/foundations.md) onto shadcn semantic variables, using `data-theme` and `.dark` on the document root. The current theme/mode combinations have been validated on the Loans page. Loans-specific composition styles live in `src/loans/loans.css`, imported by the page. Status colors are separate semantic examples and are not part of the approved theme palettes.
+## Product and architecture references
 
-## Checks and build
+- [Loans behavior](../docs/product/features/loans.md)
+- [Web architecture and hosting](../docs/architecture/web.md)
+- [Design principles](../docs/design/principles.md) and [visual foundations](../docs/design/foundations.md)
 
-```sh
-npm run typecheck
-npm run lint
-npm test
-npm run build
-```
-
-The build includes TypeScript validation and writes assets to ignored `dist/`. Use `npm run preview` to serve the build locally.
-
-Dependencies use exact versions and a committed lockfile, maintained by Renovate. Use `npm ci` to install the locked dependencies.
-
-The pinned shadcn development CLI currently pulls in `braces` 3.0.3 through its glob tooling. npm reports seven high-severity package entries for the same [unpatched braces denial-of-service advisory](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). This tooling is not shipped in the browser bundle; track the upstream fix rather than accepting npm's incompatible downgrade suggestion.
-
-## Adding UI components
-
-Follow the [shadcn foundation contract](../docs/architecture/web.md#shadcn-foundation). From `web/`, use the locally pinned CLI:
-
-```sh
-npx --no-install shadcn add <component>
-```
-
-The CLI reads `components.json`; keep Base Nova, Base UI, Lucide, CSS variables, and the Neutral generator base. Review generated files, dependencies, lockfile, and any global CSS changes before accepting them. Preserve Ocean/Natural tokens and self-hosted fonts. Do not rerun `init` over this application or overwrite matching components for routine additions. Compare with `https://ui.shadcn.com/r/styles/base-nova/<component>.json`, accounting for normal SPA, icon, import, heading-font, and menu transformations.
-
-For foundation changes, build and inspect computed styles and keyboard behavior in all four appearances at desktop and mobile widths, using fictional data with a fixed date/time zone. Check focus/selection, body portals, nested Select/Dialog Escape behavior, animation completion, focus/scroll restoration, reduced motion, and appearance changes while a portal is open. Dialog portals unmount after closing; Base UI can retain hidden Select items for closed-trigger typeahead. Verify that closed content is inactive rather than requiring every Select node to disappear. Confirm the production CSS contains enter/exit keyframes and the toolkit's open/closed/checked variants.
-
-The app root uses `CSPProvider disableStyleElements`; the documented scrollbar class is supplied through shadcn's `no-scrollbar` utility. Validate production assets under the [target CSP](../docs/architecture/security.md#browser-security-baseline), including a default aligned Select as well as the app's `alignItemWithTrigger={false}` composition. The local preview does not prove deployment acceptance; see the [deployment checklist](../docs/deployment/validation.md#browser-security).
-
-### Deferred application work
-
-The foundation retains the loans table skin, gradients/illustrations, mobile list, resized controls/badges, and bottom-attached Dialog composition. Revisit these during the subsequent composition/visual stages. Previously observed issues also remain separate: constrained/enlarged header reflow, focus return when resizing an open mobile dialog past the desktop breakpoint, the generated English close label, narrow long-title layouts, and missing client not-found content. Do not fold these into toolkit installation changes.
-
-## Integration boundary
-
-Frontend assets are not included in the deployed application. Backend integration, authentication, and live data remain deferred. See the [web architecture](../docs/architecture/web.md) for the target integration.
+The appearance sections of the architecture and design references still describe the earlier Ocean/Natural implementation. The current frontend uses the neutral foundation described above while custom theming is deferred.

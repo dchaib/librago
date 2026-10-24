@@ -27,6 +27,8 @@ See [`docs/README.md`](docs/README.md) for an overview of the project documentat
 
 ## Development
 
+For the standalone React frontend, see the [frontend development guide](web/README.md).
+
 Librago requires the .NET 10 SDK. The Nozay connector also requires a Playwright Chromium installation.
 
 After updating Playwright dependencies, rerun the Chromium installation command below for the new build. Installing with `--only-shell` is sufficient for headless tests, but not for the Nozay connector, which uses a visible browser.

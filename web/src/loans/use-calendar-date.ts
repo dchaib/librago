@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react'
-import { applicationTimeZone, calendarDate } from './loans'
+import { useEffect, useState } from "react"
+import { applicationTimeZone, calendarDate } from "./loans"
 
 export function useCalendarDate(timeZone = applicationTimeZone) {
   const [today, setToday] = useState(() => calendarDate(new Date(), timeZone))
@@ -21,12 +21,12 @@ export function useCalendarDate(timeZone = applicationTimeZone) {
       timer = setTimeout(update, high - now)
     }
     update()
-    window.addEventListener('focus', update)
-    document.addEventListener('visibilitychange', update)
+    window.addEventListener("focus", update)
+    document.addEventListener("visibilitychange", update)
     return () => {
       clearTimeout(timer)
-      window.removeEventListener('focus', update)
-      document.removeEventListener('visibilitychange', update)
+      window.removeEventListener("focus", update)
+      document.removeEventListener("visibilitychange", update)
     }
   }, [timeZone])
   return today

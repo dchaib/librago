@@ -1,69 +1,44 @@
 @import "tailwindcss";
 @import "tw-animate-css";
 @import "shadcn/tailwind.css";
-
-@font-face {
-  font-family: "Inter Variable";
-  font-style: normal;
-  font-weight: 100 900;
-  font-display: swap;
-  src: url("@fontsource-variable/inter/files/inter-latin-wght-normal.woff2") format("woff2");
-}
-
-@font-face {
-  font-family: "Source Serif 4 Variable";
-  font-style: normal;
-  font-weight: 200 900;
-  font-display: swap;
-  src: url("@fontsource-variable/source-serif-4/files/source-serif-4-latin-standard-normal.woff2") format("woff2");
-}
+@import "@fontsource-variable/geist";
 
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {
-  --font-sans: "Inter Variable", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
-  --font-heading: "Source Serif 4 Variable", Georgia, "Times New Roman", serif;
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --color-card: var(--card);
-  --color-card-foreground: var(--card-foreground);
-  --color-popover: var(--popover);
-  --color-popover-foreground: var(--popover-foreground);
-  --color-primary: var(--primary);
-  --color-primary-foreground: var(--primary-foreground);
-  --color-secondary: var(--secondary);
-  --color-secondary-foreground: var(--secondary-foreground);
-  --color-muted: var(--muted);
-  --color-muted-foreground: var(--muted-foreground);
-  --color-accent: var(--accent);
-  --color-accent-foreground: var(--accent-foreground);
-  --color-destructive: var(--destructive);
-  --color-border: var(--border);
-  --color-input: var(--input);
-  --color-ring: var(--ring);
-  --color-success: var(--success);
-  --color-success-foreground: var(--success-foreground);
-  --color-info: var(--info);
-  --color-info-foreground: var(--info-foreground);
-  --color-warning: var(--warning);
-  --color-warning-foreground: var(--warning-foreground);
-  --color-danger: var(--danger);
-  --color-danger-foreground: var(--danger-foreground);
-  --color-deadline-neutral: var(--deadline-neutral);
-  --color-deadline-neutral-foreground: var(--deadline-neutral-foreground);
-  --color-chart-1: var(--chart-1);
-  --color-chart-2: var(--chart-2);
-  --color-chart-3: var(--chart-3);
-  --color-chart-4: var(--chart-4);
-  --color-chart-5: var(--chart-5);
-  --color-sidebar: var(--sidebar);
-  --color-sidebar-foreground: var(--sidebar-foreground);
-  --color-sidebar-primary: var(--sidebar-primary);
-  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
-  --color-sidebar-accent: var(--sidebar-accent);
-  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
-  --color-sidebar-border: var(--sidebar-border);
+  --font-heading: var(--font-sans);
+  --font-sans: 'Geist Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --color-foreground: var(--foreground);
+  --color-background: var(--background);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -73,47 +48,31 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
-/* Reference-fidelity experiment: optical surface roles rather than a literal
-   palette mapping. Ocean Light remains the preview default. */
 :root {
-  color-scheme: light;
-  --background: #F9FAFA;
-  --foreground: #082B44;
-  --card: #FFFEFC;
-  --card-foreground: var(--foreground);
-  --popover: #FFFFFF;
-  --popover-foreground: var(--foreground);
-  --primary: #064464;
-  --primary-foreground: #FFFFFF;
-  --secondary: #E0EFF7;
-  --secondary-foreground: #103F5D;
-  --muted: #E6EEF1;
-  --muted-foreground: #395A6D;
-  --accent: var(--muted);
-  --accent-foreground: var(--foreground);
-  --border: #CCDDE5;
-  --input: #78909E;
-  --ring: #0074AE;
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.145 0 0);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0 0);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0 0);
+  --primary: oklch(0.205 0 0);
+  --primary-foreground: oklch(0.985 0 0);
+  --secondary: oklch(0.97 0 0);
+  --secondary-foreground: oklch(0.205 0 0);
+  --muted: oklch(0.97 0 0);
+  --muted-foreground: oklch(0.556 0 0);
+  --accent: oklch(0.97 0 0);
+  --accent-foreground: oklch(0.205 0 0);
   --destructive: oklch(0.577 0.245 27.325);
-
-  /* Application statuses remain independent of the destructive action token. */
-  --success: #DDF2E4;
-  --success-foreground: #26714B;
-  --info: #DDECF7;
-  --info-foreground: #27689A;
-  --warning: #FFF1D2;
-  --warning-foreground: #885000;
-  --danger: #FFE5DF;
-  --danger-foreground: #AE2424;
-  --deadline-neutral: #E0EFF7;
-  --deadline-neutral-foreground: #103F5D;
-
-  --radius: 0.625rem;
+  --border: oklch(0.922 0 0);
+  --input: oklch(0.922 0 0);
+  --ring: oklch(0.708 0 0);
   --chart-1: oklch(0.87 0 0);
   --chart-2: oklch(0.556 0 0);
   --chart-3: oklch(0.439 0 0);
   --chart-4: oklch(0.371 0 0);
   --chart-5: oklch(0.269 0 0);
+  --radius: 0.625rem;
   --sidebar: oklch(0.985 0 0);
   --sidebar-foreground: oklch(0.145 0 0);
   --sidebar-primary: oklch(0.205 0 0);
@@ -124,63 +83,30 @@
   --sidebar-ring: oklch(0.708 0 0);
 }
 
-:root[data-theme="natural"] {
-  --background: #FAF7F0;
-  --foreground: #172E23;
-  --card: #FFFDF9;
-  --card-foreground: var(--foreground);
-  --popover: #FFFDF8;
-  --popover-foreground: var(--foreground);
-  /* Filled forest-green controls. */
-  --primary: #385740;
-  --primary-foreground: #FFFFFF;
-  --secondary: #E5EDDF;
-  --secondary-foreground: #38523C;
-  --muted: #ECEEE4;
-  --muted-foreground: #4B5C50;
-  --accent: var(--muted);
-  --accent-foreground: var(--foreground);
-  --border: #E5DDCF;
-  --input: #7F8978;
-  --ring: #426B48;
-  --deadline-neutral: #E5EDDF;
-  --deadline-neutral-foreground: #38523C;
-}
-
-:root.dark {
-  color-scheme: dark;
-  /* Near-black navy canvas with more saturated blue content surfaces. */
-  --background: #00192B;
-  --foreground: #F4F8FF;
-  --card: #05253C;
-  --card-foreground: var(--foreground);
-  --popover: #0A3049;
-  --popover-foreground: var(--foreground);
-  /* Luminous blue action against the deep navy canvas. */
-  --primary: #A8DAFD;
-  --primary-foreground: #03273F;
-  --secondary: #103F60;
-  --secondary-foreground: #E2F3FF;
-  --muted: #0C3049;
-  --muted-foreground: #BCD6E9;
-  --accent: var(--muted);
-  --accent-foreground: var(--foreground);
-  --border: #16415B;
-  --input: #537D96;
-  --ring: #A8DAFD;
+.dark {
+  --background: oklch(0.145 0 0);
+  --foreground: oklch(0.985 0 0);
+  --card: oklch(0.205 0 0);
+  --card-foreground: oklch(0.985 0 0);
+  --popover: oklch(0.205 0 0);
+  --popover-foreground: oklch(0.985 0 0);
+  --primary: oklch(0.922 0 0);
+  --primary-foreground: oklch(0.205 0 0);
+  --secondary: oklch(0.269 0 0);
+  --secondary-foreground: oklch(0.985 0 0);
+  --muted: oklch(0.269 0 0);
+  --muted-foreground: oklch(0.708 0 0);
+  --accent: oklch(0.269 0 0);
+  --accent-foreground: oklch(0.985 0 0);
   --destructive: oklch(0.704 0.191 22.216);
-
-  --success: #256446;
-  --success-foreground: #E7F8ED;
-  --info: #285F88;
-  --info-foreground: #E9F5FD;
-  --warning: #554213;
-  --warning-foreground: #FFE5A4;
-  --danger: #501D2B;
-  --danger-foreground: #FFE6E8;
-  --deadline-neutral: #103F60;
-  --deadline-neutral-foreground: #E2F3FF;
-
+  --border: oklch(1 0 0 / 10%);
+  --input: oklch(1 0 0 / 15%);
+  --ring: oklch(0.556 0 0);
+  --chart-1: oklch(0.87 0 0);
+  --chart-2: oklch(0.556 0 0);
+  --chart-3: oklch(0.439 0 0);
+  --chart-4: oklch(0.371 0 0);
+  --chart-5: oklch(0.269 0 0);
   --sidebar: oklch(0.205 0 0);
   --sidebar-foreground: oklch(0.985 0 0);
   --sidebar-primary: oklch(0.488 0.243 264.376);
@@ -189,30 +115,6 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(1 0 0 / 10%);
   --sidebar-ring: oklch(0.556 0 0);
-}
-
-:root[data-theme="natural"].dark {
-  /* The same canvas/surface distinction in pine green. */
-  --background: #071E16;
-  --foreground: #FAF8EE;
-  --card: #112D23;
-  --card-foreground: var(--foreground);
-  --popover: #1A382C;
-  --popover-foreground: var(--foreground);
-  --primary: #345F4D;
-  --primary-foreground: #FFFFFF;
-  --secondary: #294C40;
-  --secondary-foreground: #E4F0E7;
-  --muted: #1B392C;
-  --muted-foreground: #C6D8CC;
-  --accent: var(--muted);
-  --accent-foreground: var(--foreground);
-  --border: #284638;
-  /* Control boundaries remain visible against the dark green surfaces. */
-  --input: #718D7D;
-  --ring: #C0D6A9;
-  --deadline-neutral: #294738;
-  --deadline-neutral-foreground: #DCEBD3;
 }
 
 @layer base {
@@ -227,15 +129,7 @@
   }
 }
 
-/* The full variable face includes weight and optical-size axes. Let the browser
-   choose opsz from the rendered size; no fixed optical-size override. */
-.font-heading {
-  font-optical-sizing: auto;
-}
-
-/* Base UI's CSPProvider disables injected scrollbar styles. Keep the documented
-   class available through the official shadcn utility for aligned Selects. */
+/* Base UI's CSPProvider disables injected scrollbar styles. */
 .base-ui-disable-scrollbar {
   @apply no-scrollbar;
 }
-

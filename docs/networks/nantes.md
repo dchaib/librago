@@ -6,12 +6,12 @@ Current loans and current reservations are implemented. Product behavior is defi
 
 Implementation entry points:
 
-- [NantesLibraryConnector](../../src/Librago/Connectors/Nantes/NantesLibraryConnector.cs): session, requests, and loan pagination.
-- [NantesLoanParser](../../src/Librago/Connectors/Nantes/NantesLoanParser.cs): current loan extraction and validation.
-- [NantesLoanParserTests](../../tests/Librago.Tests/NantesLoanParserTests.cs): loan parser checks.
-- [NantesReservationParser](../../src/Librago/Connectors/Nantes/NantesReservationParser.cs): complete reservation snapshot validation and mapping.
-- [ReservationParserTests](../../tests/Librago.Tests/ReservationParserTests.cs): synthetic reservation parser checks.
-- [NantesCatalogueTitles](../../src/Librago/Connectors/Nantes/NantesCatalogueTitles.cs): shared optional title enrichment for loans and reservations.
+- [NantesLibraryConnector](../../server/src/Librago/Connectors/Nantes/NantesLibraryConnector.cs): session, requests, and loan pagination.
+- [NantesLoanParser](../../server/src/Librago/Connectors/Nantes/NantesLoanParser.cs): current loan extraction and validation.
+- [NantesLoanParserTests](../../server/tests/Librago.Tests/NantesLoanParserTests.cs): loan parser checks.
+- [NantesReservationParser](../../server/src/Librago/Connectors/Nantes/NantesReservationParser.cs): complete reservation snapshot validation and mapping.
+- [ReservationParserTests](../../server/tests/Librago.Tests/ReservationParserTests.cs): synthetic reservation parser checks.
+- [NantesCatalogueTitles](../../server/src/Librago/Connectors/Nantes/NantesCatalogueTitles.cs): shared optional title enrichment for loans and reservations.
 
 ## Access and session
 

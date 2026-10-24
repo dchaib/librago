@@ -12,7 +12,9 @@ connect-src 'self'; img-src 'self'; font-src 'self'; object-src 'none';
 base-uri 'none'; frame-ancestors 'none'; form-action 'self'
 ```
 
-The policy excludes blanket `unsafe-inline`. Base UI's CSP provider disables style-element injection. Application components, including dialog/popover portals, focus behavior, and scrolling, operate under this policy in both themes and light/dark modes. Development Vite/HMR allowances are confined to development.
+The policy excludes blanket `unsafe-inline`. The React entry point wraps the app in Base UI's `CSPProvider disableStyleElements`, with the documented scrollbar class supplied by external CSS through shadcn's `no-scrollbar` utility. The [official provider guidance](https://base-ui.com/react/utils/csp-provider) distinguishes injected style elements from client-side JavaScript style assignments; the provider does not replace the host's CSP or require invented nonce handling.
+
+Application components, including dialog/select portals, focus behavior, and scrolling, must operate under this policy in both palettes and light/dark modes. A local static-host probe can verify the frontend integration but does not establish production acceptance; the [deployment checklist](../deployment/validation.md#browser-security) covers the actual host. Development Vite/HMR allowances are confined to development.
 
 Fonts are self-hosted. Provider content is untrusted and rendered as text, never interpreted as HTML or executable content.
 

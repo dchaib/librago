@@ -6,11 +6,11 @@ Current loans and current reservations are implemented. Product behavior is defi
 
 Implementation entry points:
 
-- [NozayLibraryConnector](../../src/Librago/Connectors/Nozay/NozayLibraryConnector.cs): browser session, account count, and loan-page extraction.
-- [NozayLoanRowParser](../../src/Librago/Connectors/Nozay/NozayLoanRowParser.cs): column mapping, borrower aliases, and loan identity.
-- [NozayLibraryConnectorTests](../../tests/Librago.Tests/NozayLibraryConnectorTests.cs) and [NozayLoanRowParserTests](../../tests/Librago.Tests/NozayLoanRowParserTests.cs): current extraction and parser checks.
-- [NozayLibraryConnector.Reservations](../../src/Librago/Connectors/Nozay/NozayLibraryConnector.Reservations.cs): reservation summary, scoped navigation, and list extraction.
-- [NozayReservationRowParser](../../src/Librago/Connectors/Nozay/NozayReservationRowParser.cs) and [ReservationParserTests](../../tests/Librago.Tests/ReservationParserTests.cs): reservation mapping and synthetic parser checks.
+- [NozayLibraryConnector](../../server/src/Librago/Connectors/Nozay/NozayLibraryConnector.cs): browser session, account count, and loan-page extraction.
+- [NozayLoanRowParser](../../server/src/Librago/Connectors/Nozay/NozayLoanRowParser.cs): column mapping, borrower aliases, and loan identity.
+- [NozayLibraryConnectorTests](../../server/tests/Librago.Tests/NozayLibraryConnectorTests.cs) and [NozayLoanRowParserTests](../../server/tests/Librago.Tests/NozayLoanRowParserTests.cs): current extraction and parser checks.
+- [NozayLibraryConnector.Reservations](../../server/src/Librago/Connectors/Nozay/NozayLibraryConnector.Reservations.cs): reservation summary, scoped navigation, and list extraction.
+- [NozayReservationRowParser](../../server/src/Librago/Connectors/Nozay/NozayReservationRowParser.cs) and [ReservationParserTests](../../server/tests/Librago.Tests/ReservationParserTests.cs): reservation mapping and synthetic parser checks.
 
 ## Access and session
 

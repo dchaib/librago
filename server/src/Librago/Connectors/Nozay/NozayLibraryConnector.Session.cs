@@ -10,7 +10,7 @@ public sealed partial class NozayLibraryConnector
     private const string LoansUrl = "https://www.cc-nozay-bibliotheques.fr/abonne/prets/id_profil/1";
     private static readonly Action<ILogger, Exception?> LogMissingChromium = LoggerMessage.Define(
         LogLevel.Warning, new EventId(1203),
-        "The Chromium browser required by Nozay is not installed for this Playwright version. Run: pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium (without --only-shell).");
+        "The Chromium browser required by Nozay is not installed for this Playwright version. Run from server/: pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium (without --only-shell).");
 
     internal static void RequireChromiumExecutable(string executablePath, ILogger diagnosticLogger)
     {

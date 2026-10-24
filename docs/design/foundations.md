@@ -4,7 +4,7 @@
 
 This document records the current visual identity choices for Librago. It complements the durable guidance in [principles.md](principles.md).
 
-The palettes and typefaces below are design references, not a prescribed CSS token schema, component API, or list of components to build. Names such as `color-brand` describe visual roles; implementation may map them onto the existing conventions of the chosen UI tools rather than exposing matching variables one for one.
+The reference palettes establish Librago's visual direction; functional theme values are implementation choices that may evolve as real screens are designed.
 
 Other details (control dimensions, spacing, radius, shadows, motion and component variants) should initially follow the UI toolkit's conventions. Adjust them only when an actual screen demonstrates a visual, usability or accessibility need. Do not build a separate component system to reproduce hypothetical design specifications.
 
@@ -14,10 +14,10 @@ The [brand asset guide](../../assets/brand/README.md) defines the logo artwork a
 
 | Role | Current choice | Fallback stack |
 | --- | --- | --- |
-| Heading typeface | Playfair Display | Georgia, "Times New Roman", serif |
+| Heading/editorial typeface | Source Serif 4 | Georgia, "Times New Roman", serif |
 | Interface typeface | Inter | ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif |
 
-Use the interface typeface for ordinary UI, including controls and dense information. Use the heading typeface selectively to give page and major section headings character, without compromising scanability.
+Use the interface typeface for ordinary UI, including controls and dense information. Use the heading/editorial typeface selectively for page and major section headings and item titles, without compromising scanability. Both variable fonts are self-hosted.
 
 The two themes currently share the same typefaces. Specific weights, type sizes, line heights and responsive changes can follow the UI toolkit defaults until tested in actual layouts.
 
@@ -25,146 +25,57 @@ Meaningful text should wrap naturally. Truncate only when the space constraint i
 
 ## Themes
 
-Librago has two visual themes, each in light and dark mode:
+Librago has two visual themes, each available in light and dark modes:
 
-- **Ocean:** deep blue and petrol; calm, refined, slightly warm. Its dark mode remains visibly blue rather than neutral black.
-- **Natural:** petrol green, sage and warm sand; organic, mature, slightly autumnal. Its dark mode remains visibly green rather than neutral black.
+- **Ocean:** night blue and deep teal, balanced by warm ivory and sand, with restrained copper and coral accents. Calm, refined and slightly warm. Its dark mode remains visibly blue rather than neutral black.
+- **Natural:** pine green and sage, softened by light ivory and complemented by warm, earthy tones of terracotta, ochre and brown. Organic, mature and slightly autumnal. Its dark mode remains visibly green rather than neutral black.
 
-The four combinations share the same layout, component behavior and semantic state meanings. Theme changes should not require separate page implementations.
+### Approved reference palettes
 
-The **reference palettes** below preserve the original visual direction of each theme. They help guide complementary color choices, but do not prescribe extra design tokens or override the current semantic colors for light and dark modes.
+These palettes establish the visual direction. They are not complete functional themes, mandatory CSS tokens, or a requirement to use every color on every screen.
 
-### Palette roles
+#### Ocean
 
-The color roles describe how values are meant to be used, irrespective of CSS variable or utility names.
-
-| Role | Meaning |
+| Color | Reference |
 | --- | --- |
-| `color-background` | Main page background |
-| `color-surface` | Standard content surface |
-| `color-surface-raised` | Elevated surface, when emphasis is warranted |
-| `color-text-primary` | Main text |
-| `color-text-secondary` | Supporting text and metadata |
-| `color-border` | Subtle structural separation |
-| `color-control-border` | Visible boundary for interactive fields where needed |
-| `color-brand` | Dominant theme-specific action color |
-| `color-brand-hover` | Stronger brand treatment on hover |
-| `color-on-brand` | Text and icons placed on a filled brand surface |
-| `color-interactive` | Interactive text and icons on ordinary surfaces |
-| `color-accent` | Restrained secondary visual accent, not automatically a text color |
-| `color-focus-ring` | Visible keyboard focus indicator |
+| Night blue | `#0A2E45` |
+| Deep teal | `#156E7A` |
+| Warm ivory | `#F4EBD7` |
+| Sand | `#D6C9A8` |
+| Copper | `#C97F4F` |
+| Coral | `#E16F5B` |
 
-`color-brand`, `color-interactive` and `color-accent` serve distinct visual purposes. In particular, `color-accent` should not be used for body text or meaningful icons unless sufficient contrast against the intended background has been verified.
+#### Natural
 
-### Ocean
+| Color | Reference |
+| --- | --- |
+| Pine green | `#2F6F5A` |
+| Sage | `#A7B89A` |
+| Light ivory | `#F6F1E7` |
+| Terracotta | `#C96F4F` |
+| Ochre | `#D9A658` |
+| Warm brown | `#8B6F56` |
 
-#### Light mode
+### Current functional themes
 
-| Role | Value | Intent |
-| --- | --- | --- |
-| `color-background` | `#F6F1E8` | warm ivory page background |
-| `color-surface` | `#FFFDF8` | primary content surface |
-| `color-surface-raised` | `#FFFFFF` | elevated surface |
-| `color-text-primary` | `#102A3A` | deep blue text |
-| `color-text-secondary` | `#55646D` | muted metadata |
-| `color-border` | `#D8D5CD` | subtle structural border |
-| `color-control-border` | `#7D8990` | interactive control boundary |
-| `color-brand` | `#0A4660` | primary Ocean interaction color |
-| `color-brand-hover` | `#08384D` | stronger interaction state |
-| `color-on-brand` | `#FFFDF8` | foreground on brand surfaces |
-| `color-interactive` | `#0A4660` | interactive foreground on light surfaces |
-| `color-accent` | `#157687` | secondary petrol accent |
-| `color-focus-ring` | `#0A4660` | focus indication |
+The four combinations below describe the current implementation in [`web/src/index.css`](../../web/src/index.css), validated on the Loans page. The themes share the same application structure and semantic state meanings. In the surface column, values are the card and popover colors, respectively.
 
-#### Dark mode
+| Theme | Page background / text | Content surfaces (card / popover) | Primary / primary foreground | Secondary surface | Muted text |
+| --- | --- | --- | --- | --- | --- |
+| Ocean Light | `#F9FAFA` / `#082B44` | `#FFFEFC` / `#FFFFFF` | `#064464` / `#FFFFFF` | `#E0EFF7` | `#395A6D` |
+| Ocean Dark | `#00192B` / `#F4F8FF` | `#05253C` / `#0A3049` | `#A8DAFD` / `#03273F` | `#103F60` | `#BCD6E9` |
+| Natural Light | `#FAF7F0` / `#172E23` | `#FFFDF9` / `#FFFDF8` | `#385740` / `#FFFFFF` | `#E5EDDF` | `#4B5C50` |
+| Natural Dark | `#071E16` / `#FAF8EE` | `#112D23` / `#1A382C` | `#345F4D` / `#FFFFFF` | `#294C40` | `#C6D8CC` |
 
-| Role | Value | Intent |
-| --- | --- | --- |
-| `color-background` | `#082A40` | deep blue page background |
-| `color-surface` | `#0D344C` | primary content surface |
-| `color-surface-raised` | `#123D56` | elevated surface |
-| `color-text-primary` | `#F8F3E9` | warm light foreground |
-| `color-text-secondary` | `#B9C6CE` | muted foreground |
-| `color-border` | `#2B5065` | subtle blue structural border |
-| `color-control-border` | `#7B99AA` | interactive control boundary |
-| `color-brand` | `#4C9FBA` | primary interaction color |
-| `color-brand-hover` | `#61B1CA` | stronger interaction state |
-| `color-on-brand` | `#082A40` | foreground on brand surfaces |
-| `color-interactive` | `#6CC5D9` | interactive foreground on dark surfaces |
-| `color-accent` | `#64B3B8` | secondary petrol / teal accent |
-| `color-focus-ring` | `#61B1CA` | focus indication |
+The frontend follows shadcn's semantic styling conventions. Theme colors are adjusted for readable, accessible interactions, with semantic theme variables preferred over generated-component changes. Targeted component changes remain appropriate when a real requirement justifies them.
 
-#### Reference palette
+For filled high-emphasis actions, `primary` is the background and `primary-foreground` is its contrasting foreground. Treat them as a pair. Contrast against button text does not guarantee that `primary` itself contrasts sufficiently with every page or card background, so do not assume `text-primary` is suitable for standalone text links.
 
-The original Ocean palette combines deep blues with warm neutrals and restrained accents. Its supporting tones prevent the theme from feeling monochromatic.
-
-| Color | Reference | Contribution |
-| --- | --- | --- |
-| Night blue | `#0A2E45` | Core deep blue |
-| Deep petrol | `#156E7A` | Core blue-green |
-| Warm ivory | `#F4EBD7` | Warm light neutral |
-| Sand | `#D6C9A8` | Supporting neutral |
-| Copper | `#C97F4F` | Warm complementary accent |
-| Muted coral | `#E16F5B` | Restrained contrasting accent |
-
-These reference shades guide the artistic direction rather than defining mandatory component colors. Use complementary tones selectively, without competing with essential content or semantic status colors; check contrast in their actual context.
-
-### Natural
-
-#### Light mode
-
-| Role | Value | Intent |
-| --- | --- | --- |
-| `color-background` | `#F4EFE5` | light sand page background |
-| `color-surface` | `#FBF8F0` | warm primary surface |
-| `color-surface-raised` | `#FFFDF8` | elevated surface |
-| `color-text-primary` | `#26332B` | deep green-neutral text |
-| `color-text-secondary` | `#53605A` | muted metadata |
-| `color-border` | `#D8D0C3` | warm structural border |
-| `color-control-border` | `#7D877F` | interactive control boundary |
-| `color-brand` | `#326B4B` | primary green interaction color |
-| `color-brand-hover` | `#28583E` | stronger interaction state |
-| `color-on-brand` | `#FFFDF8` | foreground on brand surfaces |
-| `color-interactive` | `#326B4B` | interactive foreground on light surfaces |
-| `color-accent` | `#8BA58F` | secondary sage accent |
-| `color-focus-ring` | `#326B4B` | focus indication |
-
-#### Dark mode
-
-| Role | Value | Intent |
-| --- | --- | --- |
-| `color-background` | `#123C2D` | deep green / petrol page background |
-| `color-surface` | `#194735` | primary content surface |
-| `color-surface-raised` | `#20503D` | elevated surface |
-| `color-text-primary` | `#F8F2E7` | warm light foreground |
-| `color-text-secondary` | `#C2CEC5` | muted foreground |
-| `color-border` | `#365E4B` | subtle green structural border |
-| `color-control-border` | `#7C9C8A` | interactive control boundary |
-| `color-brand` | `#69A27C` | primary interaction color |
-| `color-brand-hover` | `#7BB28C` | stronger interaction state |
-| `color-on-brand` | `#10261B` | foreground on brand surfaces |
-| `color-interactive` | `#9BC6A4` | interactive foreground on dark surfaces |
-| `color-accent` | `#A5BA99` | lighter sage accent |
-| `color-focus-ring` | `#7BB28C` | focus indication |
-
-#### Reference palette
-
-The original Natural palette combines petrol green, soft foliage tones and warm, slightly autumnal accents. Those complementary colors are important to its character, beyond the green functional surfaces.
-
-| Color | Reference | Contribution |
-| --- | --- | --- |
-| Petrol green | `#2F6F5A` | Core green |
-| Sage | `#A7B89A` | Soft supporting green |
-| Light sand | `#F6F1E7` | Warm light neutral |
-| Terracotta | `#C96F4F` | Warm earthy accent |
-| Ochre | `#D9A658` | Golden complementary accent |
-| Soft brown | `#8B6F56` | Muted earthy accent |
-
-These reference shades guide the artistic direction rather than defining mandatory component colors. Use complementary tones selectively, without competing with essential content or semantic status colors; check contrast in their actual context.
+Prefer underlined `foreground` text for links unless a specific treatment has been verified on its actual backgrounds. No separate interactive-text token is defined; reconsider this convention if future application requirements justify one. Existing shadcn button variants remain the shared defaults.
 
 ## Semantic status colors
 
-The following four meanings are shared across the themes: success, information, warning and danger. These colors are for **application state**, not decoration or the visual styling of destructive buttons.
+Success, information, warning and danger are shared meanings across themes. The pairs below are the current preview values and remain provisional; they are for **application state**, not decoration or the visual styling of destructive buttons.
 
 ### Light mode
 
@@ -172,8 +83,8 @@ The following four meanings are shared across the themes: success, information, 
 | --- | --- | --- |
 | `success` | `#DDF2E4` | `#26714B` |
 | `info` | `#DDECF7` | `#27689A` |
-| `warning` | `#F8EAC9` | `#8C5400` |
-| `danger` | `#F7DADA` | `#963737` |
+| `warning` | `#FFF1D2` | `#885000` |
+| `danger` | `#FFE5DF` | `#AE2424` |
 
 ### Dark mode
 
@@ -181,10 +92,10 @@ The following four meanings are shared across the themes: success, information, 
 | --- | --- | --- |
 | `success` | `#256446` | `#E7F8ED` |
 | `info` | `#285F88` | `#E9F5FD` |
-| `warning` | `#806019` | `#FFF2C2` |
-| `danger` | `#853944` | `#FFE9E9` |
+| `warning` | `#554213` | `#FFE5A4` |
+| `danger` | `#501D2B` | `#FFE6E8` |
 
-The dark-mode variants intentionally use stronger filled backgrounds than their light-mode equivalents.
+The dark-mode variants use darker filled backgrounds with light foregrounds.
 
 Use these as foreground/background pairs for compact status treatments. They are not a general-purpose palette for arbitrary text or controls.
 

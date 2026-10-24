@@ -99,7 +99,9 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         Assert.DoesNotContain("Nozay Beta", combined);
         Assert.Contains("Lecteur Beta", combined);
         Assert.Contains("Centre — Bibliothèque municipale de Nantes", combined);
-        Assert.Contains("Date estimée à partir du premier relevé", combined);
+        Assert.Contains("href=\"#estimated-dates\"", combined);
+        Assert.Contains("id=\"estimated-dates\"", combined);
+        Assert.Contains("Date estimée", combined);
         Assert.Contains("Retrait au plus tard le", combined);
         foreach (var filter in new[] { "SelectedNetwork=nantes", "SelectedBorrower=Lecteur%20Beta",
                      "SelectedStatus=Suspended", "SelectedPickupLibrary=" + Uri.EscapeDataString(libraryKey) })
@@ -226,7 +228,8 @@ public sealed class ReservationIntegrationTests : IAsyncLifetime
         Assert.Equal(clock.Now.AddHours(-1), state.LastCompleteSuccessAt);
         Assert.Contains(await Database.GetReservationsAsync(CancellationToken.None), r => r.Item.Title == "Initial");
         var never = WebUtility.HtmlDecode(await client.GetStringAsync("/Reservations", TestContext.Current.CancellationToken));
-        Assert.Contains("n’ont pas encore pu être mises à jour pour tous les comptes", never);
+        Assert.Contains("La dernière synchronisation est partielle.", never);
+        Assert.Contains("Les réservations précédentes des comptes en échec sont conservées.", never);
         var filtered = WebUtility.HtmlDecode(await client.GetStringAsync("/Reservations?SelectedStatus=Suspended", TestContext.Current.CancellationToken));
         Assert.Contains("Aucune réservation ne correspond à ces filtres", filtered);
         foreach (var network in new[] { "Nantes", "Nozay" })

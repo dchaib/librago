@@ -2,8 +2,6 @@
 
 Librago's React frontend, built with TypeScript, Vite, React Router, Tailwind CSS 4, and shadcn/ui on Base UI. The interface is in French; code and documentation are in English.
 
-The current frontend is a standalone demonstration. The Loans page uses synthetic data; Home and Reservations are placeholders. No backend connection or API proxy is configured in Vite yet. See the [root README](../README.md#development) for the existing .NET application workflows and the [web architecture](../docs/architecture/web.md) for the target hosting model.
-
 ## Development
 
 Use the Node.js version specified in the repository root's `.node-version` and npm. Run the following commands from `web/`:
@@ -13,7 +11,7 @@ npm ci
 npm run dev
 ```
 
-Open the URL printed by Vite and navigate to `/loans` to view the demonstration.
+In a second terminal, run `dotnet run --project server/src/Librago` from the repository root after configuring the backend as described in the root README. The launch profile uses `Development` and listens on `http://127.0.0.1:5080`. Vite listens on loopback and proxies `/api` to that address. No CORS configuration is required.
 
 | Command | Purpose |
 | --- | --- |
@@ -25,7 +23,7 @@ Open the URL printed by Vite and navigate to `/loans` to view the demonstration.
 | `npm run preview` | Serve the built assets locally after a build. |
 | `npm run format` | Format TypeScript and TSX files with Prettier, including Tailwind class ordering. |
 
-The tests cover date calculations, severity thresholds, sorting, and URL filters. They do not verify browser layout or interactions. Check the Loans page at mobile and desktop widths, in light and dark modes, when changing its presentation.
+The tests cover date calculations, severity thresholds, sorting, URL filters, API decoding, HTTP failures and data-confidence rules. They do not verify browser layout or interactions. Check the Loans page at mobile and desktop widths, in light and dark modes, when changing its presentation.
 
 ## Source layout
 
@@ -38,11 +36,15 @@ The tests cover date calculations, severity thresholds, sorting, and URL filters
 | `src/components/ui/` | Editable shadcn/ui primitives. |
 | `src/index.css` | Tailwind imports, shadcn theme variables, fonts, and base styles. |
 | `src/loans/LoansPage.tsx` | Loan page composition, URL filters, and the mobile filter dialog. |
+| `src/loans/loan-data-states.tsx` | Read errors, coverage alerts, and empty states. |
+| `src/loans/loan-synchronization-status.tsx` | Per-network synchronization times and confidence indicators. |
 | `src/loans/loan-filters.tsx` | Desktop and mobile filter controls. |
 | `src/loans/loan-list.tsx` | Mobile loan list, desktop table, covers, and deadlines. |
 | `src/loans/loans.ts` | Pure domain types, date calculations, sorting, and filtering. |
 | `src/loans/use-calendar-date.ts` | Calendar-day updates in the application time zone. |
-| `src/loans/mock-loans.ts` | Synthetic demonstration data. |
+| `src/loans/loans-api.ts` | API contract, response validation and data-confidence rules. |
+| `src/loans/use-loans.ts` | Cancellable reads on entry/foreground return, five-minute throttling and preserved data on errors. |
+| `tests/fixtures/mock-loans.ts` | Synthetic test data; never imported by the application. |
 | `tests/loans.test.ts` | Domain tests. |
 | `public/` | Static assets served from the site root. |
 

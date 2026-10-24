@@ -187,7 +187,7 @@ At the bottom of the list page, show one line per network with the last complete
 
 ## Known data coverage
 
-Known persistence limitation: item records and network synchronization state do not fully persist successful empty versus missing snapshots at account/collection level. That gap must be addressed before counts and empty states can reliably follow the rules below; schema design is separate work.
+Existing data without evidence of a complete successful account snapshot remains of unknown coverage until a successful synchronization establishes it.
 
 For each configured account and collection, distinguish a complete successful snapshot from the absence of any usable snapshot for that account and network. A successful empty snapshot is known data; the presence or absence of item records alone cannot establish whether an account has synchronized successfully. Preserve this distinction across later failed attempts and application restarts.
 

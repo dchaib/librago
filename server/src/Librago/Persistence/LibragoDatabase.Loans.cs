@@ -39,8 +39,14 @@ public sealed partial class LibragoDatabase
         await using (var delete = connection.CreateCommand())
         {
             delete.Transaction = transaction;
-            delete.CommandText = "DELETE FROM loans WHERE account_id = $accountId;";
+            // Account ids are unique across networks. Replacing their items also
+            // invalidates coverage for any network they previously belonged to.
+            delete.CommandText = """
+                DELETE FROM loans WHERE account_id = $accountId;
+                DELETE FROM loan_account_coverage WHERE account_id = $accountId AND network_key <> $network;
+                """;
             delete.Parameters.AddWithValue("$accountId", account.AccountId);
+            delete.Parameters.AddWithValue("$network", network.Key);
             await delete.ExecuteNonQueryAsync(cancellationToken);
         }
 
@@ -56,15 +62,35 @@ public sealed partial class LibragoDatabase
                 cancellationToken);
         }
 
+        await using (var coverage = connection.CreateCommand())
+        {
+            coverage.Transaction = transaction;
+            coverage.CommandText = """
+                INSERT INTO loan_account_coverage (network_key, account_id, last_success_at)
+                VALUES ($network, $account, $at)
+                ON CONFLICT(network_key, account_id) DO UPDATE SET last_success_at = excluded.last_success_at;
+                """;
+            coverage.Parameters.AddWithValue("$network", network.Key);
+            coverage.Parameters.AddWithValue("$account", account.AccountId);
+            coverage.Parameters.AddWithValue("$at", FormatTimestamp(attemptedAt));
+            await coverage.ExecuteNonQueryAsync(cancellationToken);
+        }
         await transaction.CommitAsync(cancellationToken);
     }
 
 
     public async Task<IReadOnlyList<Loan>> GetLoansAsync(CancellationToken cancellationToken)
     {
-        var loans = new List<Loan>();
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await ReadLoansAsync(connection, null, cancellationToken);
+    }
+
+    private static async Task<IReadOnlyList<Loan>> ReadLoansAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var loans = new List<Loan>();
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             SELECT

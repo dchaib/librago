@@ -1,5 +1,6 @@
 using System.Globalization;
 using Librago.Synchronization;
+using Microsoft.Data.Sqlite;
 
 namespace Librago.Persistence;
 
@@ -56,9 +57,16 @@ public sealed partial class LibragoDatabase
     public async Task<IReadOnlyList<NetworkSynchronizationState>> GetLoanNetworkStatesAsync(
         CancellationToken cancellationToken)
     {
-        var states = new List<NetworkSynchronizationState>();
         await using var connection = await OpenConnectionAsync(cancellationToken);
+        return await ReadLoanNetworkStatesAsync(connection, null, cancellationToken);
+    }
+
+    private static async Task<IReadOnlyList<NetworkSynchronizationState>> ReadLoanNetworkStatesAsync(
+        SqliteConnection connection, SqliteTransaction? transaction, CancellationToken cancellationToken)
+    {
+        var states = new List<NetworkSynchronizationState>();
         await using var command = connection.CreateCommand();
+        command.Transaction = transaction;
         command.CommandText =
             """
             SELECT

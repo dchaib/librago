@@ -1,4 +1,4 @@
-import { addDays, calendarDate, type Loan, type Option } from "./loans.ts"
+import { addDays, type Loan, type Option } from "../../src/loans/loans.ts"
 
 export const networks: Option[] = [
   { id: "rivages", name: "Les Rivages" },
@@ -10,8 +10,7 @@ export const borrowers: Option[] = [
   { id: "lou", name: "Lou" },
 ]
 
-// Entirely fictional titles, authors, borrowers and networks. Dates are anchored
-// once per page load so an open page really ages when the calendar day changes.
+// Entirely fictional titles, authors, borrowers and networks.
 export function createMockLoans(today: string): Loan[] {
   const titles = [
     "La maison des marées",
@@ -53,17 +52,8 @@ export function createMockLoans(today: string): Loan[] {
     id: `demo-${index + 1}`,
     title,
     author: index % 5 === 0 ? undefined : authors[index % authors.length],
-    cover: index % 5 === 2 ? undefined : `/covers/demo-${(index % 4) + 1}.svg`,
     networkId: networks[index % 2].id,
     borrowerId: borrowers[index % 3].id,
     dueDate: addDays(today, offsets[index]),
   }))
 }
-const loadedAt = new Date()
-export const mockLoans = createMockLoans(calendarDate(loadedAt))
-export const mockSynchronizations = networks.map((network, index) => ({
-  ...network,
-  lastSuccess: new Date(
-    loadedAt.getTime() - (index + 1) * 17 * 60000
-  ).toISOString(),
-}))

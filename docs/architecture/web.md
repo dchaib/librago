@@ -63,17 +63,3 @@ Librago design documentation
 [Principles](../design/principles.md) and [visual foundations](../design/foundations.md) define Librago's visual direction. Use the default conventions and accessible interaction primitives of shadcn/ui, Base UI and Tailwind CSS 4 wherever practical. Adapt tokens or components only for demonstrated screen or product needs; component APIs and implementations are defined in the frontend, not in separate design specifications. Feature documentation owns domain-specific behaviors and responsive compositions.
 
 Technical token/theme mappings and component recipes translate these design roles into the frontend. The design-system references describe their visual and interaction semantics.
-
-### shadcn foundation
-
-`web/components.json` selects **base-nova**, Base UI, React SPA (`rsc: false`), TypeScript, Tailwind CSS 4, CSS variables, Lucide, and default/subtle menus without RTL. The generator base color is **Neutral**; it supplies initial semantic roles, not the runtime Ocean/Natural palettes. Vite's Tailwind plugin and the TypeScript/Vite `@/` aliases complete the build integration; Tailwind 4 needs no JavaScript Tailwind config.
-
-`web/src/index.css` imports Tailwind, `tw-animate-css`, then `shadcn/tailwind.css`. The latter supplies shared state variants and utilities; Nova component recipes are already expanded into `components/ui`, so no separate Nova stylesheet is needed. Semantic colors and Nova's radius scale are exposed through `@theme inline`, with base border/outline, body, and font styles in `@layer base`. Application CSS remains separate.
-
-`AppearanceControls` is the single owner of appearance state and document-root updates. It follows the shadcn `.dark` convention for mode, independently of `data-theme="ocean" | "natural"` for palette. Root variables also reach body portals. Ocean Light remains the initial default; state survives SPA navigation in the shared shell and resets on full reload. No system mode, storage, or additional ThemeProvider context is needed for the current controls. Keep existing font/color values and domain status pairs (`warning`, `danger`, `deadline-neutral`, etc.) separate from shadcn action colors such as `destructive`. Unused chart/sidebar roles retain their generated defaults until needed.
-
-Start from official shadcn components and compositions matching the project's configuration. Customize through semantic theme tokens and supported component APIs first. Introduce application-specific CSS or compositions only for justified requirements. Do not recreate existing toolkit functionality through custom styles or native controls without a reason.
-
-Generated implementations live in `web/src/components/ui`; pages and domain compositions live outside that directory. Existing application overrides do not establish new primitive defaults. See the [frontend development guide](../../web/README.md#adding-ui-components) for adding components and validating the foundation.
-
-Official references: [Vite installation](https://ui.shadcn.com/docs/installation/vite), [components.json](https://ui.shadcn.com/docs/components-json), [CLI](https://ui.shadcn.com/docs/cli), [theming](https://ui.shadcn.com/docs/theming), [Vite dark mode](https://ui.shadcn.com/docs/dark-mode/vite), and the [Base Nova initialization registry](https://ui.shadcn.com/r/styles/base-nova/index.json). The dark-mode example's context, system preference, and persistence are illustrative application choices.

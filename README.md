@@ -29,11 +29,14 @@ See [`docs/README.md`](docs/README.md) for an overview of the project documentat
 
 For the standalone React frontend, see the [frontend development guide](web/README.md).
 
-Librago requires the .NET 10 SDK. The Nozay connector also requires a Playwright Chromium installation.
+Librago requires the .NET 10 SDK version selected by the root `global.json`. The Nozay connector also requires a Playwright Chromium installation.
 
 After updating Playwright dependencies, rerun the Chromium installation command below for the new build. Installing with `--only-shell` is sufficient for headless tests, but not for the Nozay connector, which uses a visible browser.
 
+Run the following commands from the repository root:
+
 ```powershell
+cd server
 Copy-Item src/Librago/appsettings.Local.example.json src/Librago/appsettings.Local.json
 dotnet restore Librago.slnx
 dotnet build Librago.slnx
@@ -41,7 +44,7 @@ pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium
 dotnet run --project src/Librago
 ```
 
-Edit the ignored `src/Librago/appsettings.Local.json` file with local account configuration before starting the application. Never commit this file or paste its contents into an issue.
+Edit the ignored `server/src/Librago/appsettings.Local.json` file with local account configuration before starting the application. Never commit this file or paste its contents into an issue.
 
 This file is intentionally excluded from build and container artifacts. Supply it as a read-only external configuration file when deploying the container.
 
@@ -51,16 +54,16 @@ For a family Nozay account, configure that parent account only. Its optional `Bo
 
 At startup, the application synchronizes when there is no previous attempt or when the previous attempt is due, then every six hours by default. The interval can be changed with `Librago:SynchronizationInterval` using standard ASP.NET Core configuration.
 
-Run the automated checks with:
+Run the automated checks from `server/`. The root `global.json` selects the SDK and test runner:
 
 ```powershell
 dotnet format Librago.slnx --verify-no-changes
-dotnet test Librago.slnx
+dotnet test --solution Librago.slnx
 ```
 
 ## Container
 
-For a local container deployment, fill in `src/Librago/appsettings.Local.json`, then run:
+For a local container deployment, fill in `server/src/Librago/appsettings.Local.json`, then run from the repository root:
 
 ```text
 docker compose up --build -d

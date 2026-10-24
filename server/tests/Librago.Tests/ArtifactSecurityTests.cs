@@ -6,7 +6,7 @@ public sealed class ArtifactSecurityTests
     public void LocalConfigurationIsExplicitlyExcludedFromBuildAndDockerArtifacts()
     {
         var repositoryRoot = FindRepositoryRoot();
-        var project = File.ReadAllText(Path.Combine(repositoryRoot, "src", "Librago", "Librago.csproj"));
+        var project = File.ReadAllText(Path.Combine(repositoryRoot, "server", "src", "Librago", "Librago.csproj"));
         var dockerIgnore = File.ReadAllText(Path.Combine(repositoryRoot, ".dockerignore"));
 
         Assert.Contains("Content Update=\"appsettings.Local.json\"", project, StringComparison.Ordinal);
@@ -19,7 +19,7 @@ public sealed class ArtifactSecurityTests
     {
         for (var directory = new DirectoryInfo(AppContext.BaseDirectory); directory is not null; directory = directory.Parent)
         {
-            if (File.Exists(Path.Combine(directory.FullName, "Librago.slnx")))
+            if (File.Exists(Path.Combine(directory.FullName, "server", "Librago.slnx")))
             {
                 return directory.FullName;
             }

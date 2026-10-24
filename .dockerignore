@@ -5,7 +5,7 @@
 .vscode
 **/bin
 **/obj
-TestResults
+**/TestResults
 **/data/
 **/appsettings.Local.json
 **/*.db

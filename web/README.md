@@ -6,7 +6,7 @@ The current frontend is a standalone demonstration. The Loans page uses syntheti
 
 ## Development
 
-Use Node.js 24 or later and npm. Run the following commands from `web/`:
+Use the Node.js version specified in the repository root's `.node-version` and npm. Run the following commands from `web/`:
 
 ```bash
 npm ci

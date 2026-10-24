@@ -6,15 +6,15 @@ WORKDIR /source
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
     DOTNET_NOLOGO=1
 
-COPY Directory.Build.props Directory.Packages.props NuGet.Config global.json ./
-COPY src/Librago/Librago.csproj src/Librago/packages.lock.json src/Librago/
+COPY server/Directory.Build.props server/Directory.Packages.props server/NuGet.Config global.json ./
+COPY server/src/Librago/Librago.csproj server/src/Librago/packages.lock.json src/Librago/
 RUN --mount=type=cache,target=/root/.nuget/packages \
     dotnet restore src/Librago/Librago.csproj \
     --runtime linux-x64 \
     --property:SelfContained=true \
     --locked-mode
 
-COPY src/Librago/ src/Librago/
+COPY server/src/Librago/ src/Librago/
 RUN --mount=type=cache,target=/root/.nuget/packages \
     dotnet publish src/Librago/Librago.csproj \
     --configuration Release \

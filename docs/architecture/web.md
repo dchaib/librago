@@ -12,7 +12,9 @@ ASP.NET Core serves the compiled frontend assets and a same-origin application A
 │   ├── src/Librago/Librago.csproj
 │   ├── tests/Librago.Tests/Librago.Tests.csproj
 │   ├── Librago.slnx
-│   └── .NET tooling/configuration
+│   ├── Directory.Build.props
+│   ├── Directory.Packages.props
+│   └── NuGet.Config
 ├── web/
 │   ├── src/
 │   ├── package.json
@@ -20,10 +22,14 @@ ASP.NET Core serves the compiled frontend assets and a same-origin application A
 │   └── vite.config.ts
 ├── docs/
 ├── scripts/
+├── global.json
+├── .node-version
 ├── Dockerfile
 ├── compose.yaml
 └── README.md
 ```
+
+The root `global.json` selects the .NET SDK and test runner, and the root `.node-version` specifies the Node.js version for compatible version managers. Run .NET commands from `server/` and frontend commands from `web/`; Docker, Compose, and deployment validation scripts use the repository root. .NET commands can also run from the repository root with explicit paths, such as `dotnet test --solution server/Librago.slnx`.
 
 The repository has two physical toolchain boundaries. The .NET application and test projects are `Librago` and `Librago.Tests`, with `Librago.*` namespaces. Application responsibilities share one application project, and the root build coordinates the two toolchains without a monorepo orchestration framework.
 

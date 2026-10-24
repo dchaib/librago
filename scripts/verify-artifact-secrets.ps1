@@ -5,7 +5,8 @@ param(
 
 $ErrorActionPreference = "Stop"
 $repositoryRoot = Split-Path -Parent $PSScriptRoot
-$configurationPath = Join-Path $repositoryRoot "src/Librago/appsettings.Local.json"
+$serverRoot = Join-Path $repositoryRoot "server"
+$configurationPath = Join-Path $serverRoot "src/Librago/appsettings.Local.json"
 $taskRoot = Join-Path ([System.IO.Path]::GetTempPath()) ("librago-artifacts-" + [Guid]::NewGuid().ToString("N"))
 $publishPath = Join-Path $taskRoot "publish"
 $sentinel = "SYNTHETIC_ARTIFACT_SECRET_" + [Guid]::NewGuid().ToString("N")
@@ -19,15 +20,21 @@ try {
     "{ `"Librago`": { `"Sentinel`": `"$sentinel`" } }" |
         Set-Content -Path $configurationPath -NoNewline
 
-    & dotnet restore "$repositoryRoot/src/Librago/Librago.csproj" --locked-mode
-    if ($LASTEXITCODE -ne 0) {
-        throw "Restoring the application failed."
-    }
+    Push-Location -LiteralPath $serverRoot
+    try {
+        & dotnet restore src/Librago/Librago.csproj --locked-mode
+        if ($LASTEXITCODE -ne 0) {
+            throw "Restoring the application failed."
+        }
 
-    & dotnet publish "$repositoryRoot/src/Librago/Librago.csproj" `
-        --configuration Release --no-restore --output $publishPath
-    if ($LASTEXITCODE -ne 0) {
-        throw "Publishing the application failed."
+        & dotnet publish src/Librago/Librago.csproj `
+            --configuration Release --no-restore --output $publishPath
+        if ($LASTEXITCODE -ne 0) {
+            throw "Publishing the application failed."
+        }
+    }
+    finally {
+        Pop-Location
     }
 
     if (Test-Path -LiteralPath (Join-Path $publishPath "appsettings.Local.json")) {

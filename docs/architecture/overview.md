@@ -2,6 +2,8 @@
 
 Librago is a self-hosted application that consolidates a household's library loans and reservations across configured accounts and networks. This directory describes its accepted target architecture as a whole.
 
+Implementation follows the [roadmap](../product/roadmap.md): OIDC and application sessions remain part of the target architecture but are deferred beyond version 0.3. The React migration proceeds behind the deployment's existing Forward Auth protection.
+
 ## Application shape
 
 Librago is a modular monolith built as one ASP.NET Core application project. It serves the compiled React frontend and a same-origin application API, runs scheduled synchronization, and integrates with library providers through network-specific connectors. One application instance owns a persistent SQLite database.

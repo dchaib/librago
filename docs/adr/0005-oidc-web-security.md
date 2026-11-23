@@ -4,6 +4,8 @@
 
 Accepted
 
+Implementation is deferred in the [roadmap](../product/roadmap.md#later--cross-cutting-concerns), independently of version 0.3 and the React migration. This decision describes the target authentication architecture; current deployments continue to use their existing Forward Auth protection.
+
 ## Context
 
 Librago contains library account information shared within a household. Only explicitly authorized users should be able to access it, even when other users can authenticate through the same identity provider (IdP).

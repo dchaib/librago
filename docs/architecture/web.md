@@ -37,24 +37,23 @@ The root product build assembles both toolchains. Frontend dependencies use lock
 
 ## Hosting and routing contract
 
-A reverse proxy terminates public HTTPS and forwards requests to Librago while preserving the public origin. Compiled assets, API, and authentication endpoints share that origin, without a production cross-origin SPA/API requirement or corresponding CORS configuration. Cookies and antiforgery follow the [authentication contract](authentication.md).
+A reverse proxy terminates public HTTPS, protects the interface and API with Forward Auth, and forwards requests to Librago while preserving the public origin. Compiled assets and the API share that origin, without a production cross-origin SPA/API requirement or corresponding CORS configuration. Application-managed authentication is deferred; see the [access model](authentication.md).
 
 Only GET/HEAD requests for client document routes receive the SPA document. Routing reserves:
 
 - `/api/*` for the HTTP API;
-- `/auth/*` and OIDC callbacks for server authentication;
 - `/health` and other backend endpoints for the server;
 - static-asset paths, whose missing files return `404`.
 
 Unsafe methods never receive SPA HTML. Unknown backend routes return backend errors rather than falling through to `index.html`.
 
-Hashed `/assets` files use immutable caching and the SPA document is revalidatable. Private API/auth responses follow the [security policy](security.md#browser-security-baseline). Public static documents and bundles contain no household data.
+Hashed `/assets` files use immutable caching and the SPA document is revalidatable. Private API responses follow the [security policy](security.md#browser-security-baseline). Public static documents and bundles contain no application data.
 
 ## Development and publishing
 
 .NET and frontend builds are independently runnable. Complete publishing installs/builds the frontend, restores locked .NET dependencies, and includes the assets in the application output. Browser checks require the matching Playwright Chromium installation.
 
-Vite runs on loopback over HTTPS for secure-cookie development, proxying API, authentication, OIDC callbacks, and health requests to ASP.NET Core. The proxy preserves the browser-visible HTTPS origin for generated OIDC callbacks. Development proxy trust is limited to the actual proxy, and local certificates are private. Production uses certificate validation and explicit proxy trust; Vite/HMR allowances are confined to development.
+Vite runs on loopback over HTTP and proxies `/api` requests to the loopback ASP.NET Core development server. No OIDC provider, simulated identity or local TLS certificate is required. Production HTTPS and Forward Auth are supplied by the deployment proxy; Vite/HMR allowances remain confined to development.
 
 ## Design-system relationship
 

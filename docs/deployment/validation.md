@@ -2,6 +2,8 @@
 
 This checklist verifies the accepted architecture in the actual production environment. All checks remain pending. Acceptance is specific to the chosen OIDC provider, reverse proxy, their configuration, and the target host; local development checks do not establish production acceptance.
 
+Apply checks as their corresponding implementation is delivered. OIDC, application-session and authentication key-persistence validation are deferred with that work in the [roadmap](../product/roadmap.md#later--cross-cutting-concerns); they do not gate version 0.3. During the React migration, retain and verify the existing Forward Auth protection for both interface and API access.
+
 Requirements are defined in [authentication](../architecture/authentication.md) and [security](../architecture/security.md). Run the checks with private configuration, mark them complete only after verification, and keep credentials, cookies, keys, personal data, and sensitive evidence outside public repository artifacts.
 
 ## Acceptance checks

@@ -219,7 +219,7 @@ A verified empty state requires complete, reliable data for the selected scope. 
 
 ## Authentication
 
-The cross-cutting [OIDC and explicit admission model](../../architecture/authentication.md) grants each admitted user shared access to the household's configured library accounts. Borrower filters do not impose access restrictions.
+The deployed interface and API use the shared [Forward Auth access model](../../architecture/authentication.md). Visitors allowed through the proxy share access to the configured library accounts. Borrower filters do not impose access restrictions. Application-managed identities and permissions are deferred independently of the React migration.
 
 ## Acceptance criteria
 

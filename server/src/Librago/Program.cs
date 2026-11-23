@@ -52,7 +52,7 @@ builder.Services.AddProblemDetails();
 
 var app = builder.Build();
 
-// API routes are a local migration slice until authentication is implemented.
+// Deployed UI and API access must be protected by the reverse proxy's Forward Auth.
 app.Use(async (context, next) =>
 {
     if (!context.Request.Path.StartsWithSegments("/api"))
@@ -99,11 +99,8 @@ app.MapGet("/health", async (LibragoDatabase database, CancellationToken cancell
         ? Results.Ok(new { status = "healthy" })
         : Results.StatusCode(StatusCodes.Status503ServiceUnavailable));
 app.MapRazorPages();
-if (app.Environment.IsDevelopment())
-{
-    app.MapGet("/api/loans", (LoanQuery query, CancellationToken cancellationToken) =>
-        query.ExecuteAsync(cancellationToken));
-}
+app.MapGet("/api/loans", (LoanQuery query, CancellationToken cancellationToken) =>
+    query.ExecuteAsync(cancellationToken));
 
 await app.RunAsync();
 

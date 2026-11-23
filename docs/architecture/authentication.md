@@ -2,6 +2,8 @@
 
 [ADR-0005](../adr/0005-oidc-web-security.md) defines the authentication and authorization boundary.
 
+This reference describes the target OIDC implementation, deferred in the [roadmap](../product/roadmap.md#later--cross-cutting-concerns). It is not a prerequisite for version 0.3 or React. Current deployments use the existing Forward Auth protection for the interface and API; application-managed sessions and admission are not implemented yet.
+
 ## Identity and admission
 
 ```text

@@ -32,11 +32,11 @@ A cohesive interface built around Librago's design system, with a home dashboard
 
 The home dashboard is described in [`features/dashboard.md`](features/dashboard.md).
 
-The accepted [React/API architecture](../architecture/overview.md), including server-side OIDC, application sessions, and explicit household admission, belongs to this migration. Its implementation covers:
+The [React/API architecture](../architecture/overview.md) belongs to this migration. Version 0.3 focuses on the dashboard, interface redesign and frontend/API integration. OIDC implementation is deferred to the later cross-cutting work below; the deployed application continues to use its existing Forward Auth protection.
 
-- frontend/API foundations and authentication integration;
+- frontend/API foundations and same-origin hosting;
 - technical implementation of the design system;
-- real [deployment validation](../deployment/validation.md) of authentication, proxy trust, key persistence, browser hardening, and effective egress controls.
+- deployment checks relevant to the migrated interface; OIDC-specific validation is deferred with its implementation.
 
 ## 0.4 — Library opening hours
 
@@ -71,7 +71,8 @@ Intentionally deferred but tracked:
 - synchronization history;
 - reservation cancellation;
 - configuration management;
-- more granular multi-user authorization if a concrete need arises; the accepted initial model explicitly admits identities to shared household access;
+- OIDC authentication and application sessions, following [ADR-0005](../adr/0005-oidc-web-security.md), scheduled independently of version 0.3;
+- multi-user roles and permissions if a concrete need arises;
 - multi-language support;
 - privacy and secret management for deployment;
 - contribution and connector extension model.

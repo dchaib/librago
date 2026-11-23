@@ -190,8 +190,8 @@ public sealed class LoansApiTests : IAsyncLifetime
     }
 
     [Theory]
-    [InlineData("Production", "/api/loans")]
-    [InlineData("Staging", "/api/loans")]
+    [InlineData("Production", "/api/unknown")]
+    [InlineData("Staging", "/api/unknown")]
     [InlineData("Development", "/api/unknown")]
     public async Task UnavailableRoutesReturnPrivateJson404(string environment, string path)
     {
@@ -199,6 +199,22 @@ public sealed class LoansApiTests : IAsyncLifetime
         Assert.Equal(HttpStatusCode.NotFound, response.StatusCode);
         Assert.Equal("application/problem+json", response.Content.Headers.ContentType?.MediaType);
         Assert.True(response.Headers.CacheControl?.NoStore);
+    }
+
+    [Theory]
+    [InlineData("Development")]
+    [InlineData("Staging")]
+    [InlineData("Production")]
+    public async Task ReadApiDoesNotRequireAnApplicationIdentity(string environment)
+    {
+        var factory = Factory(environment, accountCount: 0);
+        var response = await factory.CreateClient().GetAsync("/api/loans", TestContext.Current.CancellationToken);
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.True(response.Headers.CacheControl?.NoStore);
+        Assert.Equal("application/json", response.Content.Headers.ContentType?.MediaType);
+        var data = await response.Content.ReadFromJsonAsync<LoansResponse>(TestContext.Current.CancellationToken);
+        Assert.NotNull(data);
+        Assert.False(data.HasConfiguredAccounts);
     }
 
     [Fact]

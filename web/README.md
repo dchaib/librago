@@ -13,6 +13,8 @@ npm run dev
 
 In a second terminal, run `dotnet run --project server/src/Librago` from the repository root after configuring the backend as described in the root README. The launch profile uses `Development` and listens on `http://127.0.0.1:5080`. Vite listens on loopback and proxies `/api` to that address. No CORS configuration is required.
 
+Local development requires no OIDC provider, application login or TLS certificate. In deployment, the interface and API share an origin behind the reverse proxy's Forward Auth protection. Application-managed authentication is deferred independently of React; see the [access model](../docs/architecture/authentication.md).
+
 | Command | Purpose |
 | --- | --- |
 | `npm run dev` | Start the development server with hot reload. |

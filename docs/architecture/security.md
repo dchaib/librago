@@ -2,6 +2,8 @@
 
 Librago's security boundaries cover household access, browser requests, provider automation, private state, and deployment. [ADR-0005](../adr/0005-oidc-web-security.md) and [ADR-0007](../adr/0007-browser-automation-isolation.md) record the authentication and browser-isolation decisions. Operational acceptance checks are recorded in the [deployment validation checklist](../deployment/validation.md).
 
+The OIDC, application-session and authentication key-persistence requirements below describe the target architecture. Their implementation is deferred beyond version 0.3 in the [roadmap](../product/roadmap.md). Until then, existing Forward Auth protects deployed interface and API access; application-managed authentication does not gate the React migration.
+
 ## Browser security baseline
 
 Production enforces the following Content Security Policy through the HTTP response header:

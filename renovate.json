@@ -4,6 +4,12 @@
     "config:recommended",
     ":semanticCommits"
   ],
+  "description": [
+    "Keep Renovate on npm 11 because npm 12 fails with EALLOWREMOTE when resolving a Tailwind dependency during lockfile updates (https://github.com/npm/cli/issues/9800). Remove this constraint once npm 12 can update web/package-lock.json successfully."
+  ],
+  "constraints": {
+    "npm": "^11"
+  },
   "packageRules": [
     {
       "matchPackageNames": ["node", "npm", "@types/node"],

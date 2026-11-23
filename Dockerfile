@@ -1,6 +1,6 @@
 # syntax=docker/dockerfile:1
 
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build
+FROM mcr.microsoft.com/dotnet/sdk:11.0 AS build
 WORKDIR /source
 
 ENV DOTNET_CLI_TELEMETRY_OPTOUT=1 \
@@ -23,7 +23,7 @@ RUN --mount=type=cache,target=/root/.nuget/packages \
     --no-restore \
     --output /app
 
-FROM mcr.microsoft.com/dotnet/runtime-deps:10.0 AS runtime
+FROM mcr.microsoft.com/dotnet/runtime-deps:11.0 AS runtime
 WORKDIR /app
 
 ENV ASPNETCORE_HTTP_PORTS=8080 \

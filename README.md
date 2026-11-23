@@ -38,7 +38,7 @@ cd server
 Copy-Item src/Librago/appsettings.Local.example.json src/Librago/appsettings.Local.json
 dotnet restore Librago.slnx
 dotnet build Librago.slnx
-pwsh src/Librago/bin/Debug/net10.0/playwright.ps1 install chromium
+pwsh src/Librago/bin/Debug/net11.0/playwright.ps1 install chromium
 dotnet run --project src/Librago
 ```
 
